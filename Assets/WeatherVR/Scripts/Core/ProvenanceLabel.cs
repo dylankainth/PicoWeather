@@ -44,7 +44,7 @@ namespace WeatherVR.Core
 
         void Awake()
         {
-            if (Text == null) Text = GetComponentInChildren<TMP_Text>();
+            if (Text == null) Text = GetComponentInChildren<Text>();
         }
 
         /// <summary>Shows a one-line status while the scene is still loading.</summary>
