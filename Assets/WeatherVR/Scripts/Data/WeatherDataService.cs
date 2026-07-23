@@ -155,6 +155,15 @@ namespace WeatherVR.Data
 
         IEnumerator LoadWeather(WeatherSnapshot snapshot, GeoBounds bounds, AppConfig config)
         {
+            if (config.ForceProceduralWeather)
+            {
+                Debug.Log("[WeatherVR] ForceProceduralWeather is on; generating a synthetic storm.");
+                snapshot.Weather = ProceduralWeather.Generate(
+                    snapshot.Bounds, ProceduralGridSize, config.ProceduralSeed);
+                snapshot.WeatherSource = "procedural (demo mode)";
+                yield break;
+            }
+
             if (config.AllowLiveFetch)
             {
                 var live = new OpenMeteoClient.Result();

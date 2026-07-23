@@ -100,6 +100,13 @@ namespace WeatherVR.Core
         [Tooltip("Seconds to wait for the live weather request before giving up.")]
         public float LiveFetchTimeoutSeconds = 6f;
 
+        [Tooltip("Demo mode: ignore live and baked weather and always generate the " +
+                 "synthetic squall line. Real Shanghai weather is clear most days — a " +
+                 "true snapshot is often an empty sky with no lightning at all, which " +
+                 "is correct and undemonstrable. The app still labels the result " +
+                 "'procedural' on screen, so this shows a storm without claiming one.")]
+        public bool ForceProceduralWeather = false;
+
         // ------------------------------------------------------- derived values
 
         /// <summary>VR metres per real-world metre, horizontally.</summary>

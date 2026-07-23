@@ -1,0 +1,12 @@
+# Core bake pipeline. These two cover terrain, imagery and Open-Meteo weather.
+requests>=2.28
+Pillow>=9.0
+
+# Optional: only needed for `fetch_weather.py --source era5`, which pulls genuine
+# ERA5 from the Copernicus Climate Data Store. Requires a free CDS account and a
+# ~/.cdsapirc. Left commented out because the default Open-Meteo path needs none
+# of it and these are heavy dependencies.
+# cdsapi>=0.6
+# xarray>=2023.1
+# netcdf4>=1.6
+# numpy>=1.24

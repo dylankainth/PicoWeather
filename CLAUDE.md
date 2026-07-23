@@ -584,20 +584,67 @@ scale before it drops framerate.
 - Namespace root: `WeatherVR`.
 - No `async void`; use coroutines (Unity 2022, no UniTask dependency).
 - Runtime code must not reference `UnityEditor`. Editor-only code lives in
-  `Assets/WeatherVR/Editor/` behind an asmdef with `Editor` platform only.
+  `Assets/WeatherVR/Editor/`, which Unity compiles into
+  `Assembly-CSharp-Editor` by virtue of the folder name. No asmdefs: they
+  would have to declare references into the PICO SDK's own assemblies, which
+  is a maintenance cost with nothing to buy at this size.
 - Every generated asset must be reproducible from a menu item under
   `Tools/WeatherVR/`.
+
+## Known issues found in the handover state
+
+1. **`ENABLE_PICO_XR_SDK` was missing from the Android scripting defines** (it
+   was set for Standalone only). Every runtime file in the PICO SDK is wrapped
+   in `#if ENABLE_PICO_XR_SDK`, so the APK would have built and installed with
+   the entire SDK compiled out and *no compiler error*. Confirmed empirically:
+   the `ByteDance.PICO.XR.dll` in `Library/ScriptAssemblies` contains no
+   `PXR_HandTracking` type at all. Fixed by `ProjectConfigurator`, which is run
+   automatically by `BuildAPK`.
+2. **Shaders looked up via `Shader.Find` are stripped from player builds**
+   unless referenced by an asset or listed in Always Included Shaders. All
+   three WeatherVR shaders are found by name, so `ProjectConfigurator`
+   registers them. Without this they return `null` on device only.
+3. **TextMeshPro's essential resources are not imported** in this project, so a
+   TMP label renders nothing. The provenance HUD uses built-in UI `Text`.
 
 ## How to (re)build everything
 
 ```powershell
-# 1. bake data (optional — app runs procedurally without it)
+pip install -r tools/requirements.txt
+
+# 1. bake data (optional — the app runs fully procedurally without it)
 python tools/build_all.py
 
 # 2. in Unity:  Tools ▸ WeatherVR ▸ Build Scene
 # 3. in Unity:  Tools ▸ WeatherVR ▸ Build APK   (or File ▸ Build Settings)
 ```
 
+Batch mode, for a machine with nothing set up:
+
+```powershell
+& "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe" `
+    -batchmode -quit -projectPath "." `
+    -executeMethod WeatherVR.EditorTools.BuildAPK.BuildEverythingFromCommandLine
+```
+
+## Demo mode
+
+Real Shanghai weather is clear most days. A genuine snapshot is frequently an
+empty sky with zero lightning, which is *correct* and undemonstrable — the
+first live bake during development returned CAPE of 3920 J/kg with no rain, so
+the lightning proxy correctly produced nothing. Set
+`ForceProceduralWeather = true` on the `WeatherVRConfig` asset to always render
+the synthetic squall line. The app still labels it "procedural (demo mode)" on
+screen, so this shows a storm without claiming one.
+
 ## Progress log
 
 - **2026-07-23** — repo initialised, spec captured, environment audited.
+- **2026-07-23** — data layer, terrain + volumetric cloud rendering, lightning,
+  procedural audio, interaction, scene orchestration and editor tooling written
+  and compile-verified with Roslyn against the Unity and PICO assemblies in both
+  define configurations.
+- **2026-07-23** — Python bake pipeline working end to end against live sources:
+  real SRTM-derived terrain (−89 m to +82 m over the delta, after despiking 6
+  pixels of SRTM void speckle), 2048² Esri basemap verified to be Shanghai
+  (Huangpu meander, Yangtze estuary, Hongqiao), and a live Open-Meteo snapshot.
