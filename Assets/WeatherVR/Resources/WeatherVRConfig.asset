@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a2bc92ebff355c41a740b6d51d8a56a, type: 3}
+  m_Name: WeatherVRConfig
+  m_EditorClassIdentifier: 
+  CenterLatitude: 31.23
+  CenterLongitude: 121.47
+  RegionSpanKm: 50
+  MapSizeMeters: 2
+  VerticalExaggeration: 4
+  TerrainReliefExaggeration: 12
+  AtmosphereFloorMeters: 200
+  AtmosphereCeilingMeters: 12000
+  TerrainMeshResolution: 128
+  CloudVolumeXZ: 64
+  CloudVolumeY: 32
+  TargetFrameRate: 72
+  CloudMarchSteps: 48
+  CloudMarchStepsMin: 16
+  MaxConcurrentBolts: 3
+  ProceduralSeed: 20260723
+  AllowLiveFetch: 1
+  LiveFetchTimeoutSeconds: 6
+  ForceProceduralWeather: 0

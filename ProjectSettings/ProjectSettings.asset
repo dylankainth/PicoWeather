@@ -743,7 +743,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthCap: 96
   webGLPowerPreference: 2
   scriptingDefineSymbols:
-    Android: PICO_SPATIALIZER
+    Android: PICO_SPATIALIZER;ENABLE_PICO_XR_SDK
     Standalone: PICO_SPATIALIZER;ENABLE_PICO_XR_SDK
   additionalCompilerArguments: {}
   platformArchitecture: {}
