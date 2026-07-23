@@ -51,7 +51,13 @@ Shader "WeatherVR/VolumetricClouds"
     {
         Tags
         {
-            "Queue"            = "Transparent"
+            // Ahead of the default Transparent queue (3000) on purpose. This pass
+            // draws with ZTest Always and the depth texture it clips against contains
+            // only opaque geometry, so nothing stops it covering a transparent object
+            // — including the world-space provenance panel, which sits at 3000 and
+            // would otherwise be washed out by cloud drawn on top of it. Ordering is
+            // clouds (2900), lightning (2950), UI (3000).
+            "Queue"            = "Transparent-100"
             "RenderType"       = "Transparent"
             "IgnoreProjector"  = "True"
             "DisableBatching"  = "True"   // we need per-object space to be meaningful

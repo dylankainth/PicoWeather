@@ -25,7 +25,11 @@ Shader "WeatherVR/LightningBolt"
     {
         Tags
         {
-            "Queue"           = "Transparent+10"
+            // After the clouds (2900) so bolts read as being lit through the volume,
+            // but before the default Transparent queue so they never draw over the
+            // world-space UI. Clouds do not write depth, so this ordering is what
+            // actually decides it.
+            "Queue"           = "Transparent-50"
             "RenderType"      = "Transparent"
             "IgnoreProjector" = "True"
         }
