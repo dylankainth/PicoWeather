@@ -1,5 +1,5 @@
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using WeatherVR.Data;
 using WeatherVR.Lightning;
 
@@ -18,8 +18,11 @@ namespace WeatherVR.Core
     /// </summary>
     public class ProvenanceLabel : MonoBehaviour
     {
-        [Tooltip("Text element to write into. Found in children if unset.")]
-        public TMP_Text Text;
+        [Tooltip("Text element to write into. Found in children if unset. Deliberately " +
+                 "the built-in UI Text rather than TextMeshPro: TMP needs its essential " +
+                 "resources imported before it will render anything, and a label that " +
+                 "silently shows nothing on a fresh checkout is worse than a plainer font.")]
+        public Text Text;
 
         [Tooltip("Optional second line showing frame time and quality tier.")]
         public bool ShowPerformance = true;
