@@ -670,11 +670,22 @@ it.
   `SetPixels32` on R8 3D textures. `tools/verify.py` now runs 35 checks against
   the real baked data, all passing.
 
+- **2026-07-23** — scene generated and inspected: all 11 components present,
+  every serialized reference wired, map root at the expected scale. Further
+  review found and fixed two more silent-failure bugs — a missing
+  `TrackedPoseDriver` (now self-installing, so a stale scene cannot lose head
+  tracking) and a malformed `file://` URL for StreamingAssets. The shader's
+  stereo and depth-sampling macros were checked against Unity 2022.3's actual
+  `HLSLSupport.cginc`: `SAMPLE_DEPTH_TEXTURE_PROJ` is correctly redefined for
+  the texture-array case, so single-pass-instanced sampling is right.
+
 ## Still to do
 
-- [ ] Run `Tools ▸ WeatherVR ▸ Build Scene` in the editor and press Play. This
-      is the first execution of the MonoBehaviour lifecycle, the shader variants
-      and the `Texture3D` uploads — none of which the out-of-editor checks can
-      reach.
+- [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`.** The scene currently on disk
+      was generated before the head-tracking fix. The runtime guard makes it work
+      anyway, but it will log a warning until the scene is rebuilt.
+- [ ] Press Play. This is the first execution of the MonoBehaviour lifecycle,
+      the shader variants and the `Texture3D` uploads — none of which the
+      out-of-editor checks can reach.
 - [ ] Verify on device: frame rate against the 72 FPS target, and that the perf
       governor's tier changes are not visible.
