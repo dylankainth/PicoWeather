@@ -59,8 +59,9 @@ namespace WeatherVR.Core
         // ----------------------------------------------------------- resolutions
 
         [Header("Resolution budgets")]
-        [Tooltip("Vertices per side of the terrain mesh at LOD0.")]
-        [Range(32, 256)] public int TerrainMeshResolution = 160;
+        [Tooltip("Vertices per side of the terrain mesh at LOD0. 128 gives ~32 k " +
+                 "triangles, inside the 40 k budget in CLAUDE.md.")]
+        [Range(32, 256)] public int TerrainMeshResolution = 128;
 
         [Tooltip("Horizontal resolution of the generated cloud density volume.")]
         [Range(16, 128)] public int CloudVolumeXZ = 64;
