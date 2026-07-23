@@ -637,6 +637,20 @@ the lightning proxy correctly produced nothing. Set
 the synthetic squall line. The app still labels it "procedural (demo mode)" on
 screen, so this shows a storm without claiming one.
 
+## The unit convention (read this before touching anything under the map root)
+
+Local map space is a **normalised unit square**: X and Z run `[-0.5, 0.5]`, Y
+uses the *same* units, and the map root's scale (`MapSizeMeters`) turns all
+three into VR metres.
+
+Any value computed in VR metres must therefore be divided by `MapSizeMeters`
+before being used as a local coordinate. This shipped wrong once — the terrain
+mesh built relief in metres while the cloud box and the lightning built theirs
+in map units, so terrain was exactly 2× too tall and bolts stopped short of the
+ground. Use `MapScale` (via `AppConfig.Scale`) for every conversion; it exists
+specifically so this cannot be got wrong silently, and `tools/verify.py` guards
+it.
+
 ## Progress log
 
 - **2026-07-23** — repo initialised, spec captured, environment audited.
@@ -648,3 +662,19 @@ screen, so this shows a storm without claiming one.
   real SRTM-derived terrain (−89 m to +82 m over the delta, after despiking 6
   pixels of SRTM void speckle), 2048² Esri basemap verified to be Shanghai
   (Huangpu meander, Yangtze estuary, Hongqiao), and a live Open-Meteo snapshot.
+- **2026-07-23** — Unity compiled the project clean (`Assembly-CSharp.dll` and
+  `Assembly-CSharp-Editor.dll`, no errors, all three shaders imported without
+  shader errors). Review pass then found and fixed three bugs that compile fine
+  and only manifest on device: the map-unit mismatch above, a missing
+  `TrackedPoseDriver` (head tracking would simply not have worked), and
+  `SetPixels32` on R8 3D textures. `tools/verify.py` now runs 35 checks against
+  the real baked data, all passing.
+
+## Still to do
+
+- [ ] Run `Tools ▸ WeatherVR ▸ Build Scene` in the editor and press Play. This
+      is the first execution of the MonoBehaviour lifecycle, the shader variants
+      and the `Texture3D` uploads — none of which the out-of-editor checks can
+      reach.
+- [ ] Verify on device: frame rate against the 72 FPS target, and that the perf
+      governor's tier changes are not visible.
