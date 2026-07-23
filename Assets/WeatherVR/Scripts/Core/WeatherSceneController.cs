@@ -73,7 +73,14 @@ namespace WeatherVR.Core
             // forward means the camera has to be asked for a depth texture. Doing it
             // here rather than in the shader's own setup keeps the cost visible.
             var camera = Camera.main;
-            if (camera != null) camera.depthTextureMode |= DepthTextureMode.Depth;
+            if (camera != null)
+            {
+                camera.depthTextureMode |= DepthTextureMode.Depth;
+                // Re-asserted here so a scene generated before head tracking existed,
+                // or one edited by hand, still follows the headset. Silent failure
+                // otherwise: stereo renders fine, the view just never moves.
+                HeadTracking.Ensure(camera.gameObject);
+            }
 
             ApplyMapScale(config);
 
