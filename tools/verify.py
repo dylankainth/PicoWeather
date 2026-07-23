@@ -1,7 +1,7 @@
 """Run the project's pure-logic checks outside Unity.
 
-Compiles ``tools/verify_logic/Verify.cs`` against the already-built
-``Assembly-CSharp.dll`` and the Unity managed assemblies, then runs it.
+Compiles the runtime scripts and ``tools/verify_logic/Verify.cs`` straight from
+source against the Unity managed assemblies, then runs the result.
 
 Why this exists rather than Unity EditMode tests: the Unity editor holds an
 exclusive lock on the project, so while it is open nothing else can run the
@@ -15,10 +15,14 @@ Anything needing the engine proper -- ScriptableObject, Texture3D, MonoBehaviour
 lifecycles, shaders -- is out of scope here by construction and has to be
 verified in the editor.
 
-    python tools/verify.py
+Compiling the scripts from source rather than referencing Unity's
+``Assembly-CSharp.dll`` is deliberate: it checks what is on disk right now
+rather than whatever the editor last happened to build, so edits are covered
+before the editor has noticed them. The project's *package* assemblies do still
+come from ``Library/ScriptAssemblies``, so Unity has to have opened the project
+at least once.
 
-Requires that Unity has compiled the project at least once, so that
-``Library/ScriptAssemblies/Assembly-CSharp.dll`` exists.
+    python tools/verify.py
 """
 
 from __future__ import annotations
@@ -75,15 +79,36 @@ def main() -> int:
         dotnet = os.path.join(unity_data, "NetCoreRuntime", "dotnet")
     csc = os.path.join(unity_data, "DotNetSdkRoslyn", "csc.dll")
 
-    game_assembly = os.path.join(REPO_ROOT, "Library", "ScriptAssemblies", "Assembly-CSharp.dll")
-    if not os.path.exists(game_assembly):
-        raise SystemExit(
-            "Assembly-CSharp.dll not found. Open the project in Unity once so it "
-            "compiles, then run this again."
-        )
+    # Runtime scripts only. The Editor tree references UnityEditor, which drags in
+    # the whole editor assembly for no benefit to these checks.
+    sources = sorted(glob.glob(
+        os.path.join(REPO_ROOT, "Assets", "WeatherVR", "Scripts", "**", "*.cs"),
+        recursive=True))
+    if not sources:
+        raise SystemExit("No runtime scripts found under Assets/WeatherVR/Scripts.")
 
     netstandard = os.path.join(unity_data, "NetStandard", "ref", "2.1.0", "netstandard.dll")
     engine_dlls = glob.glob(os.path.join(unity_data, "Managed", "UnityEngine", "UnityEngine*.dll"))
+
+    # Package assemblies the runtime scripts touch -- UnityEngine.UI for the
+    # provenance label, and whatever else the project pulls in.
+    #
+    # Only ScriptAssemblies, not PackageCache: PackageCache also carries native
+    # binaries (sqlite3, libonigwrap) that the C# compiler rejects outright, and
+    # ScriptAssemblies is exactly the managed set Unity itself compiles against.
+    # Assembly-CSharp is excluded because these sources are being compiled here and
+    # a stale copy would collide with them.
+    script_assemblies = os.path.join(REPO_ROOT, "Library", "ScriptAssemblies")
+    if not os.path.isdir(script_assemblies):
+        raise SystemExit(
+            "Library/ScriptAssemblies not found. Open the project in Unity once so "
+            "it compiles the packages, then run this again."
+        )
+
+    package_dlls = [
+        dll for dll in glob.glob(os.path.join(script_assemblies, "*.dll"))
+        if not os.path.basename(dll).startswith("Assembly-CSharp")
+    ]
 
     os.makedirs(BUILD_DIR, exist_ok=True)
     output = os.path.join(BUILD_DIR, "Verify.dll")
@@ -94,10 +119,13 @@ def main() -> int:
         handle.write(f'-r:"{netstandard}"\n')
         for dll in engine_dlls:
             handle.write(f'-r:"{dll}"\n')
-        handle.write(f'-r:"{game_assembly}"\n')
+        for dll in package_dlls:
+            handle.write(f'-r:"{dll}"\n')
+        for source in sources:
+            handle.write(f'"{source}"\n')
         handle.write(f'"{os.path.join(HERE, "verify_logic", "Verify.cs")}"\n')
 
-    print(f"Compiling verifier against {os.path.basename(game_assembly)}...")
+    print(f"Compiling {len(sources)} runtime scripts plus the verifier...")
     compile_result = subprocess.run(
         [dotnet, csc, f"@{response_path}", f"-out:{output}"],
         capture_output=True, text=True,
@@ -111,7 +139,7 @@ def main() -> int:
     # to sit beside it rather than being resolved out of the Unity install.
     import shutil
 
-    for dll in [*engine_dlls, netstandard, game_assembly]:
+    for dll in [*engine_dlls, netstandard, *package_dlls]:
         shutil.copy2(dll, BUILD_DIR)
 
     with open(os.path.join(BUILD_DIR, "Verify.runtimeconfig.json"), "w", encoding="utf-8") as handle:

@@ -141,30 +141,52 @@ static class Verify
         Check("cloud cover is partial, not total", meanCloud > 0.1f && meanCloud < 0.8f,
               $"mean {meanCloud * 100:F0}%");
 
-        // AppConfig is a ScriptableObject and cannot be instantiated outside the
-        // Unity runtime (CreateInstance is a native ECall), so the scale chain is
-        // recomputed here from the same defaults. Keep these in step with AppConfig.
-        Console.WriteLine("\n== Scale chain (AppConfig defaults, recomputed) ==");
+        // AppConfig is a ScriptableObject and cannot be instantiated outside the Unity
+        // runtime, but MapScale -- which holds every unit conversion AppConfig
+        // delegates to -- is a plain struct precisely so this can be checked here.
+        Console.WriteLine("\n== MapScale (AppConfig defaults) ==");
         const float mapSizeMeters = 2.0f;
-        const float regionSpanMeters = 50_000f;
-        const float verticalExaggeration = 4.0f;
-        const float atmosphereFloor = 200f;
         const float atmosphereCeiling = 12_000f;
+        var scale = new MapScale(mapSizeMeters, 50_000f, 4.0f, 12.0f, 200f);
 
-        float horizontalScale = mapSizeMeters / regionSpanMeters;
-        float verticalScale = horizontalScale * verticalExaggeration;
-        float cloudAt2km = (2000f - atmosphereFloor) * verticalScale;
-        float columnHeight = (atmosphereCeiling - atmosphereFloor) * verticalScale;
+        Check("1 VR metre is 25 km", Math.Abs(scale.RepresentativeFraction - 25000) < 1,
+              $"1:{scale.RepresentativeFraction:N0}");
 
-        Check("1 VR metre is 25 km", Math.Abs(1f / horizontalScale - 25000) < 1,
-              $"1:{1f / horizontalScale:N0}");
+        float cloudAt2km = scale.AltitudeToVr(2000f);
         Check("2 km cloud sits within reach", cloudAt2km > 0.05f && cloudAt2km < 0.6f,
               $"{cloudAt2km * 100:F1} cm above the map");
+
+        float columnHeight = (atmosphereCeiling - 200f) * scale.Vertical;
         Check("atmosphere column fits on the table",
               columnHeight > 0.5f && columnHeight < 3f, $"{columnHeight:F2} m tall");
         Check("column is comparable to the map width, so it reads as a volume",
               columnHeight > mapSizeMeters * 0.4f && columnHeight < mapSizeMeters * 1.5f,
               $"{columnHeight:F2} m tall vs {mapSizeMeters:F1} m wide");
+
+        // Regression guard. The terrain mesh once built relief in VR metres while the
+        // cloud box and the lightning built theirs in normalised map units, so the
+        // terrain came out MapSizeMeters times too tall and bolts stopped short of the
+        // ground. Everything below the map root must agree on map units.
+        Console.WriteLine("\n== MapScale: map units, not VR metres ==");
+        Check("map units and VR metres differ by exactly the map size",
+              Math.Abs(scale.MetersToMapUnits(1f) * mapSizeMeters - 1f) < 1e-6f,
+              $"1 m = {scale.MetersToMapUnits(1f):F3} map units");
+
+        float terrainTopMapUnits = scale.TerrainElevationToMapUnits(82f); // real baked peak
+        float terrainTopMeters = terrainTopMapUnits * mapSizeMeters;
+        Check("82 m summit renders as a few cm of relief",
+              terrainTopMeters > 0.02f && terrainTopMeters < 0.25f,
+              $"{terrainTopMeters * 100:F1} cm on a {mapSizeMeters:F0} m map");
+
+        float boltTopMapUnits = scale.AltitudeToMapUnits(2400f);
+        Check("lightning starts above the terrain it strikes",
+              boltTopMapUnits > terrainTopMapUnits,
+              $"channel top {boltTopMapUnits:F3} vs summit {terrainTopMapUnits:F3} map units");
+        Check("lightning starts inside the cloud volume",
+              boltTopMapUnits < scale.MetersToMapUnits(columnHeight),
+              $"channel top {boltTopMapUnits:F3} vs column {scale.MetersToMapUnits(columnHeight):F3}");
+        Check("sea level flattens to the map plane",
+              scale.TerrainElevationToMapUnits(-40f) == 0f, "bathymetry does not dent the surface");
 
         Console.WriteLine($"\n{(failures == 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED")}\n");
         Environment.Exit(failures == 0 ? 0 : 1);

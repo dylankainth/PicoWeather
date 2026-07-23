@@ -38,7 +38,10 @@ namespace WeatherVR.Clouds
                 anisoLevel = 0
             };
 
-            var pixels = new Color32[width * height * depth];
+            // One byte per voxel, uploaded raw. SetPixels32 would work through a
+            // Color32 conversion that assumes a four-channel layout; SetPixelData
+            // writes exactly the R8 bytes the shader samples.
+            var voxels = new byte[width * height * depth];
             float floor = config.AtmosphereFloorMeters;
             float ceiling = config.AtmosphereCeilingMeters;
             int seed = config.ProceduralSeed;
@@ -94,13 +97,13 @@ namespace WeatherVR.Clouds
                         }
 
                         int index = x + y * width + z * width * height;
-                        byte value = (byte)Mathf.Clamp(Mathf.RoundToInt(Mathf.Clamp01(density) * 255f), 0, 255);
-                        pixels[index] = new Color32(value, value, value, value);
+                        voxels[index] = (byte)Mathf.Clamp(
+                            Mathf.RoundToInt(Mathf.Clamp01(density) * 255f), 0, 255);
                     }
                 }
             }
 
-            texture.SetPixels32(pixels);
+            texture.SetPixelData(voxels, 0);
             texture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
             return texture;
         }
@@ -162,7 +165,7 @@ namespace WeatherVR.Clouds
                 anisoLevel = 0
             };
 
-            var pixels = new Color32[resolution * resolution * resolution];
+            var voxels = new byte[resolution * resolution * resolution];
 
             for (int z = 0; z < resolution; z++)
             {
@@ -174,14 +177,13 @@ namespace WeatherVR.Clouds
                     {
                         float fx = x / (float)resolution;
                         float n = Noise.CloudDetailPeriodic(fx, fy, fz, DetailBaseFrequency, seed);
-                        byte value = (byte)Mathf.Clamp(Mathf.RoundToInt(n * 255f), 0, 255);
-                        pixels[x + y * resolution + z * resolution * resolution] =
-                            new Color32(value, value, value, value);
+                        voxels[x + y * resolution + z * resolution * resolution] =
+                            (byte)Mathf.Clamp(Mathf.RoundToInt(n * 255f), 0, 255);
                     }
                 }
             }
 
-            texture.SetPixels32(pixels);
+            texture.SetPixelData(voxels, 0);
             texture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
             return texture;
         }

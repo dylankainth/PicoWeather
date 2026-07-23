@@ -109,19 +109,39 @@ namespace WeatherVR.Core
 
         // ------------------------------------------------------- derived values
 
+        /// <summary>
+        /// Every unit conversion the app performs. Lives in its own struct so it can
+        /// be tested without the Unity runtime — see <c>tools/verify.py</c>.
+        /// </summary>
+        public MapScale Scale => new MapScale(
+            MapSizeMeters,
+            (float)(RegionSpanKm * 1000.0),
+            VerticalExaggeration,
+            TerrainReliefExaggeration,
+            AtmosphereFloorMeters);
+
         /// <summary>VR metres per real-world metre, horizontally.</summary>
-        public float HorizontalScale => MapSizeMeters / (float)(RegionSpanKm * 1000.0);
+        public float HorizontalScale => Scale.Horizontal;
 
         /// <summary>VR metres per real-world metre, vertically (altitude).</summary>
-        public float VerticalScale => HorizontalScale * VerticalExaggeration;
+        public float VerticalScale => Scale.Vertical;
 
         /// <summary>Height of the rendered cloud volume in VR metres.</summary>
         public float AtmosphereHeightVr =>
             (AtmosphereCeilingMeters - AtmosphereFloorMeters) * VerticalScale;
 
         /// <summary>Converts a real-world altitude in metres to VR metres above the map plane.</summary>
-        public float AltitudeToVr(float altitudeMeters) =>
-            (altitudeMeters - AtmosphereFloorMeters) * VerticalScale;
+        public float AltitudeToVr(float altitudeMeters) => Scale.AltitudeToVr(altitudeMeters);
+
+        /// <summary>VR metres to the map root's normalised local units.</summary>
+        public float MetersToMapUnits(float meters) => Scale.MetersToMapUnits(meters);
+
+        /// <summary>Real-world altitude in metres to map-local Y.</summary>
+        public float AltitudeToMapUnits(float altitudeMeters) => Scale.AltitudeToMapUnits(altitudeMeters);
+
+        /// <summary>Terrain elevation in metres to map-local Y, with relief exaggeration.</summary>
+        public float TerrainElevationToMapUnits(float elevationMeters) =>
+            Scale.TerrainElevationToMapUnits(elevationMeters);
 
         // ------------------------------------------------------------- singleton
 

@@ -41,7 +41,6 @@ namespace WeatherVR.Terrain
             if (field == null) return null;
 
             resolution = Mathf.Clamp(resolution, 4, 256);
-            float reliefScale = config.VerticalScale * config.TerrainReliefExaggeration;
 
             int vertexCount = resolution * resolution;
             var vertices = new Vector3[vertexCount];
@@ -77,8 +76,10 @@ namespace WeatherVR.Terrain
                     float elevation = elevations[i];
 
                     // Sea surface is flat; the sea floor lives only in the colour.
-                    float renderElevation = Mathf.Max(elevation, 0f);
-                    vertices[i] = new Vector3(u - 0.5f, renderElevation * reliefScale, v - 0.5f);
+                    // Y goes through the same normalised-map-unit conversion as X and
+                    // Z, which the map root's scale then turns into VR metres.
+                    vertices[i] = new Vector3(
+                        u - 0.5f, config.TerrainElevationToMapUnits(elevation), v - 0.5f);
                     uvs[i] = new Vector2(u, v);
 
                     float left = elevations[y * resolution + Mathf.Max(x - 1, 0)];

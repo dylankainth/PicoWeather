@@ -2,6 +2,8 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.XR;
 using UnityEngine.UI;
 using WeatherVR.Audio;
 using WeatherVR.Clouds;
@@ -80,6 +82,8 @@ namespace WeatherVR.EditorTools
             // The cloud shader clips its raymarch against scene depth.
             camera.depthTextureMode = DepthTextureMode.Depth;
             cameraObject.AddComponent<AudioListener>();
+
+            AddHeadTracking(cameraObject);
 
             // Controller anchors. XRPointer prefers raw device poses, but a transform
             // gives the editor and the XR device simulator something to work with.
@@ -162,6 +166,36 @@ namespace WeatherVR.EditorTools
 
             // Somewhere sensible to look before the user places it.
             mapRoot.transform.position = new Vector3(0f, 0.85f, 1.1f);
+        }
+
+        /// <summary>
+        /// Drives the camera from the headset pose.
+        ///
+        /// Easy to forget and unmissable when it is missing: without it the XR
+        /// runtime still initialises, the app still renders in stereo, and the view
+        /// simply does not respond to the user's head. The actions are built in code
+        /// rather than referencing an .inputactions asset so the scene has no
+        /// external dependency that can go stale.
+        /// </summary>
+        static void AddHeadTracking(GameObject cameraObject)
+        {
+            var driver = cameraObject.AddComponent<TrackedPoseDriver>();
+            driver.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;
+            // BeforeRender as well as Update: updating only on Update leaves a frame
+            // of latency, which in VR is felt rather than seen.
+            driver.updateType = TrackedPoseDriver.UpdateType.UpdateAndBeforeRender;
+
+            var position = new InputAction("HMD Position", InputActionType.Value,
+                                           "<XRHMD>/centerEyePosition",
+                                           expectedControlType: "Vector3");
+            var rotation = new InputAction("HMD Rotation", InputActionType.Value,
+                                           "<XRHMD>/centerEyeRotation",
+                                           expectedControlType: "Quaternion");
+            position.Enable();
+            rotation.Enable();
+
+            driver.positionInput = new InputActionProperty(position);
+            driver.rotationInput = new InputActionProperty(rotation);
         }
 
         static void ConfigureRayVisual(LineRenderer line)

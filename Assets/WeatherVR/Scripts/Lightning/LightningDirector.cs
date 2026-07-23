@@ -223,13 +223,15 @@ namespace WeatherVR.Lightning
             v = Mathf.Clamp01(v);
 
             float terrainElevation = _snapshot.Terrain != null ? _snapshot.Terrain.SampleElevation(u, v) : 0f;
-            float groundY = Mathf.Max(terrainElevation, 0f)
-                          * _config.VerticalScale * _config.TerrainReliefExaggeration;
-            float topY = _config.AltitudeToVr(ChannelTopAltitudeMeters) / Mathf.Max(_config.MapSizeMeters, 1e-4f);
 
             // Bolts live under the map root, whose local space is the normalised
-            // [-0.5, 0.5] map square.
-            var ground = new Vector3(u - 0.5f, groundY / Mathf.Max(_config.MapSizeMeters, 1e-4f), v - 0.5f);
+            // [-0.5, 0.5] map square. Both ends go through the same conversions the
+            // terrain mesh and the cloud box use, so the channel genuinely runs from
+            // the cloud base down to the ground surface.
+            float groundY = _config.TerrainElevationToMapUnits(terrainElevation);
+            float topY = _config.AltitudeToMapUnits(ChannelTopAltitudeMeters);
+
+            var ground = new Vector3(u - 0.5f, groundY, v - 0.5f);
             var top = new Vector3(
                 ground.x + ((float)_random.NextDouble() - 0.5f) * 0.06f,
                 topY,
