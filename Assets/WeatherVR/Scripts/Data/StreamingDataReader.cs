@@ -48,9 +48,21 @@ namespace WeatherVR.Data
             result.Error = null;
 
             string path = PathFor(fileName);
-            string url = path.Contains("://") ? path : "file://" + path.Replace('\\', '/');
 
-            using var request = UnityWebRequest.Get(url);
+            // Only Android genuinely needs UnityWebRequest: there StreamingAssets is
+            // compressed inside the APK behind a "jar:file://" URL that the file APIs
+            // cannot open. Everywhere else the path is an ordinary filesystem path,
+            // and turning it into a "file://" URL by string concatenation is actively
+            // harmful — the result is not escaped, so any project whose path contains
+            // a space or a parenthesis produces a malformed URL. This project lives in
+            // "My project (2)", which has both.
+            if (!path.Contains("://"))
+            {
+                ReadFromDisk(path, fileName, result);
+                yield break;
+            }
+
+            using var request = UnityWebRequest.Get(path);
             request.timeout = Mathf.Max(1, Mathf.CeilToInt(timeoutSeconds));
             yield return request.SendWebRequest();
 
@@ -68,6 +80,35 @@ namespace WeatherVR.Data
             }
 
             result.Success = true;
+        }
+
+        /// <summary>
+        /// Plain filesystem read. Separate from the coroutine because C# will not
+        /// allow a try/catch around a <c>yield</c>.
+        /// </summary>
+        static void ReadFromDisk(string path, string fileName, Result result)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    result.Error = $"{fileName}: not found at {path}";
+                    return;
+                }
+
+                result.Bytes = File.ReadAllBytes(path);
+                if (result.Bytes.Length == 0)
+                {
+                    result.Error = $"{fileName}: file is empty";
+                    return;
+                }
+
+                result.Success = true;
+            }
+            catch (Exception e)
+            {
+                result.Error = $"{fileName}: {e.Message}";
+            }
         }
 
         /// <summary>
