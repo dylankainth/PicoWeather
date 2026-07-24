@@ -20,7 +20,7 @@ MonoBehaviour:
   VerticalExaggeration: 0.4
   TerrainReliefExaggeration: 1.2
   AtmosphereFloorMeters: 200
-  AtmosphereCeilingMeters: 12000
+  AtmosphereCeilingMeters: 3500
   TerrainMeshResolution: 128
   CloudVolumeXZ: 64
   CloudVolumeY: 32

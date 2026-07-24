@@ -32,6 +32,7 @@ namespace WeatherVR.Core
         public TerrainRenderer Terrain;
         public BuildingRenderer Buildings;
         public CloudRenderer Clouds;
+        public RainRenderer Rain;
         public LightningDirector Lightning;
         public AmbientSoundscape Soundscape;
         public MapPlacementController Placement;
@@ -128,6 +129,7 @@ namespace WeatherVR.Core
             Terrain?.Apply(snapshot, config);
             Buildings?.Apply(snapshot, config);
             Clouds?.Apply(snapshot, config);
+            Rain?.Apply(snapshot, config);
             Lightning?.Apply(snapshot, config, MapRoot);
             Soundscape?.Apply(snapshot);
 

@@ -71,8 +71,11 @@ namespace WeatherVR.Core
         public float AtmosphereFloorMeters = 200f;
 
         [Tooltip("Altitude in metres of the top of the rendered cloud volume. " +
-                 "12 km covers the high (cirrus) layer.")]
-        public float AtmosphereCeilingMeters = 12000f;
+                 "3.5 km covers the low/mid deck and clips out the high (cirrus) " +
+                 "layer. Was 12 km (full atmosphere) — on the 5 km London span that " +
+                 "made the box read as an almost cube-shaped tower rather than a " +
+                 "tabletop cloud deck; see CLAUDE.md 'tall and weird clouds'.")]
+        public float AtmosphereCeilingMeters = 3500f;
 
         // ----------------------------------------------------------- resolutions
 

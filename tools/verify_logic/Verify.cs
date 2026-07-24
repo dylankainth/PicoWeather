@@ -154,7 +154,10 @@ static class Verify
         // that -- keep it in sync with the live config or it is decoration, not a guard.
         Console.WriteLine("\n== MapScale (AppConfig defaults) ==");
         const float mapSizeMeters = 2.0f;
-        const float atmosphereCeiling = 12_000f;
+        // 3.5 km, not the full-atmosphere 12 km: the box is meant to read as a
+        // compact tabletop cloud deck (low/mid layers only), not a tower spanning
+        // the map's own width. See CLAUDE.md 'tall and weird clouds'.
+        const float atmosphereCeiling = 3_500f;
         var scale = new MapScale(mapSizeMeters, 5_000f, 0.4f, 1.2f, 200f);
 
         Check("1 VR metre is 2.5 km", Math.Abs(scale.RepresentativeFraction - 2500) < 1,
@@ -166,9 +169,9 @@ static class Verify
 
         float columnHeight = (atmosphereCeiling - 200f) * scale.Vertical;
         Check("atmosphere column fits on the table",
-              columnHeight > 0.5f && columnHeight < 3f, $"{columnHeight:F2} m tall");
-        Check("column is comparable to the map width, so it reads as a volume",
-              columnHeight > mapSizeMeters * 0.4f && columnHeight < mapSizeMeters * 1.5f,
+              columnHeight > 0.3f && columnHeight < 1.5f, $"{columnHeight:F2} m tall");
+        Check("column reads as a deck, clearly shorter than the map is wide",
+              columnHeight > mapSizeMeters * 0.15f && columnHeight < mapSizeMeters * 0.75f,
               $"{columnHeight:F2} m tall vs {mapSizeMeters:F1} m wide");
 
         // Regression guard. The terrain mesh once built relief in VR metres while the

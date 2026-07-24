@@ -106,8 +106,11 @@ namespace WeatherVR.Core
                 if (Cards[i].Text == null) continue;
                 if (i == 0)
                 {
-                    Cards[i].Text.text =
-                        $"<align=center><color=#5CB8FF>{_status}</color></align>";
+                    // Built-in UI Text does not parse <align> (that is TextMeshPro
+                    // markup); it rendered as literal text during loading. Centre via
+                    // the Text component's own alignment field instead.
+                    Cards[i].Text.alignment = TextAnchor.MiddleCenter;
+                    Cards[i].Text.text = $"<color=#5CB8FF>{_status}</color>";
                 }
                 else
                 {
@@ -127,6 +130,9 @@ namespace WeatherVR.Core
             // ── Card 0 : Location ──────────────────────────────────────
             if (Cards.Length > 0 && Cards[0].Text != null)
             {
+                // Undo the centred alignment ShowStatusOnAllCards sets while loading.
+                Cards[0].Text.alignment = TextAnchor.UpperLeft;
+
                 var b = new System.Text.StringBuilder(128);
                 b.AppendLine($"<color=#5CB8FF><b>London</b></color>");
                 b.AppendLine($"{FormatCoordinate(_config.CenterLatitude, "N", "S")}");

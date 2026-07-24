@@ -20,13 +20,28 @@ namespace WeatherVR.Data
     public static class ProceduralWeather
     {
         /// <summary>
+        /// Axis position of the map centre for the default 20° tilt: with
+        /// <c>axis = u*cos(0.35) + v*sin(0.35)</c> over u,v ∈ [0,1], the centre
+        /// (u=v=0.5) sits at 0.5*(cos+sin) ≈ 0.6411. Centring the line here, rather
+        /// than the old 0.45, puts the convective core and the densest cloud over
+        /// the middle of the region instead of tucked into one corner.
+        /// </summary>
+        public const float DefaultPhase = 0.6411f;
+
+        /// <summary>
         /// Builds a synthetic snapshot on a <paramref name="gridSize"/> square grid.
         /// </summary>
         /// <param name="phase">
-        /// 0..1 position of the squall line across the region, letting callers march
-        /// the system across the map for an animated forecast timeline.
+        /// Position of the squall line across the region in the same units as
+        /// <c>axis</c> below (roughly 0..1.28 for the default 20° tilt, not a plain
+        /// 0..1 fraction), letting callers march the system across the map for an
+        /// animated forecast timeline. Defaults to the map centre -- see
+        /// <see cref="DefaultPhase"/> -- rather than 0.45, which put the convective
+        /// core off to one side of the map (the map centre sits at axis ≈ 0.64 for
+        /// the default tilt, not 0.45) and made the whole storm read as parked in
+        /// one corner instead of over the region the map exists to show.
         /// </param>
-        public static WeatherDataset Generate(GeoBounds bounds, int gridSize, int seed, float phase = 0.45f)
+        public static WeatherDataset Generate(GeoBounds bounds, int gridSize, int seed, float phase = DefaultPhase)
         {
             gridSize = Mathf.Clamp(gridSize, 4, 256);
 
@@ -71,8 +86,10 @@ namespace WeatherVR.Data
             float s = axis - (phase + waviness);
 
             // --- convective core -------------------------------------------
-            // Narrow (~4 km) band of towering cumulonimbus straddling the line.
-            float core = Gaussian(s, 0.055f);
+            // Band of towering cumulonimbus straddling the line. Widened from the
+            // original ~4 km (sigma 0.055) to ~5-6 km so the core covers more of a
+            // 5 km-wide region instead of reading as a thin ribbon crossing it.
+            float core = Gaussian(s, 0.075f);
             // Broken into discrete cells along the line, as real squall lines are.
             float cellular = 0.55f + 0.45f * Noise.Fbm2(axis * 4f, (v - u * 0.3f) * 14f, 3, 2f, 0.55f, seed + 19);
             core *= cellular;
@@ -80,8 +97,10 @@ namespace WeatherVR.Data
             // --- trailing stratiform shield --------------------------------
             // Broad region of layered cloud and steady rain behind the line: it ramps
             // in just behind the convective core and thins out towards the back edge.
-            float trailingRise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.05f, -0.20f, s));
-            float trailingFade = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.45f, -0.85f, s));
+            // Widened along with the core above so the shield still reads as
+            // proportionate to it rather than suddenly narrow behind a wider line.
+            float trailingRise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.07f, -0.27f, s));
+            float trailingFade = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-0.55f, -1.05f, s));
             float trailing = trailingRise * (1f - trailingFade);
 
             // --- forward anvil ----------------------------------------------

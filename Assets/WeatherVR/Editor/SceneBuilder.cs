@@ -108,11 +108,44 @@ namespace WeatherVR.EditorTools
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.30f, 0.34f, 0.40f);
-            RenderSettings.fog = false;
+
+            // A controlled studio backdrop rather than Unity's default blue sky: the
+            // app is a tabletop exhibit, not something that appears to float outdoors.
+            // Previously only WeatherVR/EditorTools/CaptureTool assigned this shader
+            // (for screenshots); the runtime scene never set RenderSettings.skybox at
+            // all, so Play mode fell back to Unity's built-in procedural sky.
+            var skyShader = Shader.Find("WeatherVR/StudioSky");
+            if (skyShader != null)
+            {
+                var skyMaterial = new Material(skyShader) { name = "StudioSky (runtime)" };
+                // The direction *towards* the sun, for the shader's glow term, is the
+                // opposite of the light's own forward (a directional light's forward
+                // is the direction light travels, i.e. away from the sun).
+                skyMaterial.SetVector("_SunDir", -sunObject.transform.forward);
+                RenderSettings.skybox = skyMaterial;
+            }
+            else
+            {
+                Debug.LogWarning("[WeatherVR] StudioSky shader not found; leaving the default skybox.");
+            }
+
+            // Faint depth cue matching the sky's horizon colour -- negligible this
+            // close to the tabletop (a few percent at arm's length), more noticeable
+            // toward the edges of the tracked space.
+            RenderSettings.fog = true;
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogDensity = 0.15f;
+            RenderSettings.fogColor = new Color(0.050f, 0.065f, 0.095f);
 
             // ------------------------------------------------------- map root
             var mapRoot = new GameObject("WeatherMap");
             mapRoot.transform.localScale = Vector3.one * config.MapSizeMeters;
+
+            var pedestalObject = new GameObject("Pedestal");
+            pedestalObject.transform.SetParent(mapRoot.transform, false);
+            pedestalObject.AddComponent<MeshFilter>();
+            pedestalObject.AddComponent<MeshRenderer>();
+            pedestalObject.AddComponent<PedestalRenderer>();
 
             var terrainObject = new GameObject("TerrainMesh");
             terrainObject.transform.SetParent(mapRoot.transform, false);
@@ -127,6 +160,11 @@ namespace WeatherVR.EditorTools
             cloudObject.AddComponent<MeshFilter>();
             cloudObject.AddComponent<MeshRenderer>();
             var clouds = cloudObject.AddComponent<CloudRenderer>();
+
+            var rainObject = new GameObject("Rain");
+            rainObject.transform.SetParent(mapRoot.transform, false);
+            rainObject.AddComponent<ParticleSystem>();
+            var rain = rainObject.AddComponent<RainRenderer>();
 
             // ---------------------------------------------------------- audio
             var audioRoot = new GameObject("Audio");
@@ -161,6 +199,7 @@ namespace WeatherVR.EditorTools
             controller.Terrain = terrain;
             controller.Buildings = buildings;
             controller.Clouds = clouds;
+            controller.Rain = rain;
             controller.Lightning = lightning;
             controller.Soundscape = soundscape;
             controller.Placement = placement;
@@ -204,35 +243,60 @@ namespace WeatherVR.EditorTools
         }
 
         /// <summary>
-        /// A set of world-space info cards standing just off the north edge of the
-        /// map. Each card is its own canvas at a slightly different depth, creating
-        /// a 3D holographic-HUD effect.
+        /// A clean, non-overlapping row of three info cards standing just off the
+        /// north edge of the map, with a slim title strip above them. Cards are equal
+        /// width and centre-spaced by more than a card width apart, so unlike the
+        /// original staggered 3D layout (three cards overlapping by design, since
+        /// each was forced to the same 0.3 m width but centred only ~0.1-0.2 m apart)
+        /// nothing here can overlap regardless of content length.
         /// </summary>
         static ProvenanceLabel BuildProvenancePanel(Transform mapRoot, AppConfig config)
         {
+            const float cardWidthMeters = 0.30f;
+            const float cardHeightMeters = cardWidthMeters * (240f / 300f); // matches the row cards' aspect ratio
+            const float cardGapMeters = 0.045f;
+            const float centerSpacingMeters = cardWidthMeters + cardGapMeters;
+            const float titleWidthMeters = cardWidthMeters * 3.4f;
+            const float titleHeightMeters = titleWidthMeters * (70f / 900f);
+            const float titleGapMeters = 0.02f;
+            // Every localPosition/localScale under this root is in normalised map
+            // units, same as everywhere else under mapRoot (whose own scale is
+            // MapSizeMeters) -- a value expressed in real metres must be divided by
+            // MapSizeMeters before use here, exactly like BuildCard already does for
+            // its own card-size scale. Skipping that for a *position* rather than a
+            // *size* is the same unit-convention bug class CLAUDE.md documents.
+            float centerSpacing = centerSpacingMeters / config.MapSizeMeters;
+            float titleOffset = (cardHeightMeters * 0.5f + titleGapMeters + titleHeightMeters * 0.5f)
+                                 / config.MapSizeMeters;
+
             var root = new GameObject("ProvenancePanel");
             root.transform.SetParent(mapRoot, false);
             root.transform.localPosition = new Vector3(0f, 0.18f, 0.62f);
             root.transform.localRotation = Quaternion.Euler(24f, 180f, 0f);
 
+            BuildCard(root.transform, "TitleCard",
+                900f, 70f, titleWidthMeters,
+                new Vector3(0f, titleOffset, 0f),
+                Quaternion.identity, config, showBackground: false);
+
             var cards = new ProvenanceLabel.CardInfo[3];
 
-            // Three glass cards arranged in a staggered 3D layout.
-            // Each card: (name, width, height, localPosition, localRotation)
+            // Three glass cards in a single flat row: same width, same height, same
+            // depth -- only the X offset differs, so they read as one clean HUD strip.
             cards[0] = BuildCard(root.transform, "LocationCard",
-                260f, 170f,
-                new Vector3(-0.075f, 0.065f, 0.020f),
-                Quaternion.Euler(0f, 5f, 0f), config);
+                300f, 240f, cardWidthMeters,
+                new Vector3(-centerSpacing, 0f, 0f),
+                Quaternion.identity, config);
 
             cards[1] = BuildCard(root.transform, "WeatherCard",
-                280f, 280f,
-                new Vector3(0.065f, -0.005f, -0.015f),
-                Quaternion.Euler(0f, -3f, 0f), config);
+                300f, 240f, cardWidthMeters,
+                Vector3.zero,
+                Quaternion.identity, config);
 
             cards[2] = BuildCard(root.transform, "SourcesCard",
-                240f, 190f,
-                new Vector3(-0.060f, -0.100f, 0.005f),
-                Quaternion.Euler(0f, 4f, 0f), config);
+                300f, 240f, cardWidthMeters,
+                new Vector3(centerSpacing, 0f, 0f),
+                Quaternion.identity, config);
 
             var label = root.AddComponent<ProvenanceLabel>();
             label.Cards = cards;
@@ -245,8 +309,9 @@ namespace WeatherVR.EditorTools
         /// </summary>
         static ProvenanceLabel.CardInfo BuildCard(
             Transform parent, string name,
-            float canvasW, float canvasH,
-            Vector3 localPos, Quaternion localRot, AppConfig config)
+            float canvasW, float canvasH, float worldWidthMeters,
+            Vector3 localPos, Quaternion localRot, AppConfig config,
+            bool showBackground = true)
         {
             var cardObj = new GameObject(name);
             cardObj.transform.SetParent(parent, false);
@@ -259,12 +324,16 @@ namespace WeatherVR.EditorTools
             canvasRect.sizeDelta = new Vector2(canvasW, canvasH);
             // This card sits under mapRoot, whose own scale is MapSizeMeters, so that
             // ancestor scale multiplies the card's world size too -- divide it back out
-            // here or every card renders MapSizeMeters times too big for its 0.3 m
-            // target width. Same unit-convention bug class as MapScale; see CLAUDE.md.
-            canvasRect.localScale = Vector3.one * (0.3f / canvasW / config.MapSizeMeters);
+            // here or every card renders MapSizeMeters times too big for its target
+            // width. Same unit-convention bug class as MapScale; see CLAUDE.md.
+            canvasRect.localScale = Vector3.one * (worldWidthMeters / canvasW / config.MapSizeMeters);
 
-            var bg = cardObj.AddComponent<Image>();
-            bg.color = new Color(0.06f, 0.09f, 0.16f, 0.78f);
+            Image bg = null;
+            if (showBackground)
+            {
+                bg = cardObj.AddComponent<Image>();
+                bg.color = new Color(0.06f, 0.09f, 0.16f, 0.78f);
+            }
 
             var textObj = new GameObject("Text");
             textObj.transform.SetParent(cardObj.transform, false);
@@ -284,6 +353,14 @@ namespace WeatherVR.EditorTools
             textRect.anchorMax = Vector2.one;
             textRect.offsetMin = new Vector2(16f, 12f);
             textRect.offsetMax = new Vector2(-16f, -12f);
+
+            if (name == "TitleCard")
+            {
+                text.alignment = TextAnchor.MiddleCenter;
+                text.fontSize = 22;
+                text.text = "<b><color=#5CB8FF>Immersive Weather</color></b>  " +
+                             "<color=#8899AA>· City of London</color>";
+            }
 
             return new ProvenanceLabel.CardInfo { Text = text, Background = bg };
         }

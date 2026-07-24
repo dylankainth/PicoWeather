@@ -159,6 +159,8 @@ namespace WeatherVR.UI.Carousel
         public void OnEndDrag(PointerEventData eventData)
         {
             dragging = false;
+            if (content == null)
+                return;
             int nearest = Mathf.RoundToInt(-content.anchoredPosition.x / stride);
             if (scrollRect != null && Mathf.Abs(scrollRect.velocity.x) > VelocityThreshold)
                 nearest = selectedIndex + (scrollRect.velocity.x < 0f ? 1 : -1);
