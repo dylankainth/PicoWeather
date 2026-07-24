@@ -115,12 +115,19 @@ namespace WeatherVR.EditorTools
                 changes.Add("Raised the minimum Android SDK to 29 (PICO/Quest baseline).");
             }
 
-            if (PlayerSettings.Android.targetArchitectures != AndroidArchitecture.ARM64)
+            // ARM64 is what real PICO/Quest hardware runs. X86_64 exists purely so the
+            // build also runs natively on the PICO Emulator, which is an x86_64 image:
+            // an ARM64-only APK does install there (the image ships libhoudini and
+            // advertises arm64-v8a) but every instruction is binary-translated, which
+            // made the app unusably slow while the host sat at 22% CPU and 6% GPU.
+            // Shipping both costs roughly 30 MB of extra native libraries.
+            const AndroidArchitecture DesiredArchitectures =
+                AndroidArchitecture.ARM64 | AndroidArchitecture.X86_64;
+
+            if (PlayerSettings.Android.targetArchitectures != DesiredArchitectures)
             {
-                // 64-bit only: the store requires it and a fat APK doubles build time
-                // for an architecture no current headset runs.
-                PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-                changes.Add("Restricted Android architectures to ARM64.");
+                PlayerSettings.Android.targetArchitectures = DesiredArchitectures;
+                changes.Add("Set Android architectures to ARM64 + X86_64 (device + emulator).");
             }
 
             if (PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android) != ScriptingImplementation.IL2CPP)
