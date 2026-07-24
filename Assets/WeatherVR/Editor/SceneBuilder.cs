@@ -98,6 +98,37 @@ namespace WeatherVR.EditorTools
             var rayVisual = rightAnchor.AddComponent<LineRenderer>();
             ConfigureRayVisual(rayVisual);
 
+            var content = BuildWeatherContent(config);
+
+            // Wire the headset-specific placement to the shared content.
+            var placement = content.App.AddComponent<MapPlacementController>();
+            placement.MapRoot = content.MapRoot;
+            placement.Pointer = pointer;
+            placement.Head = cameraObject.transform;
+            placement.RayVisual = rayVisual;
+            content.Controller.Placement = placement;
+
+            // Somewhere sensible to look before the user places it.
+            content.MapRoot.position = new Vector3(0f, 0.85f, 1.1f);
+        }
+
+        /// <summary>
+        /// Everything that is the same on every platform: lighting, the map root and
+        /// its renderers, audio, lightning, the provenance HUD, and the app
+        /// controller. The rig and the placement mechanism differ per platform and are
+        /// wired by the caller, which is what lets the phone-AR scene reuse all of
+        /// this instead of duplicating it.
+        /// </summary>
+        public struct WeatherContent
+        {
+            public Transform MapRoot;
+            public GameObject App;
+            public WeatherSceneController Controller;
+            public Light Sun;
+        }
+
+        public static WeatherContent BuildWeatherContent(AppConfig config)
+        {
             // ------------------------------------------------------- lighting
             var sunObject = new GameObject("SunLight");
             var sun = sunObject.AddComponent<Light>();
@@ -145,12 +176,6 @@ namespace WeatherVR.EditorTools
             var governor = appObject.AddComponent<PerfGovernor>();
             governor.Clouds = clouds;
 
-            var placement = appObject.AddComponent<MapPlacementController>();
-            placement.MapRoot = mapRoot.transform;
-            placement.Pointer = pointer;
-            placement.Head = cameraObject.transform;
-            placement.RayVisual = rayVisual;
-
             var controller = appObject.AddComponent<WeatherSceneController>();
             controller.MapRoot = mapRoot.transform;
             controller.DataService = dataService;
@@ -158,13 +183,17 @@ namespace WeatherVR.EditorTools
             controller.Clouds = clouds;
             controller.Lightning = lightning;
             controller.Soundscape = soundscape;
-            controller.Placement = placement;
             controller.Governor = governor;
             controller.SunLight = sun;
             controller.Provenance = provenance;
 
-            // Somewhere sensible to look before the user places it.
-            mapRoot.transform.position = new Vector3(0f, 0.85f, 1.1f);
+            return new WeatherContent
+            {
+                MapRoot = mapRoot.transform,
+                App = appObject,
+                Controller = controller,
+                Sun = sun
+            };
         }
 
         static void ConfigureRayVisual(LineRenderer line)

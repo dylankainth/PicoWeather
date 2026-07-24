@@ -10,4 +10,6 @@ EditorBuildSettings:
     guid: 80dec439b51ca3b46ae01a22df29dee6
   m_configObjects:
     ByteDance.PICO.XR.Settings: {fileID: 11400000, guid: bdc21401b2a57894b8b29d81157453dc, type: 2}
+    UnityEditor.XR.ARCore.ARCoreSettings: {fileID: 11400000, guid: e503c49d2b1e00042abe0801070397df, type: 2}
+    com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: c547a15b9bd623543841b8ab95a6ff87, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 6c12924a4ae2638418fe54328a6c69ae, type: 2}
