@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: PhoneSky
+  m_Shader: {fileID: 4800000, guid: c715c8a8b0b1d0d4788cd757c7ebd752, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _HorizonSharpness: 2.2
+    - _SunGlow: 1.4
+    - _SunSharp: 18
+    m_Colors:
+    - _Horizon: {r: 0.049999982, g: 0.064999975, b: 0.09499996, a: 1}
+    - _Nadir: {r: 0.008, g: 0.009, b: 0.013, a: 1}
+    - _SunColor: {r: 0.54999995, g: 0.41999996, b: 0.29999998, a: 1}
+    - _SunDir: {r: 0.3, g: 0.15, b: -0.9, a: 0}
+    - _Zenith: {r: 0.015, g: 0.018, b: 0.03, a: 1}
+  m_BuildTextureStacks: []
