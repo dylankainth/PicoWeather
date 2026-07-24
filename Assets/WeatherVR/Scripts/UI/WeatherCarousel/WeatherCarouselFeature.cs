@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 using WeatherVR.Core;
 using WeatherVR.Data;
 using WeatherVR.Interaction;
+using WeatherVR.Weather;
 
 namespace WeatherVR.UI.Carousel
 {
@@ -20,6 +21,8 @@ namespace WeatherVR.UI.Carousel
         WeatherSceneController sceneController;
         MapPlacementController placement;
         BuiltWeatherCarousel built;
+        WeatherCarouselDataset activeDataset;
+        WeatherSceneDirector director;
         bool sceneReady;
         bool loading;
         float targetAlpha;
@@ -115,11 +118,46 @@ namespace WeatherVR.UI.Carousel
 
             built = new WeatherCarouselBuilder().Build(dataset, head, pointer);
             built.Root.transform.SetParent(transform, true);
+            activeDataset = dataset;
             UpdateVisibility(immediate: true);
+
+            // Clicking a card switches the rendered weather scene, so terrain and UI
+            // change together. Subscribe first, then apply the current card once.
+            director = sceneController.SceneDirector != null
+                ? sceneController.SceneDirector
+                : FindObjectOfType<WeatherSceneDirector>();
+
+            // Subscribe only — do not apply a scene on load. The bootstrap has already
+            // shown a bright default so the terrain is visible; the weather changes
+            // when the user actually taps a card.
+            if (director != null && built.Controller != null)
+                built.Controller.SelectionChanged += OnCardSelected;
 
             Debug.Log(
                 $"[WeatherVR] Bilingual immersive weather carousel ready " +
                 $"with {dataset.Items.Length} cards ({dataset.SourceEnglish}).");
+        }
+
+        void OnCardSelected(int index)
+        {
+            if (director == null || activeDataset?.Items == null || activeDataset.Items.Length == 0)
+                return;
+
+            index = Mathf.Clamp(index, 0, activeDataset.Items.Length - 1);
+            WeatherCarouselItem item = activeDataset.Items[index];
+            director.ApplyKind(SceneKindForIcon(item.Icon), item.Accent, item.GlassTint);
+        }
+
+        static WeatherSceneKind SceneKindForIcon(WeatherCarouselIcon icon)
+        {
+            switch (icon)
+            {
+                case WeatherCarouselIcon.Sunny: return WeatherSceneKind.Clear;
+                case WeatherCarouselIcon.PartlyCloudy: return WeatherSceneKind.PartlyCloudy;
+                case WeatherCarouselIcon.Cloudy: return WeatherSceneKind.Cloudy;
+                case WeatherCarouselIcon.Rain: return WeatherSceneKind.Rain;
+                default: return WeatherSceneKind.Storm;
+            }
         }
 
         void OnPlaced(Pose pose) => UpdateVisibility(immediate: false);
@@ -182,6 +220,9 @@ namespace WeatherVR.UI.Carousel
 
         void OnDestroy()
         {
+            if (built?.Controller != null)
+                built.Controller.SelectionChanged -= OnCardSelected;
+
             if (sceneController != null)
                 sceneController.Ready -= OnSceneReady;
 

@@ -199,15 +199,11 @@ namespace WeatherVR.UI.Carousel
             if (Head == null)
                 return;
 
-            Vector3 forward = Head.forward;
-            forward.y = 0f;
-            if (forward.sqrMagnitude < 0.001f)
-                forward = Vector3.forward;
-            forward.Normalize();
-
-            Vector3 targetPosition =
-                Head.position + forward * Distance + Vector3.up * VerticalOffset;
-            Quaternion targetRotation = Quaternion.LookRotation(forward, Vector3.up);
+            // Identical anchor maths to the map's ComfortFollow, off the same head, so
+            // the carousel and the terrain move together as the user turns and walks.
+            ComfortFollow.ComputeAnchor(
+                Head, Distance, VerticalOffset,
+                out Vector3 targetPosition, out Quaternion targetRotation);
 
             if (!initialised)
             {

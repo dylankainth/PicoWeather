@@ -541,10 +541,11 @@ My project (2)/
       │  ├─ Terrain/      TerrainMeshBuilder, LOD
       │  ├─ Clouds/       CloudVolumeBuilder (3D texture), CloudRenderer
       │  ├─ Lightning/    LightningDirector, LightningBolt, ThunderAudio
-      │  ├─ Interaction/  MapPlacementController, MapAnchor
+      │  ├─ Interaction/  ComfortFollow, XRPointer, HeadTracking, MapPlacementController
+      │  ├─ Weather/      WeatherScene (profiles+synth), WeatherSceneDirector, EnvironmentController
       │  ├─ Audio/        AmbientSoundscape, ProceduralAudio
       │  └─ Core/         WeatherSceneController, AppConfig, PerfGovernor
-      ├─ Shaders/         VolumetricClouds.shader, LightningBolt.shader, Terrain*.shader
+      ├─ Shaders/         VolumetricClouds.shader, LightningBolt.shader, GlassEnvironment.shader, Terrain*.shader
       ├─ Materials/
       └─ Editor/          SceneBuilder.cs, BuildAPK.cs, DataBakeWindow.cs
 ```
@@ -743,6 +744,44 @@ it.
   `terrain.bin` (43.7 m peak renders as 0.84 cm of relief, 2 km cloud sits
   28.8 cm up, atmosphere column 1.89 m tall). Scene has not yet been rebuilt
   or pressed-play with this fix — see "Still to do".
+- **2026-07-25** — head-follow + switchable glass weather scenes (this branch).
+  New `Scripts/Weather/` module: `WeatherScene` (five profiles Clear/PartlyCloudy/
+  Cloudy/Rain/Storm, each with physical field targets + a glass palette, plus a
+  `WeatherDataset` synthesiser — Storm reuses `ProceduralWeather`), `WeatherSceneDirector`
+  (replays the existing cloud/rain/lightning `Apply` with the synthesised snapshot
+  and sets sun/ambient/fog/surround; terrain+buildings are NOT re-applied, they do
+  not change with weather), and `EnvironmentController` (frosted glass floor disc +
+  studio-sky re-tint). New `ComfortFollow` (lazy head-follow: eases in front of the
+  head, world-upright, secondary button re-centres). Behaviour changes:
+    - The map is **no longer placed on a surface / world-locked**. It rides the head
+      via `ComfortFollow`; the carousel's `WeatherCarouselFollower` now runs the
+      *identical* anchor maths (`ComfortFollow.ComputeAnchor`) off the same camera, so
+      terrain and carousel move together. `MapPlacementController` is no longer added
+      by `SceneBuilder` (`controller.Placement = null`); the class is kept for
+      `DesktopPreview`, which also now disables every `ComfortFollow` so the flat
+      orbit preview can look around a map parked at the origin.
+    - Tapping a carousel card switches the scene: `WeatherCarouselController` raises
+      `SelectionChanged`; `WeatherCarouselFeature` maps the card's `WeatherCarouselIcon`
+      to a `WeatherSceneKind` and calls `WeatherSceneDirector.ApplyKind`, grading the
+      whole surround toward that card's accent/glass tint so UI and terrain agree.
+      Forecast-day cards are kept (each day's condition picks its scene).
+    - `StudioSky` defaults brightened (was near-black); `GlassEnvironment.shader`
+      added and registered in `ProjectConfigurator`'s always-included list.
+  Written to compile against the existing APIs but **not yet compiled in Unity,
+  scene not yet rebuilt, not yet pressed-play** — see "Still to do".
+- **2026-07-25 (follow-up)** — first test came back "looks exactly the same,
+  still blue sky, only rain". Root cause: the environment/director/follow were
+  added *only* by SceneBuilder, so on a scene/APK that had not been regenerated
+  none of them existed and the old path ran unchanged. Fixed by
+  `WeatherSceneBootstrap` (RuntimeInitializeOnLoadMethod, like the carousel):
+  it self-installs `ComfortFollow`, `EnvironmentController` and
+  `WeatherSceneDirector` at runtime, idempotently, so Press Play works without a
+  rebuild. Also: `EnvironmentController.EnsureSky` now assigns the StudioSky
+  material at runtime if the scene has none (otherwise the camera falls back to
+  Unity's default blue procedural sky); the opening scene defaults to `Clear`
+  (bright, terrain visible) instead of the initial data's weather; the carousel
+  no longer auto-applies card 0 on load (weather changes on tap only); and
+  `DesktopPreview` no longer forces the demo storm. Still uncompiled/untested.
 
 ## Still to do
 
@@ -760,3 +799,12 @@ it.
       out-of-editor checks can reach.
 - [ ] Verify on device: frame rate against the 72 FPS target, and that the perf
       governor's tier changes are not visible.
+- [ ] **Head-follow + glass scenes (2026-07-25):** rebuild the scene, then in the
+      PICO OS6 Emulator confirm: (1) terrain + carousel stay in front and move
+      together as you turn/walk, secondary button re-centres; (2) tapping each of
+      the five cards visibly changes clouds/rain/lightning/sky and the glass tint;
+      (3) the surround is the lit glass environment (floor disc + graded sky), not
+      black. None of this is confirmed yet — code is written but uncompiled.
+- [ ] Re-check the cloud/rain/lightning `Apply` cost on a card tap (it rebuilds the
+      density `Texture3D`). Fine as an occasional switch; if a rapid card-swipe
+      stutters, debounce `ApplyKind` behind the carousel's settle.

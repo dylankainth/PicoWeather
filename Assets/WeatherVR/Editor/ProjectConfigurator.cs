@@ -226,7 +226,8 @@ namespace WeatherVR.EditorTools
                 "WeatherVR/Buildings",
                 "WeatherVR/StudioSky",
                 "WeatherVR/Pedestal",
-                "WeatherVR/Rain"
+                "WeatherVR/Rain",
+                "WeatherVR/GlassEnvironment"
             };
 
             var graphicsSettings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")

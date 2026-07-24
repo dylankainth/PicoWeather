@@ -10,6 +10,7 @@ using WeatherVR.Data;
 using WeatherVR.Interaction;
 using WeatherVR.Lightning;
 using WeatherVR.Terrain;
+using WeatherVR.Weather;
 
 namespace WeatherVR.EditorTools
 {
@@ -141,6 +142,18 @@ namespace WeatherVR.EditorTools
             var mapRoot = new GameObject("WeatherMap");
             mapRoot.transform.localScale = Vector3.one * config.MapSizeMeters;
 
+            // The map is no longer placed on a surface and world-locked; it rides with
+            // the user. This lazy follow eases it in front of the head, and the carousel
+            // runs the identical maths, so the terrain and the UI move together. The
+            // secondary controller button re-centres it if it drifts.
+            var mapFollow = mapRoot.AddComponent<ComfortFollow>();
+            mapFollow.Head = cameraObject.transform;
+            mapFollow.Pointer = pointer;
+            mapFollow.Distance = 0.95f;
+            mapFollow.VerticalOffset = -0.40f;
+            mapFollow.FollowSpeed = 8f;
+            mapFollow.FaceHead = true;
+
             var pedestalObject = new GameObject("Pedestal");
             pedestalObject.transform.SetParent(mapRoot.transform, false);
             pedestalObject.AddComponent<MeshFilter>();
@@ -178,6 +191,14 @@ namespace WeatherVR.EditorTools
             thunder.Seed = config.ProceduralSeed;
             var lightning = lightningObject.AddComponent<LightningDirector>();
 
+            // ------------------------------------------------------- environment
+            // The glass surround: a frosted floor under the user plus the studio sky,
+            // both re-tinted per weather scene so the area around the terrain is a
+            // controlled glass environment rather than the old flat black.
+            var environmentObject = new GameObject("Environment");
+            var environment = environmentObject.AddComponent<EnvironmentController>();
+            environment.Head = cameraObject.transform;
+
             // ------------------------------------------------------------ HUD
             var provenance = BuildProvenancePanel(mapRoot.transform, config);
 
@@ -187,11 +208,15 @@ namespace WeatherVR.EditorTools
             var governor = appObject.AddComponent<PerfGovernor>();
             governor.Clouds = clouds;
 
-            var placement = appObject.AddComponent<MapPlacementController>();
-            placement.MapRoot = mapRoot.transform;
-            placement.Pointer = pointer;
-            placement.Head = cameraObject.transform;
-            placement.RayVisual = rayVisual;
+            // Switches the whole weather look when the user taps a carousel card,
+            // reusing the loaded terrain/imagery for every scene it synthesises.
+            var sceneDirector = appObject.AddComponent<WeatherSceneDirector>();
+            sceneDirector.Clouds = clouds;
+            sceneDirector.Rain = rain;
+            sceneDirector.Lightning = lightning;
+            sceneDirector.Sun = sun;
+            sceneDirector.Environment = environment;
+            sceneDirector.MapRoot = mapRoot.transform;
 
             var controller = appObject.AddComponent<WeatherSceneController>();
             controller.MapRoot = mapRoot.transform;
@@ -202,12 +227,16 @@ namespace WeatherVR.EditorTools
             controller.Rain = rain;
             controller.Lightning = lightning;
             controller.Soundscape = soundscape;
-            controller.Placement = placement;
+            // No MapPlacementController: the map follows the head via ComfortFollow
+            // instead of being placed on a surface, so Placement stays null.
+            controller.Placement = null;
             controller.Governor = governor;
             controller.SunLight = sun;
             controller.Provenance = provenance;
+            controller.SceneDirector = sceneDirector;
 
-            // Somewhere sensible to look before the user places it.
+            // A sensible starting pose; ComfortFollow snaps it in front of the head on
+            // the first frame anyway.
             mapRoot.transform.position = new Vector3(0f, 0.85f, 1.1f);
         }
 

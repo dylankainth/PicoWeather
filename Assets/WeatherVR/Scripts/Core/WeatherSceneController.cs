@@ -6,6 +6,7 @@ using WeatherVR.Data;
 using WeatherVR.Interaction;
 using WeatherVR.Lightning;
 using WeatherVR.Terrain;
+using WeatherVR.Weather;
 
 namespace WeatherVR.Core
 {
@@ -37,6 +38,10 @@ namespace WeatherVR.Core
         public AmbientSoundscape Soundscape;
         public MapPlacementController Placement;
         public PerfGovernor Governor;
+
+        [Tooltip("Drives weather-scene switching from the carousel. The initial load hands it " +
+                 "the loaded terrain/imagery so every scene it synthesises reuses them.")]
+        public WeatherSceneDirector SceneDirector;
 
         [Header("Lighting")]
         [Tooltip("Key light standing in for the sun. Its angle is set from the region " +
@@ -132,6 +137,11 @@ namespace WeatherVR.Core
             Rain?.Apply(snapshot, config);
             Lightning?.Apply(snapshot, config, MapRoot);
             Soundscape?.Apply(snapshot);
+
+            // Hand the director the loaded terrain/imagery/bounds so it can reuse them
+            // for every weather scene the carousel switches to. It does not draw a scene
+            // yet — the carousel drives the first ApplyKind once it has built its cards.
+            SceneDirector?.Initialize(snapshot, config);
 
             if (Provenance != null)
             {

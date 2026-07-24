@@ -9,9 +9,12 @@ Shader "WeatherVR/StudioSky"
 {
     Properties
     {
-        _Zenith     ("Zenith",  Color) = (0.015, 0.018, 0.030, 1)
-        _Horizon    ("Horizon", Color) = (0.050, 0.065, 0.095, 1)
-        _Nadir      ("Nadir",   Color) = (0.008, 0.009, 0.013, 1)
+        // Glass-studio gradient. Brighter than the original near-black backdrop so the
+        // area around the tabletop reads as a lit environment; WeatherSceneDirector
+        // re-tints these per weather scene at runtime.
+        _Zenith     ("Zenith",  Color) = (0.10, 0.20, 0.40, 1)
+        _Horizon    ("Horizon", Color) = (0.40, 0.50, 0.62, 1)
+        _Nadir      ("Nadir",   Color) = (0.06, 0.08, 0.13, 1)
         _HorizonSharpness ("Horizon Sharpness", Range(0.5, 6)) = 2.2
 
         _SunColor   ("Sun Glow Color", Color) = (0.55, 0.42, 0.30, 1)

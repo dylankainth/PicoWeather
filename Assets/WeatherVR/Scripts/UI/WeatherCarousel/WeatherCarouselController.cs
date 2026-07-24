@@ -32,6 +32,13 @@ namespace WeatherVR.UI.Carousel
 
         public int SelectedIndex => selectedIndex;
 
+        /// <summary>
+        /// Raised whenever the selected card changes (tap, drag-snap, arrows or wheel),
+        /// carrying the new index. The carousel feature listens to this to switch the
+        /// rendered weather scene.
+        /// </summary>
+        public event System.Action<int> SelectionChanged;
+
         public void Configure(
             ScrollRect targetScrollRect,
             RectTransform targetContent,
@@ -122,6 +129,8 @@ namespace WeatherVR.UI.Carousel
                 position.x = targetX;
                 content.anchoredPosition = position;
             }
+
+            SelectionChanged?.Invoke(selectedIndex);
         }
 
         void Update()

@@ -28,10 +28,9 @@ namespace WeatherVR.Desktop
             // Never on a headset.
             if (Application.isMobilePlatform) return;
 
-            // Real Shanghai is usually clear; force the demo storm so the flat preview
-            // always has weather to show. Only touches the in-memory config, never the
-            // asset or the APK.
-            AppConfig.Instance.ForceProceduralWeather = true;
+            // The weather is now chosen from the carousel, and the scene opens on a
+            // bright default, so there is no need to force the demo storm — doing so
+            // just made the flat preview open in permanent rain.
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -94,7 +93,14 @@ namespace WeatherVR.Desktop
             else if (mapRoot != null)
             {
                 mapRoot.position = Vector3.zero;
+                mapRoot.rotation = Quaternion.identity;
             }
+
+            // The head-follow would glue the map (and anything else that follows) to the
+            // orbit camera, defeating the orbit. Disable it so the flat preview can look
+            // around a map parked at the origin.
+            foreach (var follow in FindObjectsOfType<ComfortFollow>())
+                follow.enabled = false;
 
             if (mapRoot != null) _pivot = mapRoot.position + Vector3.up * 0.28f;
 
