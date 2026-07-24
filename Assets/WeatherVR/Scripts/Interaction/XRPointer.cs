@@ -180,9 +180,47 @@ namespace WeatherVR.Interaction
 
         // ------------------------------------------------------ hand tracking
 
+        /// <summary>
+        /// Latched once the PICO hand-tracking native library turns out to be
+        /// unavailable, so the P/Invoke is not retried every frame.
+        ///
+        /// This is not hypothetical. PICO ships libPxrPlatform.so for arm64-v8a only,
+        /// so on the x86_64 PICO Emulator — or any build where the native library is
+        /// missing — the very first call throws DllNotFoundException, and without this
+        /// latch it threw again on every Update of every pointer. Building an
+        /// exception and capturing its stack 60+ times a second is expensive enough to
+        /// matter on a frame budget of 13.9 ms.
+        /// </summary>
+        static bool _handTrackingUnavailable;
+
         bool TryReadHand(ref bool selecting, ref bool tracked)
         {
 #if ENABLE_PICO_XR_SDK
+            if (_handTrackingUnavailable) return false;
+
+            try
+            {
+                return TryReadHandNative(ref selecting, ref tracked);
+            }
+            catch (System.Exception e) when (e is System.DllNotFoundException ||
+                                             e is System.EntryPointNotFoundException)
+            {
+                _handTrackingUnavailable = true;
+                Debug.LogWarning(
+                    "[WeatherVR] PICO hand tracking is unavailable on this platform " +
+                    $"({e.GetType().Name}); falling back to controllers for the rest of " +
+                    "the session. Expected on the x86_64 emulator, where PICO's native " +
+                    "libraries are arm64-only.");
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+
+#if ENABLE_PICO_XR_SDK
+        bool TryReadHandNative(ref bool selecting, ref bool tracked)
+        {
             if (PXR_HandTracking.GetActiveInputDevice() != ActiveInputDevice.HandTrackingActive)
                 return false;
 
@@ -216,9 +254,7 @@ namespace WeatherVR.Interaction
             selecting = (aimState.aimStatus & HandAimStatus.AimIndexPinching) != 0;
             tracked = true;
             return true;
-#else
-            return false;
-#endif
         }
+#endif
     }
 }

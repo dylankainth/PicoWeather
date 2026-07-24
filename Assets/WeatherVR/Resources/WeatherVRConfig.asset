@@ -30,4 +30,4 @@ MonoBehaviour:
   ProceduralSeed: 20260723
   AllowLiveFetch: 1
   LiveFetchTimeoutSeconds: 6
-  ForceProceduralWeather: 0
+  ForceProceduralWeather: 1
