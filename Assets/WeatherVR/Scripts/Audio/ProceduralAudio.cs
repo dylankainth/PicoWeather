@@ -111,15 +111,23 @@ namespace WeatherVR.Audio
         /// </summary>
         public static AudioClip CreateWindLoop(float durationSeconds, int seed)
         {
-            int sampleCount = Mathf.CeilToInt(Mathf.Max(2f, durationSeconds) * SampleRate);
-            var samples = new float[sampleCount];
+            int loopSamples = Mathf.CeilToInt(Mathf.Max(2f, durationSeconds) * SampleRate);
+            int fade = Mathf.Min(loopSamples / 4, Mathf.CeilToInt(0.25f * SampleRate));
+
+            // Generate `fade` extra samples past the loop point: that surplus is what
+            // gets blended into the head, and is then discarded.
+            var samples = new float[loopSamples + fade];
             var random = new System.Random(seed);
 
             // Three one-pole stages approximate a pink spectrum well enough for a bed.
             float s1 = 0f, s2 = 0f, s3 = 0f;
             float c1 = Coefficient(1200f), c2 = Coefficient(320f), c3 = Coefficient(70f);
 
-            for (int n = 0; n < sampleCount; n++)
+            // Gust periods are whole multiples of the *final* loop length, so the
+            // modulation meets itself exactly at the seam.
+            float period = loopSamples / (float)SampleRate;
+
+            for (int n = 0; n < samples.Length; n++)
             {
                 float t = n / (float)SampleRate;
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
@@ -128,9 +136,6 @@ namespace WeatherVR.Audio
                 s2 += c2 * (s1 - s2);
                 s3 += c3 * (s2 - s3);
 
-                // Gusts, at periods chosen to divide the loop length exactly so the
-                // modulation is continuous across the loop point.
-                float period = sampleCount / (float)SampleRate;
                 float gust = 0.55f
                            + 0.28f * Mathf.Sin(2f * Mathf.PI * t / period * 3f)
                            + 0.17f * Mathf.Sin(2f * Mathf.PI * t / period * 7f + 1.3f);
@@ -138,10 +143,11 @@ namespace WeatherVR.Audio
                 samples[n] = (s1 * 0.25f + s2 * 0.5f + s3 * 1.6f) * gust;
             }
 
-            CrossfadeLoop(samples, 0.25f);
+            CrossfadeLoop(samples, loopSamples, fade);
+            System.Array.Resize(ref samples, loopSamples);
             Normalize(samples, 0.55f);
 
-            var clip = AudioClip.Create("WindLoop", sampleCount, 1, SampleRate, false);
+            var clip = AudioClip.Create("WindLoop", loopSamples, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
         }
@@ -151,14 +157,16 @@ namespace WeatherVR.Audio
         /// </summary>
         public static AudioClip CreateRainLoop(float durationSeconds, int seed)
         {
-            int sampleCount = Mathf.CeilToInt(Mathf.Max(2f, durationSeconds) * SampleRate);
-            var samples = new float[sampleCount];
+            int loopSamples = Mathf.CeilToInt(Mathf.Max(2f, durationSeconds) * SampleRate);
+            int fade = Mathf.Min(loopSamples / 4, Mathf.CeilToInt(0.2f * SampleRate));
+
+            var samples = new float[loopSamples + fade];
             var random = new System.Random(seed);
 
             float highState = 0f, bandState = 0f;
             float cHigh = Coefficient(7000f), cBand = Coefficient(2200f);
 
-            for (int n = 0; n < sampleCount; n++)
+            for (int n = 0; n < samples.Length; n++)
             {
                 float noise = (float)(random.NextDouble() * 2.0 - 1.0);
 
@@ -174,10 +182,11 @@ namespace WeatherVR.Audio
                 samples[n] = band * 1.5f + bandState * 0.35f + droplet;
             }
 
-            CrossfadeLoop(samples, 0.2f);
+            CrossfadeLoop(samples, loopSamples, fade);
+            System.Array.Resize(ref samples, loopSamples);
             Normalize(samples, 0.5f);
 
-            var clip = AudioClip.Create("RainLoop", sampleCount, 1, SampleRate, false);
+            var clip = AudioClip.Create("RainLoop", loopSamples, 1, SampleRate, false);
             clip.SetData(samples, 0);
             return clip;
         }
@@ -225,26 +234,26 @@ namespace WeatherVR.Audio
         }
 
         /// <summary>
-        /// Makes a buffer loop without a click by crossfading its tail over its head.
-        /// The looped clip is shortened by the crossfade length, which is fine for a
-        /// noise bed.
+        /// Blends the surplus material at <c>[loopSamples, loopSamples + fade)</c> into
+        /// the head so that <c>[0, loopSamples)</c> loops without a seam. The caller
+        /// must then truncate the buffer to <paramref name="loopSamples"/>.
+        ///
+        /// Truncating is the part that matters, and getting it wrong is audible. The
+        /// first version of this faded the tail to silence and *kept* it, so every
+        /// wrap played down to digital zero and then jumped to a full-scale sample —
+        /// a one-sample step that is a broadband impulse, i.e. a click every time the
+        /// bed looped. Discarding the surplus instead leaves sample
+        /// <c>loopSamples - 1</c> flowing into sample <c>loopSamples</c>, which were
+        /// consecutive in the generated signal, so the seam is continuous.
         /// </summary>
-        static void CrossfadeLoop(float[] samples, float seconds)
+        static void CrossfadeLoop(float[] samples, int loopSamples, int fade)
         {
-            int fade = Mathf.Min(samples.Length / 4, Mathf.CeilToInt(seconds * SampleRate));
-            if (fade <= 1) return;
+            if (fade <= 1 || loopSamples + fade > samples.Length) return;
 
-            int tailStart = samples.Length - fade;
             for (int i = 0; i < fade; i++)
             {
-                float t = i / (float)(fade - 1);
-                samples[i] = Mathf.Lerp(samples[tailStart + i], samples[i], t);
-            }
-            // Silence what we just folded in, so it is not heard twice.
-            for (int i = tailStart; i < samples.Length; i++)
-            {
-                float t = (i - tailStart) / (float)(fade - 1);
-                samples[i] *= 1f - t;
+                float t = i / (float)fade;   // 0 at the seam, 1 by the end of the fade
+                samples[i] = samples[i] * t + samples[loopSamples + i] * (1f - t);
             }
         }
     }

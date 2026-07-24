@@ -15,9 +15,10 @@ namespace WeatherVR.Audio
     /// </summary>
     public class ThunderAudio : MonoBehaviour
     {
-        [Tooltip("Concurrent thunder voices. Beyond this, new strikes steal the " +
-                 "oldest voice.")]
-        [Range(1, 8)] public int VoiceCount = 4;
+        [Tooltip("Concurrent thunder voices. Distant thunder runs 6.5 s and an active " +
+                 "storm strikes every ~3 s, so roughly 2-3 overlap on average; 6 leaves " +
+                 "headroom for a Poisson burst before any voice has to be stolen.")]
+        [Range(1, 8)] public int VoiceCount = 6;
 
         [Tooltip("Distance buckets in real kilometres. One clip is synthesised per bucket.")]
         public float[] DistanceBucketsKm = { 1f, 5f, 12f, 25f, 45f };
@@ -86,15 +87,35 @@ namespace WeatherVR.Audio
         {
             if (_voices.Count == 0 || _clips == null || _clips.Length == 0) return;
 
-            var source = _voices[_nextVoice];
-            _nextVoice = (_nextVoice + 1) % _voices.Count;
-
-            StartCoroutine(PlayDelayed(source, worldPosition, realDistanceKm, Mathf.Max(0f, delaySeconds)));
+            StartCoroutine(PlayDelayed(worldPosition, realDistanceKm, Mathf.Max(0f, delaySeconds)));
         }
 
-        IEnumerator PlayDelayed(AudioSource source, Vector3 worldPosition, float realDistanceKm, float delay)
+        /// <summary>
+        /// Picks a voice that is not currently sounding, falling back to round-robin.
+        ///
+        /// This matters more than it looks. Distant thunder runs 6.5 s and strikes
+        /// arrive every ~3 s, so a naive round-robin reuses a voice that is still
+        /// mid-rumble; calling Play() on it restarts the clip instantly and the
+        /// waveform jumps from the middle of one rumble to the start of another — an
+        /// audible click. Choosing a free voice avoids the discontinuity, and the
+        /// choice is made *after* the time-of-flight delay, when it is actually known
+        /// which voices are busy.
+        /// </summary>
+        AudioSource AcquireVoice()
+        {
+            foreach (var voice in _voices)
+                if (voice != null && !voice.isPlaying) return voice;
+
+            var stolen = _voices[_nextVoice];
+            _nextVoice = (_nextVoice + 1) % _voices.Count;
+            return stolen;
+        }
+
+        IEnumerator PlayDelayed(Vector3 worldPosition, float realDistanceKm, float delay)
         {
             if (delay > 0f) yield return new WaitForSeconds(delay);
+
+            var source = AcquireVoice();
             if (source == null) yield break;
 
             source.transform.position = worldPosition;
