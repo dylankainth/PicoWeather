@@ -1,13 +1,19 @@
 # Immersive weather carousel
 
 This folder is the complete PICO bottom-carousel feature. It is runtime-built
-in both `WeatherVR.unity` and `WeatherVR_MR.unity`: press Play, place the
-weather map (or let MR detect a table), and the carousel appears in the lower
-field of view.
+in `WeatherVR.unity`: press Play, place the London weather map, and the
+carousel appears in the lower field of view.
 
 No prefab or hand-authored scene changes are required. The feature hides the
 old map-side provenance text panel at runtime, so rebuilding the generated
 scene does not undo the replacement.
+
+## UI method
+
+This uses Unity uGUI on a world-space `Canvas`. The hierarchy is created from
+small C# builder methods when `WeatherVR` runs, so there is no prefab to wire
+up and no scene YAML to conflict during merges. It is data-driven, but it is
+not Unity UI Toolkit/UXML-style declarative UI.
 
 ## Files
 

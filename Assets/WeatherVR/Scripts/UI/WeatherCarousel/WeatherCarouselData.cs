@@ -33,8 +33,8 @@ namespace WeatherVR.UI.Carousel
 
     public sealed class WeatherCarouselDataset
     {
-        public string LocationEnglish = "SHANGHAI";
-        public string LocationChinese = "上海";
+        public string LocationEnglish = "LONDON";
+        public string LocationChinese = "伦敦";
         public string SourceEnglish = "SCENE DATA";
         public string SourceChinese = "场景数据";
         public WeatherCarouselItem[] Items;

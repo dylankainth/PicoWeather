@@ -27,10 +27,9 @@ namespace WeatherVR.UI.Carousel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate()
         {
-            // ONLY ATTACH TO THE PICO IMMERSIVE SCENE.
-            // PHONE AND AR SCENES KEEP THEIR OWN SCREEN-SPACE INTERFACES.
+            // ONLY ATTACH TO THE LONDON PICO IMMERSIVE SCENE.
             string sceneName = SceneManager.GetActiveScene().name;
-            if (sceneName != "WeatherVR" && sceneName != "WeatherVR_MR")
+            if (sceneName != "WeatherVR")
                 return;
 
             if (FindObjectOfType<WeatherCarouselFeature>() == null)
@@ -178,16 +177,7 @@ namespace WeatherVR.UI.Carousel
             if (placement == null)
                 return true;
 
-            if (placement.CurrentState == MapPlacementController.State.Placed)
-                return true;
-
-            // PICO MR automatically seats the map on detected furniture, then
-            // disables manual placement. That path does not call Commit(), so the
-            // disabled placement component is the reliable completion signal.
-            return !placement.enabled &&
-                   sceneController != null &&
-                   sceneController.MapRoot != null &&
-                   sceneController.MapRoot.position.y > -100f;
+            return placement.CurrentState == MapPlacementController.State.Placed;
         }
 
         void OnDestroy()
