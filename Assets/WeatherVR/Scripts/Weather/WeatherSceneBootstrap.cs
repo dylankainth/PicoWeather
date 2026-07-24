@@ -38,10 +38,7 @@ namespace WeatherVR.Weather
                 return;
             }
 
-            Transform cam = Camera.main != null ? Camera.main.transform : null;
-            XRPointer pointer = FindObjectOfType<XRPointer>();
-
-            InstallFollow(controller, cam, pointer);
+            WorldLockMap(controller);
             EnvironmentController environment = InstallEnvironment();
             WeatherVisuals visuals = InstallVisuals(controller);
             WeatherSceneDirector director = InstallDirector(controller, visuals, environment);
@@ -52,21 +49,17 @@ namespace WeatherVR.Weather
                 controller.Ready += _ => Begin(director);
         }
 
-        void InstallFollow(WeatherSceneController controller, Transform cam, XRPointer pointer)
+        // The map is a world-locked exhibit the user walks around. A scene generated
+        // before this change may still carry a head-follow on the map root, so strip
+        // any ComfortFollow off it — idempotent, and makes Press Play correct without a
+        // scene rebuild.
+        void WorldLockMap(WeatherSceneController controller)
         {
             Transform mapRoot = controller.MapRoot;
             if (mapRoot == null) return;
 
-            if (mapRoot.GetComponent<ComfortFollow>() == null)
-            {
-                var follow = mapRoot.gameObject.AddComponent<ComfortFollow>();
-                follow.Head = cam;
-                follow.Pointer = pointer;
-                follow.Distance = 0.95f;
-                follow.VerticalOffset = -0.40f;
-                follow.FollowSpeed = 8f;
-                follow.FaceHead = true;
-            }
+            foreach (var follow in mapRoot.GetComponents<ComfortFollow>())
+                Destroy(follow);
         }
 
         EnvironmentController InstallEnvironment()

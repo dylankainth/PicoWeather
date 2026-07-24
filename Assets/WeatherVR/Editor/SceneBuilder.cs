@@ -139,17 +139,10 @@ namespace WeatherVR.EditorTools
             var mapRoot = new GameObject("WeatherMap");
             mapRoot.transform.localScale = Vector3.one * config.MapSizeMeters;
 
-            // The map is no longer placed on a surface and world-locked; it rides with
-            // the user. This lazy follow eases it in front of the head, and the carousel
-            // runs the identical maths, so the terrain and the UI move together. The
-            // secondary controller button re-centres it if it drifts.
-            var mapFollow = mapRoot.AddComponent<ComfortFollow>();
-            mapFollow.Head = cameraObject.transform;
-            mapFollow.Pointer = pointer;
-            mapFollow.Distance = 0.95f;
-            mapFollow.VerticalOffset = -0.40f;
-            mapFollow.FollowSpeed = 8f;
-            mapFollow.FaceHead = true;
+            // The map is world-locked: it stands still in the room like a museum
+            // exhibit, and the user physically walks around it. The carousel mounts on
+            // whichever pedestal wall the user is facing (see WeatherCarouselFollower),
+            // so it rides the table but does not follow the head. No ComfortFollow here.
 
             var pedestalObject = new GameObject("Pedestal");
             pedestalObject.transform.SetParent(mapRoot.transform, false);

@@ -184,29 +184,39 @@ namespace WeatherVR.UI.Carousel
     /// Keeps the carousel in the lower field of view with gentle smoothing, world
     /// upright so it never rolls or pitches with the head.
     ///
-    /// When <see cref="Anchor"/> is set (the map root), the dock rides a fixed gap
-    /// *directly beneath the terrain* and pulled a little toward the user, so it moves
-    /// as one with the table and is guaranteed never to intersect it. Without an
-    /// anchor it falls back to a head-relative dock.
+    /// When <see cref="Anchor"/> is set (the map root), the panel is *mounted on the
+    /// pedestal wall*, not on the camera: it snaps flush to whichever of the four
+    /// walls currently faces the user and rides with the table. Walk around the table
+    /// and it hops to the wall you are now looking at. Without an anchor it falls back
+    /// to a head-relative dock.
     /// </summary>
     public sealed class WeatherCarouselFollower : MonoBehaviour
     {
         public Transform Head;
 
-        [Tooltip("Map root to hang beneath. When set, the dock tracks the map, not the head directly.")]
+        [Tooltip("Map root to mount against. When set, the panel mounts on the pedestal wall facing the user.")]
         public Transform Anchor;
 
-        [Tooltip("Gap below the map, in metres. Large enough that the panel clears the tabletop.")]
-        public float DropBelow = 0.5f;
+        [Tooltip("How far out from the map centre the panel sits, in map-local units. " +
+                 "Pedestal rim is ~0.57 and terrain edge 0.5, so >0.7 clears the block and floats it proud.")]
+        public float WallHalfExtent = 0.68f;
 
-        [Tooltip("How far toward the user the dock is pulled from under the map, in metres.")]
-        public float NearOffset = 0.22f;
+        [Tooltip("Vertical centre of the panel, in map-local units. 0 = tabletop/rim level; positive floats it higher.")]
+        public float WallHeight = 0.02f;
+
+        [Tooltip("Upward pitch of the wall-mounted panel, degrees. 0 = vertical, facing straight out.")]
+        public float TiltDegrees = 0f;
+
+        [Tooltip("Extra margin (map-local units) the user must round a corner by before the " +
+                 "panel hops to the next wall. Stops it flip-flopping at the 45° diagonal.")]
+        public float WallSwitchMargin = 0.12f;
 
         public float Distance = 1.20f;
         public float VerticalOffset = -0.30f;
         public float FollowSpeed = 8f;
 
         bool initialised;
+        Vector3 currentNormal;
 
         void LateUpdate()
         {
@@ -215,19 +225,50 @@ namespace WeatherVR.UI.Carousel
 
             Vector3 targetPosition;
             Quaternion targetRotation;
+            bool snap = !initialised;
 
             if (Anchor != null)
             {
-                // Flattened facing so the panel stays upright and turns to face the user.
-                Vector3 forward = Head.forward;
-                forward.y = 0f;
-                if (forward.sqrMagnitude < 1e-4f) forward = Vector3.forward;
-                forward.Normalize();
+                // Which of the four pedestal walls faces the user right now, in the
+                // map's own local frame: dominant horizontal axis of the head offset.
+                Vector3 localToHead = Anchor.InverseTransformPoint(Head.position);
+                localToHead.y = 0f;
 
-                // Straight down from the map, then a little back toward the user so the
-                // panel sits at the near-lower edge rather than hidden under the table.
-                targetPosition = Anchor.position + Vector3.down * DropBelow - forward * NearOffset;
-                targetRotation = Quaternion.LookRotation(forward, Vector3.up);
+                Vector3 candidate = Mathf.Abs(localToHead.x) >= Mathf.Abs(localToHead.z)
+                    ? new Vector3(Mathf.Sign(localToHead.x == 0f ? 1f : localToHead.x), 0f, 0f)
+                    : new Vector3(0f, 0f, Mathf.Sign(localToHead.z == 0f ? 1f : localToHead.z));
+
+                // Hysteresis: stay on the current wall until the user has clearly rounded
+                // the corner (its projection beats the current wall's by a margin). Then
+                // hop — snapping, not sliding, so the panel never sweeps through the body.
+                if (!initialised)
+                {
+                    currentNormal = candidate;
+                }
+                else if (candidate != currentNormal)
+                {
+                    float cur = Vector3.Dot(localToHead, currentNormal);
+                    float cand = Vector3.Dot(localToHead, candidate);
+                    if (cand > cur + WallSwitchMargin)
+                    {
+                        currentNormal = candidate;
+                        snap = true;
+                    }
+                }
+
+                // Flush against that wall, at mid pedestal height. TransformPoint applies
+                // the map's scale + rotation, so the panel rides with the table.
+                Vector3 localPos = currentNormal * WallHalfExtent + Vector3.up * WallHeight;
+                targetPosition = Anchor.TransformPoint(localPos);
+
+                // Canvas faces outward from the pedestal toward the user. A world-space
+                // UGUI canvas is readable from its -Z side, so its +Z must point AWAY
+                // from the viewer — i.e. back into the wall, the opposite of the outward
+                // normal. LookRotation with -worldNormal does that; otherwise the panel
+                // shows its mirrored back (which is what "it's inside" was).
+                Vector3 worldNormal = Anchor.TransformDirection(currentNormal).normalized;
+                targetRotation = Quaternion.LookRotation(-worldNormal, Vector3.up)
+                                 * Quaternion.Euler(-TiltDegrees, 0f, 0f);
             }
             else
             {
@@ -237,7 +278,7 @@ namespace WeatherVR.UI.Carousel
                     out targetPosition, out targetRotation);
             }
 
-            if (!initialised)
+            if (snap)
             {
                 transform.SetPositionAndRotation(targetPosition, targetRotation);
                 initialised = true;
