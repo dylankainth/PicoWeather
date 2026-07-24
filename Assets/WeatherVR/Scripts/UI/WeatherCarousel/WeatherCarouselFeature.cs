@@ -19,7 +19,6 @@ namespace WeatherVR.UI.Carousel
     public sealed class WeatherCarouselFeature : MonoBehaviour
     {
         WeatherSceneController sceneController;
-        MapPlacementController placement;
         BuiltWeatherCarousel built;
         WeatherCarouselDataset activeDataset;
         WeatherSceneDirector director;
@@ -53,22 +52,7 @@ namespace WeatherVR.UI.Carousel
                 return;
             }
 
-            placement = sceneController.Placement != null
-                ? sceneController.Placement
-                : FindObjectOfType<MapPlacementController>();
-
-            // REPLACE THE OLD MAP-SIDE TEXT PANEL WITH THE IMMERSIVE CAROUSEL.
-            // THE OBJECT REMAINS IN THE GENERATED SCENE, BUT IT NEVER RENDERS.
-            // THIS AVOIDS EDITING THE GENERATED SCENE AND PREVENTS MERGE CONFLICTS.
-            if (sceneController.Provenance != null)
-                sceneController.Provenance.gameObject.SetActive(false);
-
             sceneController.Ready += OnSceneReady;
-            if (placement != null)
-            {
-                placement.Placed += OnPlaced;
-                placement.Unplaced += OnUnplaced;
-            }
 
             if (sceneController.IsReady)
                 OnSceneReady(sceneController.Snapshot);
@@ -145,7 +129,7 @@ namespace WeatherVR.UI.Carousel
 
             index = Mathf.Clamp(index, 0, activeDataset.Items.Length - 1);
             WeatherCarouselItem item = activeDataset.Items[index];
-            director.ApplyKind(SceneKindForIcon(item.Icon), item.Accent, item.GlassTint);
+            director.ApplyKind(SceneKindForIcon(item.Icon));
         }
 
         static WeatherSceneKind SceneKindForIcon(WeatherCarouselIcon icon)
@@ -156,20 +140,16 @@ namespace WeatherVR.UI.Carousel
                 case WeatherCarouselIcon.PartlyCloudy: return WeatherSceneKind.PartlyCloudy;
                 case WeatherCarouselIcon.Cloudy: return WeatherSceneKind.Cloudy;
                 case WeatherCarouselIcon.Rain: return WeatherSceneKind.Rain;
-                default: return WeatherSceneKind.Storm;
+                default: return WeatherSceneKind.Thunderstorm;
             }
         }
-
-        void OnPlaced(Pose pose) => UpdateVisibility(immediate: false);
-
-        void OnUnplaced() => UpdateVisibility(immediate: false);
 
         void Update()
         {
             if (built == null)
                 return;
 
-            bool shouldShow = sceneReady && IsMapPlaced();
+            bool shouldShow = sceneReady;
             targetAlpha = shouldShow ? 1f : 0f;
 
             if (shouldShow && !built.Root.activeSelf)
@@ -194,7 +174,7 @@ namespace WeatherVR.UI.Carousel
             if (built == null)
                 return;
 
-            bool show = sceneReady && IsMapPlaced();
+            bool show = sceneReady;
             targetAlpha = show ? 1f : 0f;
 
             if (show)
@@ -210,14 +190,6 @@ namespace WeatherVR.UI.Carousel
             }
         }
 
-        bool IsMapPlaced()
-        {
-            if (placement == null)
-                return true;
-
-            return placement.CurrentState == MapPlacementController.State.Placed;
-        }
-
         void OnDestroy()
         {
             if (built?.Controller != null)
@@ -225,12 +197,6 @@ namespace WeatherVR.UI.Carousel
 
             if (sceneController != null)
                 sceneController.Ready -= OnSceneReady;
-
-            if (placement != null)
-            {
-                placement.Placed -= OnPlaced;
-                placement.Unplaced -= OnUnplaced;
-            }
         }
     }
 }

@@ -6,9 +6,7 @@ namespace WeatherVR.Terrain
     /// <summary>
     /// Builds the holographic plinth the map stands on: a flared lip just under the
     /// terrain's edge, tapering down to a narrower base. Pure geometry, no weather
-    /// dependency, so it is built once in <see cref="PedestalRenderer"/>'s Awake --
-    /// the same precedent <c>CloudRenderer.BuildUnitCube</c> sets for a static prop
-    /// mesh that needs no snapshot.
+    /// dependency, so it is built once in <see cref="PedestalRenderer"/>'s Awake.
     ///
     /// Everything is in normalised map units: X/Z centred on [-0.5, 0.5] (the same
     /// square <see cref="TerrainMeshBuilder"/> fills), Y = 0 at the map plane where

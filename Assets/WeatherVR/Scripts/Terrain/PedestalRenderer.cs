@@ -4,8 +4,7 @@ namespace WeatherVR.Terrain
 {
     /// <summary>
     /// Owns the holographic plinth mesh under the map. Needs no weather snapshot --
-    /// it is pure geometry -- so it builds itself once in <see cref="Awake"/>, the
-    /// same precedent <c>CloudRenderer</c> sets for its static unit-cube mesh.
+    /// it is pure geometry -- so it builds itself once in <see cref="Awake"/>.
     /// Sits under the map root alongside <see cref="TerrainRenderer"/>, so it
     /// inherits the map's placement and scale for free.
     /// </summary>
