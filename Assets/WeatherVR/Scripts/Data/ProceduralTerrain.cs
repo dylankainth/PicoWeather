@@ -111,7 +111,7 @@ namespace WeatherVR.Data
             float d = Mathf.Abs(u - centre);
             // Channels widen downstream.
             float width = halfWidth * (0.6f + 0.8f * v);
-            return 1f - Mathf.SmoothStep(width, width * 2.4f, d);
+            return 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(width, width * 2.4f, d));
         }
     }
 }

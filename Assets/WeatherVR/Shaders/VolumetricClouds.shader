@@ -37,6 +37,10 @@ Shader "WeatherVR/VolumetricClouds"
         _AmbientSky       ("Ambient Sky", Color) = (0.42, 0.52, 0.68, 1)
         _AmbientGround    ("Ambient Ground", Color) = (0.24, 0.24, 0.22, 1)
         _Anisotropy       ("Forward Scattering (g)", Range(-0.95, 0.95)) = 0.45
+        _BackScatter      ("Back Scattering (g)", Range(-0.95, 0)) = -0.15
+        _SilverIntensity  ("Silver Lining", Range(0, 4)) = 1.6
+        _SilverExponent   ("Silver Sharpness", Range(1, 64)) = 12
+        _MultiScatter     ("Multi-Scatter Boost", Range(0, 2)) = 0.7
         _PowderStrength   ("Powder (dark edges)", Range(0, 1)) = 0.5
         _SunIntensity     ("Sun Intensity", Range(0, 8)) = 2.6
 
@@ -45,6 +49,17 @@ Shader "WeatherVR/VolumetricClouds"
         _LightSteps       ("Light Steps", Range(0, 6)) = 3
         _LightStepLength  ("Light Step Length", Range(0.005, 0.4)) = 0.09
         _BlueNoiseOffset  ("Dither Amount", Range(0, 1)) = 1.0
+        // 1 clips the march against scene depth (correct on device, where a depth
+        // texture exists). 0 skips it — needed for offline captures that render to
+        // an isolated target with no populated _CameraDepthTexture.
+        _DepthClip        ("Depth Clip", Float) = 1
+        // Front by default: the VR camera sits inside the volume, so the back faces
+        // are what we raymarch from. An offline camera outside the box also wants
+        // Front — but this is exposed so a capture can rule culling in or out.
+        [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 1
+        // Diagnostic: >0 fills the box with uniform fog, ignoring the density volume,
+        // to separate a volume-binding problem from a raymarch/render-path problem.
+        _DebugFog         ("Debug Fog", Float) = 0
     }
 
     SubShader
@@ -65,12 +80,16 @@ Shader "WeatherVR/VolumetricClouds"
 
         Pass
         {
+            // ForwardBase so the pass receives the directional light through
+            // _WorldSpaceLightPos0 / _LightColor0, which the sun scattering depends on.
+            Tags { "LightMode" = "ForwardBase" }
+
             // Premultiplied alpha: the raymarch already weights colour by coverage,
             // so this composites correctly over the terrain without double-darkening.
             Blend One OneMinusSrcAlpha
             ZWrite Off
             ZTest Always
-            Cull Front        // keeps the volume visible when the head is inside it
+            Cull [_Cull]      // Front by default; keeps the volume visible from inside
 
             CGPROGRAM
             #pragma vertex vert
@@ -102,6 +121,10 @@ Shader "WeatherVR/VolumetricClouds"
             fixed4 _AmbientSky;
             fixed4 _AmbientGround;
             half  _Anisotropy;
+            half  _BackScatter;
+            half  _SilverIntensity;
+            half  _SilverExponent;
+            half  _MultiScatter;
             half  _PowderStrength;
             half  _SunIntensity;
 
@@ -109,6 +132,8 @@ Shader "WeatherVR/VolumetricClouds"
             float _LightSteps;
             float _LightStepLength;
             float _BlueNoiseOffset;
+            float _DepthClip;
+            float _DebugFog;
 
             // Set from CloudRenderer each frame.
             float3 _WindScroll;        // detail-noise offset, object space
@@ -191,6 +216,15 @@ Shader "WeatherVR/VolumetricClouds"
                 // to the box, but the light march below is not.
                 if (any(uvw < 0.0) || any(uvw > 1.0)) return 0.0;
 
+                // Diagnostic fog: a soft slab in the lower-middle of the box, ignoring
+                // the density volume entirely.
+                if (_DebugFog > 0.0)
+                {
+                    half h = uvw.y;
+                    half slab = smoothstep(0.0, 0.15, h) * (1.0 - smoothstep(0.45, 0.85, h));
+                    return _DebugFog * slab * _DensityScale;
+                }
+
                 half base = UNITY_SAMPLE_TEX3D_LOD(_DensityVolume, uvw, 0).r;
                 base = saturate(base + _CoverageBias);
                 if (base <= 0.001) return 0.0;
@@ -264,12 +298,16 @@ Shader "WeatherVR/VolumetricClouds"
                 tNear = max(tNear, 0.0);
 
                 // Clip the march where the opaque scene begins, so clouds do not
-                // bleed through the terrain or through the user's controllers.
-                float rawDepth = SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(i.screenPos));
-                float sceneEyeDepth = LinearEyeDepth(rawDepth);
-                float3 camForward = -UNITY_MATRIX_V._m20_m21_m22;
-                float sceneDist = sceneEyeDepth / max(dot(rdWorld, camForward), 1e-4);
-                tFar = min(tFar, sceneDist);
+                // bleed through the terrain or through the user's controllers. Skipped
+                // for offline captures, which render to a target with no depth texture.
+                if (_DepthClip > 0.5)
+                {
+                    float rawDepth = SAMPLE_DEPTH_TEXTURE_PROJ(_CameraDepthTexture, UNITY_PROJ_COORD(i.screenPos));
+                    float sceneEyeDepth = LinearEyeDepth(rawDepth);
+                    float3 camForward = -UNITY_MATRIX_V._m20_m21_m22;
+                    float sceneDist = sceneEyeDepth / max(dot(rdWorld, camForward), 1e-4);
+                    tFar = min(tFar, sceneDist);
+                }
 
                 if (tFar <= tNear) discard;
 
@@ -283,7 +321,17 @@ Shader "WeatherVR/VolumetricClouds"
 
                 float3 sunDirWorld = normalize(_WorldSpaceLightPos0.xyz);
                 float3 sunDirObj = mul((float3x3)unity_WorldToObject, sunDirWorld);
-                half phase = HenyeyGreenstein(dot(rdWorld, sunDirWorld), _Anisotropy);
+
+                // A cloud is not a single-lobe scatterer. Combining a forward lobe, a
+                // gentle back lobe and a sharp near-sun "silver lining" term is the
+                // cheap approximation of that, and it is the difference between grey
+                // cotton wool and a real backlit storm cloud.
+                half cosTheta = dot(rdWorld, sunDirWorld);
+                half phase = max(
+                    HenyeyGreenstein(cosTheta, _Anisotropy),
+                    HenyeyGreenstein(cosTheta, _BackScatter));
+                phase += _SilverIntensity * pow(saturate(cosTheta), _SilverExponent);
+
                 half3 sunColor = _LightColor0.rgb * _SunIntensity;
 
                 half3 scattered = 0;
@@ -308,11 +356,18 @@ Shader "WeatherVR/VolumetricClouds"
                         half powder = 1.0 - exp(-density * 2.0 * _Absorption);
                         powder = lerp(1.0, powder, _PowderStrength);
 
+                        // Cheap multiple-scattering: deep in the cloud, light that has
+                        // bounced many times fills the shadowed core with a soft glow
+                        // rather than leaving it black. Modelled as a second, much
+                        // softer transmittance that does not fall off as fast.
+                        half multiScatter = _MultiScatter * pow(sunTransmittance, 0.35);
+
                         // Height in the volume drives the sky/ground ambient split.
                         half heightFrac = saturate(objPos.y + 0.5);
                         half3 ambient = lerp(_AmbientGround.rgb, _AmbientSky.rgb, heightFrac);
 
-                        half3 luminance = sunColor * sunTransmittance * phase * powder * _ScatterColor.rgb
+                        half3 luminance = sunColor * (sunTransmittance * phase * powder + multiScatter)
+                                            * _ScatterColor.rgb
                                         + ambient
                                         + LightningInScatter(worldPos);
 

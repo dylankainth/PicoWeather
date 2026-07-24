@@ -168,8 +168,45 @@ namespace WeatherVR.Lightning
                 float gain = Mathf.Pow(0.62f, i);
                 value = Mathf.Max(value, gain * Mathf.Exp(-dt * 26f) * (1f - Mathf.Exp(-dt * 700f)));
             }
-            // Overall fade so nothing survives past the lifetime.
-            return Mathf.Clamp01(value) * (1f - Mathf.SmoothStep(0.75f, 1f, t));
+            // Overall fade so nothing survives past the lifetime. (SmoothStep(0,1,
+            // InverseLerp(..)) is GLSL smoothstep; Mathf.SmoothStep(0.75f,1f,t) would
+            // interpolate between 0.75 and 1, not ramp 0→1 across that window.)
+            return Mathf.Clamp01(value) * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.75f, 1f, t)));
+        }
+
+        /// <summary>
+        /// Builds and displays a bolt frozen at a chosen brightness, without the
+        /// timed flash. For offline captures and thumbnails, where there is no Update
+        /// loop to drive the envelope.
+        /// </summary>
+        public void RenderStatic(Vector3 topLocal, Vector3 groundLocal, int seed, float intensity)
+        {
+            if (_meshFilter == null) Awake();
+
+            var random = new System.Random(seed);
+            var channel = BuildChannel(topLocal, groundLocal, random);
+            var branches = BuildBranches(channel, random);
+            RebuildMesh(channel, branches);
+
+            Vector3 lightLocal = Vector3.Lerp(groundLocal, topLocal, 0.35f);
+            _light.transform.localPosition = lightLocal;
+            _light.range = LightRange;
+            _light.color = BoltColor;
+            _light.intensity = intensity * LightIntensity;
+            _light.enabled = true;
+
+            GroundPointWorld = transform.TransformPoint(groundLocal);
+
+            _currentIntensity = intensity;
+            _propertyBlock.SetColor(ColorId, BoltColor);
+            _propertyBlock.SetFloat(IntensityId, intensity);
+            _meshRenderer.SetPropertyBlock(_propertyBlock);
+            _meshRenderer.enabled = true;
+
+            IsActive = true;
+            _elapsed = 0f;
+            enabled = false; // do not let Update animate or clear it
+            gameObject.SetActive(true);
         }
 
         public void Deactivate()

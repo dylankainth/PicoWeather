@@ -115,7 +115,7 @@ namespace WeatherVR.Data
             float edgeU = Mathf.Abs(Mathf.Repeat(u * parcelsPerEdge, 1f) - 0.5f) * 2f;
             float edgeV = Mathf.Abs(Mathf.Repeat(v * parcelsPerEdge, 1f) - 0.5f) * 2f;
             float bund = Mathf.Max(edgeU, edgeV);
-            farmland *= Mathf.Lerp(1f, 0.9f, Mathf.SmoothStep(0.86f, 1f, bund));
+            farmland *= Mathf.Lerp(1f, 0.9f, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.86f, 1f, bund)));
 
             Color built = Color.Lerp((Color)Suburb, (Color)UrbanCore, urban);
             Color surface = Color.Lerp(farmland, built, Mathf.SmoothStep(0f, 1f, urban));

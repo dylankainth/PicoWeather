@@ -42,6 +42,8 @@ namespace WeatherVR.Clouds
             // Color32 conversion that assumes a four-channel layout; SetPixelData
             // writes exactly the R8 bytes the shader samples.
             var voxels = new byte[width * height * depth];
+            _dbgMaxCover = 0f;
+            _dbgMaxProfile = 0f;
             float floor = config.AtmosphereFloorMeters;
             float ceiling = config.AtmosphereCeilingMeters;
             int seed = config.ProceduralSeed;
@@ -66,6 +68,7 @@ namespace WeatherVR.Clouds
                     float coverLow = weather.SampleBilinear(u, v, c => c.cloudLow);
                     float coverMid = weather.SampleBilinear(u, v, c => c.cloudMid);
                     float coverHigh = weather.SampleBilinear(u, v, c => c.cloudHigh);
+                    _dbgMaxCover = Mathf.Max(_dbgMaxCover, Mathf.Max(coverLow, Mathf.Max(coverMid, coverHigh)));
 
                     for (int y = 0; y < height; y++)
                     {
@@ -79,6 +82,7 @@ namespace WeatherVR.Clouds
 
                             float profile = LayerProfile(altitude, layers[l].baseAlt, layers[l].topAlt,
                                                          coverage, layers[l].id);
+                            _dbgMaxProfile = Mathf.Max(_dbgMaxProfile, profile);
                             if (profile <= 0f) continue;
 
                             // Layers stack rather than sum: two overlapping decks are
@@ -105,8 +109,30 @@ namespace WeatherVR.Clouds
 
             texture.SetPixelData(voxels, 0);
             texture.Apply(updateMipmaps: false, makeNoLongerReadable: true);
+
+            // Peak is scanned from the local voxel array, so the GPU texture can still
+            // free its CPU copy above.
+            byte max = 0;
+            foreach (byte b in voxels) if (b > max) max = b;
+            LastBuildMaxDensity = max;
+
+            // Layer altitude windows, for the diagnostic string.
+            _dbgLayers = $"low[{layers[0].baseAlt:F0}-{layers[0].topAlt:F0}] " +
+                         $"mid[{layers[1].baseAlt:F0}-{layers[1].topAlt:F0}] " +
+                         $"high[{layers[2].baseAlt:F0}-{layers[2].topAlt:F0}]";
+
             return texture;
         }
+
+        /// <summary>Peak voxel value (0..255) of the most recent density build, for diagnostics.</summary>
+        public static int LastBuildMaxDensity { get; private set; }
+
+        static float _dbgMaxCover, _dbgMaxProfile;
+        static string _dbgLayers = "";
+
+        /// <summary>Diagnostic summary of the most recent density build.</summary>
+        public static string LastBuildDiagnostics =>
+            $"maxCover={_dbgMaxCover:F2} maxProfile={_dbgMaxProfile:F3} layers={_dbgLayers}";
 
         /// <summary>
         /// Vertical fill profile of one cloud layer.
@@ -142,9 +168,13 @@ namespace WeatherVR.Clouds
             float t = Mathf.InverseLerp(cloudBase, cloudTop, altitude);
             if (t <= 0f || t >= 1f) return 0f;
 
-            // Soft base, firm top.
-            float rise = Mathf.SmoothStep(0f, 0.22f, t);
-            float fall = 1f - Mathf.SmoothStep(0.82f, 1f, t);
+            // Soft base, firm top. Note: Unity's Mathf.SmoothStep(a, b, t) interpolates
+            // *between a and b* — it is not GLSL smoothstep(edge0, edge1, x). Using it
+            // that way capped this profile at ~0.01 and made the entire cloud volume
+            // almost transparent. The correct 0→1 ramp between edges is
+            // SmoothStep(0, 1, InverseLerp(edge0, edge1, x)).
+            float rise = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0f, 0.22f, t));
+            float fall = 1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.82f, 1f, t));
             return rise * fall;
         }
 
