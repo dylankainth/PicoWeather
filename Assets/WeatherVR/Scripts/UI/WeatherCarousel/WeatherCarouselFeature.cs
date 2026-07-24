@@ -103,6 +103,13 @@ namespace WeatherVR.UI.Carousel
             built = new WeatherCarouselBuilder().Build(dataset, head, pointer);
             built.Root.transform.SetParent(transform, true);
             activeDataset = dataset;
+
+            // Anchor the carousel to the map so it always sits a fixed gap beneath the
+            // terrain and can never intersect it — the two move together as one.
+            var follower = built.Root.GetComponent<WeatherCarouselFollower>();
+            if (follower != null && sceneController.MapRoot != null)
+                follower.Anchor = sceneController.MapRoot;
+
             UpdateVisibility(immediate: true);
 
             // Clicking a card switches the rendered weather scene, so terrain and UI
@@ -129,19 +136,9 @@ namespace WeatherVR.UI.Carousel
 
             index = Mathf.Clamp(index, 0, activeDataset.Items.Length - 1);
             WeatherCarouselItem item = activeDataset.Items[index];
-            director.ApplyKind(SceneKindForIcon(item.Icon));
-        }
-
-        static WeatherSceneKind SceneKindForIcon(WeatherCarouselIcon icon)
-        {
-            switch (icon)
-            {
-                case WeatherCarouselIcon.Sunny: return WeatherSceneKind.Clear;
-                case WeatherCarouselIcon.PartlyCloudy: return WeatherSceneKind.PartlyCloudy;
-                case WeatherCarouselIcon.Cloudy: return WeatherSceneKind.Cloudy;
-                case WeatherCarouselIcon.Rain: return WeatherSceneKind.Rain;
-                default: return WeatherSceneKind.Thunderstorm;
-            }
+            // Use the card's own scene, not its icon — the icon set is smaller than the
+            // case set, so Overcast/Fog/Snow would otherwise collapse onto Cloudy.
+            director.ApplyKind((WeatherSceneKind)item.SceneKind);
         }
 
         void Update()

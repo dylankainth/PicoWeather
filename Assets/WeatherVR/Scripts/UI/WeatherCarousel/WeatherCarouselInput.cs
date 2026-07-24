@@ -181,13 +181,27 @@ namespace WeatherVR.UI.Carousel
     }
 
     /// <summary>
-    /// Keeps the dock in the lower field of view with gentle smoothing. It follows
-    /// yaw and position, but stays world-upright to avoid uncomfortable head-locked
-    /// roll and pitch.
+    /// Keeps the carousel in the lower field of view with gentle smoothing, world
+    /// upright so it never rolls or pitches with the head.
+    ///
+    /// When <see cref="Anchor"/> is set (the map root), the dock rides a fixed gap
+    /// *directly beneath the terrain* and pulled a little toward the user, so it moves
+    /// as one with the table and is guaranteed never to intersect it. Without an
+    /// anchor it falls back to a head-relative dock.
     /// </summary>
     public sealed class WeatherCarouselFollower : MonoBehaviour
     {
         public Transform Head;
+
+        [Tooltip("Map root to hang beneath. When set, the dock tracks the map, not the head directly.")]
+        public Transform Anchor;
+
+        [Tooltip("Gap below the map, in metres. Large enough that the panel clears the tabletop.")]
+        public float DropBelow = 0.5f;
+
+        [Tooltip("How far toward the user the dock is pulled from under the map, in metres.")]
+        public float NearOffset = 0.22f;
+
         public float Distance = 1.20f;
         public float VerticalOffset = -0.30f;
         public float FollowSpeed = 8f;
@@ -199,11 +213,29 @@ namespace WeatherVR.UI.Carousel
             if (Head == null)
                 return;
 
-            // Identical anchor maths to the map's ComfortFollow, off the same head, so
-            // the carousel and the terrain move together as the user turns and walks.
-            ComfortFollow.ComputeAnchor(
-                Head, Distance, VerticalOffset,
-                out Vector3 targetPosition, out Quaternion targetRotation);
+            Vector3 targetPosition;
+            Quaternion targetRotation;
+
+            if (Anchor != null)
+            {
+                // Flattened facing so the panel stays upright and turns to face the user.
+                Vector3 forward = Head.forward;
+                forward.y = 0f;
+                if (forward.sqrMagnitude < 1e-4f) forward = Vector3.forward;
+                forward.Normalize();
+
+                // Straight down from the map, then a little back toward the user so the
+                // panel sits at the near-lower edge rather than hidden under the table.
+                targetPosition = Anchor.position + Vector3.down * DropBelow - forward * NearOffset;
+                targetRotation = Quaternion.LookRotation(forward, Vector3.up);
+            }
+            else
+            {
+                // Identical anchor maths to the map's ComfortFollow, off the same head.
+                ComfortFollow.ComputeAnchor(
+                    Head, Distance, VerticalOffset,
+                    out targetPosition, out targetRotation);
+            }
 
             if (!initialised)
             {
