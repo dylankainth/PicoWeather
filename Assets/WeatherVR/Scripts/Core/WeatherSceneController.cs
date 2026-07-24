@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using WeatherVR.Audio;
 using WeatherVR.Data;
+using WeatherVR.Interaction;
 using WeatherVR.Terrain;
 using WeatherVR.Weather;
 
