@@ -118,6 +118,10 @@ namespace WeatherVR.EditorTools
             terrainObject.transform.SetParent(mapRoot.transform, false);
             var terrain = terrainObject.AddComponent<TerrainRenderer>();
 
+            var buildingsObject = new GameObject("BuildingsMesh");
+            buildingsObject.transform.SetParent(mapRoot.transform, false);
+            var buildings = buildingsObject.AddComponent<BuildingRenderer>();
+
             var cloudObject = new GameObject("VolumetricClouds");
             cloudObject.transform.SetParent(mapRoot.transform, false);
             cloudObject.AddComponent<MeshFilter>();
@@ -155,6 +159,7 @@ namespace WeatherVR.EditorTools
             controller.MapRoot = mapRoot.transform;
             controller.DataService = dataService;
             controller.Terrain = terrain;
+            controller.Buildings = buildings;
             controller.Clouds = clouds;
             controller.Lightning = lightning;
             controller.Soundscape = soundscape;
@@ -199,53 +204,88 @@ namespace WeatherVR.EditorTools
         }
 
         /// <summary>
-        /// A world-space text panel standing just off the north edge of the map, sized
-        /// and positioned in map-local units so it follows the map wherever it is put.
+        /// A set of world-space info cards standing just off the north edge of the
+        /// map. Each card is its own canvas at a slightly different depth, creating
+        /// a 3D holographic-HUD effect.
         /// </summary>
         static ProvenanceLabel BuildProvenancePanel(Transform mapRoot, AppConfig config)
         {
-            var panel = new GameObject("ProvenancePanel");
-            panel.transform.SetParent(mapRoot, false);
-            // Just beyond the far edge, tilted up towards a standing viewer.
-            panel.transform.localPosition = new Vector3(0f, 0.18f, 0.62f);
-            panel.transform.localRotation = Quaternion.Euler(24f, 180f, 0f);
+            var root = new GameObject("ProvenancePanel");
+            root.transform.SetParent(mapRoot, false);
+            root.transform.localPosition = new Vector3(0f, 0.18f, 0.62f);
+            root.transform.localRotation = Quaternion.Euler(24f, 180f, 0f);
 
-            var canvasObject = new GameObject("Canvas");
-            canvasObject.transform.SetParent(panel.transform, false);
+            var cards = new ProvenanceLabel.CardInfo[3];
 
-            var canvas = canvasObject.AddComponent<Canvas>();
+            // Three glass cards arranged in a staggered 3D layout.
+            // Each card: (name, width, height, localPosition, localRotation)
+            cards[0] = BuildCard(root.transform, "LocationCard",
+                260f, 170f,
+                new Vector3(-0.075f, 0.065f, 0.020f),
+                Quaternion.Euler(0f, 5f, 0f), config);
+
+            cards[1] = BuildCard(root.transform, "WeatherCard",
+                280f, 280f,
+                new Vector3(0.065f, -0.005f, -0.015f),
+                Quaternion.Euler(0f, -3f, 0f), config);
+
+            cards[2] = BuildCard(root.transform, "SourcesCard",
+                240f, 190f,
+                new Vector3(-0.060f, -0.100f, 0.005f),
+                Quaternion.Euler(0f, 4f, 0f), config);
+
+            var label = root.AddComponent<ProvenanceLabel>();
+            label.Cards = cards;
+            return label;
+        }
+
+        /// <summary>
+        /// Creates one glass-morphism info card: a world-space canvas with a
+        /// semi-transparent dark background and a text element.
+        /// </summary>
+        static ProvenanceLabel.CardInfo BuildCard(
+            Transform parent, string name,
+            float canvasW, float canvasH,
+            Vector3 localPos, Quaternion localRot, AppConfig config)
+        {
+            var cardObj = new GameObject(name);
+            cardObj.transform.SetParent(parent, false);
+            cardObj.transform.localPosition = localPos;
+            cardObj.transform.localRotation = localRot;
+
+            var canvas = cardObj.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
-            var canvasRect = canvas.GetComponent<RectTransform>();
-            // 1 map unit = MapSizeMeters, so 0.5 x 0.3 units is about 1 m x 0.6 m of
-            // panel at the default 2 m map.
-            canvasRect.sizeDelta = new Vector2(520f, 330f);
-            canvasRect.localScale = Vector3.one * (0.5f / 520f);
+            var canvasRect = cardObj.GetComponent<RectTransform>();
+            canvasRect.sizeDelta = new Vector2(canvasW, canvasH);
+            // This card sits under mapRoot, whose own scale is MapSizeMeters, so that
+            // ancestor scale multiplies the card's world size too -- divide it back out
+            // here or every card renders MapSizeMeters times too big for its 0.3 m
+            // target width. Same unit-convention bug class as MapScale; see CLAUDE.md.
+            canvasRect.localScale = Vector3.one * (0.3f / canvasW / config.MapSizeMeters);
 
-            var textObject = new GameObject("Text");
-            textObject.transform.SetParent(canvasObject.transform, false);
+            var bg = cardObj.AddComponent<Image>();
+            bg.color = new Color(0.06f, 0.09f, 0.16f, 0.78f);
 
-            var text = textObject.AddComponent<Text>();
-            text.text = "Loading weather data…";
-            // The built-in legacy font is the only one guaranteed to exist without
-            // importing TextMeshPro's essential resources first.
+            var textObj = new GameObject("Text");
+            textObj.transform.SetParent(cardObj.transform, false);
+
+            var text = textObj.AddComponent<Text>();
             text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = 20;
-            text.lineSpacing = 1.15f;
+            text.fontSize = 18;
+            text.lineSpacing = 1.1f;
             text.color = new Color(0.90f, 0.94f, 1f);
             text.alignment = TextAnchor.UpperLeft;
             text.horizontalOverflow = HorizontalWrapMode.Wrap;
             text.verticalOverflow = VerticalWrapMode.Overflow;
             text.supportRichText = true;
 
-            var textRect = text.GetComponent<RectTransform>();
+            var textRect = textObj.GetComponent<RectTransform>();
             textRect.anchorMin = Vector2.zero;
             textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = new Vector2(12f, 12f);
-            textRect.offsetMax = new Vector2(-12f, -12f);
+            textRect.offsetMin = new Vector2(16f, 12f);
+            textRect.offsetMax = new Vector2(-16f, -12f);
 
-            var label = panel.AddComponent<ProvenanceLabel>();
-            label.Text = text;
-            return label;
+            return new ProvenanceLabel.CardInfo { Text = text, Background = bg };
         }
 
         // ------------------------------------------------------------- config

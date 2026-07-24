@@ -6,11 +6,12 @@ using WeatherVR.Lightning;
 namespace WeatherVR.Core
 {
     /// <summary>
-    /// The small panel floating at the edge of the map saying what the user is
-    /// actually looking at.
+    /// A set of floating 3D info-cards at the edge of the map showing what the
+    /// user is actually looking at. Each card is a separate world-space canvas
+    /// at a slightly different depth, giving a holographic-HUD feel.
     ///
-    /// This is not a debug overlay, and it is not optional. Roughly half of what is
-    /// on screen is derived rather than measured: the lightning is a CAPE-and-rain
+    /// This is not a debug overlay, and it is not optional. Roughly half of what
+    /// is on screen is derived rather than measured: the lightning is a CAPE-and-rain
     /// proxy because no free feed publishes stroke density, the cloud shapes are
     /// noise because no 31 km model resolves a cumulus tower, and when the venue
     /// Wi-Fi is down the whole scene is procedural. Someone watching a demo cannot
@@ -18,11 +19,16 @@ namespace WeatherVR.Core
     /// </summary>
     public class ProvenanceLabel : MonoBehaviour
     {
-        [Tooltip("Text element to write into. Found in children if unset. Deliberately " +
-                 "the built-in UI Text rather than TextMeshPro: TMP needs its essential " +
-                 "resources imported before it will render anything, and a label that " +
-                 "silently shows nothing on a fresh checkout is worse than a plainer font.")]
-        public Text Text;
+        [System.Serializable]
+        public struct CardInfo
+        {
+            public Text Text;
+            public Image Background;
+        }
+
+        [Tooltip("Card slots. Assigned by the scene builder; falls back to " +
+                 "GetComponentInChildren if unset.")]
+        public CardInfo[] Cards;
 
         [Tooltip("Optional second line showing frame time and quality tier.")]
         public bool ShowPerformance = true;
@@ -38,57 +44,38 @@ namespace WeatherVR.Core
 
         WeatherSnapshot _snapshot;
         AppConfig _config;
-        string _staticBlock = "";
         string _status;
         float _nextRefresh;
 
         void Awake()
         {
-            if (Text == null) Text = GetComponentInChildren<Text>();
+            if (Cards == null || Cards.Length == 0)
+            {
+                var texts = GetComponentsInChildren<Text>();
+                if (texts.Length > 0)
+                {
+                    Cards = new CardInfo[texts.Length];
+                    for (int i = 0; i < texts.Length; i++)
+                        Cards[i] = new CardInfo { Text = texts[i] };
+                }
+            }
         }
 
         /// <summary>Shows a one-line status while the scene is still loading.</summary>
         public void SetStatus(string status)
         {
             _status = status;
+            _snapshot = null;
             Render();
         }
 
-        /// <summary>Switches the label from status text to the full provenance block.</summary>
+        /// <summary>Switches the cards from status text to the full provenance block.</summary>
         public void SetSnapshot(WeatherSnapshot snapshot, AppConfig config)
         {
             _snapshot = snapshot;
             _config = config;
             _status = null;
-
-            var weather = snapshot.Weather;
-            var builder = new System.Text.StringBuilder(512);
-
-            builder.AppendLine("<b>Shanghai</b>  31.23°N 121.47°E");
-            builder.AppendLine($"{config.RegionSpanKm:F0} km across · shown at {config.MapSizeMeters:F1} m " +
-                               $"(1:{1f / config.HorizontalScale:N0})");
-            builder.AppendLine($"Altitude ×{config.VerticalExaggeration:F1} vs. horizontal");
-            builder.AppendLine();
-
-            if (weather != null)
-            {
-                builder.AppendLine($"<b>Observed</b> {FormatTime(weather.observationTimeUtc)}");
-                builder.AppendLine($"Terrain: {snapshot.TerrainSource}");
-                builder.AppendLine($"Imagery: {snapshot.SatelliteSource}");
-                builder.AppendLine($"Weather: {snapshot.WeatherSource}");
-                builder.AppendLine();
-
-                Summarise(weather, out float meanCloud, out float meanPrecipitation, out float peakCape);
-                builder.AppendLine($"Cloud cover {meanCloud * 100f:F0}%  ·  " +
-                                   $"rain {meanPrecipitation:F1} mm/h  ·  CAPE {peakCape:F0} J/kg");
-            }
-
-            builder.AppendLine();
-            builder.AppendLine("<i>Cloud shapes are procedural detail over a coarse model grid.</i>");
-            builder.AppendLine("<i>Lightning is derived from CAPE and rain rate, not observed strokes.</i>");
-
-            _staticBlock = builder.ToString();
-            Render();
+            RenderCards();
         }
 
         void Update()
@@ -100,32 +87,118 @@ namespace WeatherVR.Core
 
         void Render()
         {
-            if (Text == null) return;
-
             if (_status != null)
             {
-                Text.text = _status;
+                ShowStatusOnAllCards();
                 return;
             }
-
-            if (_snapshot == null) return;
-
-            var builder = new System.Text.StringBuilder(_staticBlock, 640);
-
-            if (Lightning != null)
+            if (_snapshot != null)
             {
-                builder.AppendLine();
-                builder.AppendLine($"Strikes: {Lightning.StrikeCount} " +
-                                   $"({Lightning.CurrentRatePerMinute:F0}/min)");
+                RenderCards();
+            }
+        }
+
+        void ShowStatusOnAllCards()
+        {
+            if (Cards == null) return;
+            for (int i = 0; i < Cards.Length; i++)
+            {
+                if (Cards[i].Text == null) continue;
+                if (i == 0)
+                {
+                    Cards[i].Text.text =
+                        $"<align=center><color=#5CB8FF>{_status}</color></align>";
+                }
+                else
+                {
+                    Cards[i].Text.text = "";
+                }
+                if (Cards[i].Background != null)
+                    Cards[i].Background.enabled = (i == 0);
+            }
+        }
+
+        void RenderCards()
+        {
+            if (Cards == null || Cards.Length == 0) return;
+
+            var weather = _snapshot.Weather;
+
+            // ── Card 0 : Location ──────────────────────────────────────
+            if (Cards.Length > 0 && Cards[0].Text != null)
+            {
+                var b = new System.Text.StringBuilder(128);
+                b.AppendLine($"<color=#5CB8FF><b>London</b></color>");
+                b.AppendLine($"{FormatCoordinate(_config.CenterLatitude, "N", "S")}");
+                b.AppendLine($"{FormatCoordinate(_config.CenterLongitude, "E", "W")}");
+                b.AppendLine();
+                b.AppendLine($"<color=#8899AA>{_config.RegionSpanKm:F0} km across</color>");
+                b.AppendLine($"<color=#8899AA>{_config.MapSizeMeters:F1} m · " +
+                             $"1:{1f / _config.HorizontalScale:N0}</color>");
+                Cards[0].Text.text = b.ToString();
             }
 
-            if (ShowPerformance && Governor != null && Governor.AverageFrameMs > 0f)
+            // ── Card 1 : Weather ───────────────────────────────────────
+            if (Cards.Length > 1 && Cards[1].Text != null)
             {
-                float fps = 1000f / Governor.AverageFrameMs;
-                builder.AppendLine($"{fps:F0} fps · clouds: {Governor.CurrentTierName}");
+                var b = new System.Text.StringBuilder(256);
+                b.AppendLine($"<color=#5CB8FF><b>Weather</b></color>");
+
+                if (weather != null)
+                {
+                    b.AppendLine($"<color=#5CB8FF>Observed</color>  " +
+                                 $"<color=#FFCC80>{FormatTime(weather.observationTimeUtc)}</color>");
+                    b.AppendLine($"<color=#8899AA>Terrain:</color> {_snapshot.TerrainSource}");
+                    b.AppendLine($"<color=#8899AA>Imagery:</color> {_snapshot.SatelliteSource}");
+                    b.AppendLine($"<color=#8899AA>Weather:</color> {_snapshot.WeatherSource}");
+                    b.AppendLine();
+
+                    Summarise(weather, out float meanCloud, out float meanPrecipitation, out float peakCape);
+                    b.AppendLine($"<color=#FFCC80>Cloud {meanCloud * 100f:F0}%</color>  ·  " +
+                                 $"<color=#80D8FF>Rain {meanPrecipitation:F1} mm/h</color>");
+                    b.AppendLine($"<color=#FFAB91>CAPE {peakCape:F0} J/kg</color>");
+
+                    if (Lightning != null)
+                    {
+                        b.AppendLine();
+                        b.AppendLine($"<color=#FFE082>Strikes: {Lightning.StrikeCount}</color>  " +
+                                     $"<color=#8899AA>({Lightning.CurrentRatePerMinute:F0}/min)</color>");
+                    }
+                }
+                else
+                {
+                    b.AppendLine("<color=#8899AA>No data</color>");
+                }
+
+                if (ShowPerformance && Governor != null && Governor.AverageFrameMs > 0f)
+                {
+                    float fps = 1000f / Governor.AverageFrameMs;
+                    b.AppendLine($"<color=#8899AA>{fps:F0} fps · {Governor.CurrentTierName}</color>");
+                }
+
+                Cards[1].Text.text = b.ToString();
             }
 
-            Text.text = builder.ToString();
+            // ── Card 2 : Data Sources ──────────────────────────────────
+            if (Cards.Length > 2 && Cards[2].Text != null)
+            {
+                var b = new System.Text.StringBuilder(128);
+                b.AppendLine($"<color=#5CB8FF><b>Sources</b></color>");
+                if (weather != null)
+                {
+                    b.AppendLine($"<color=#8899AA>Terrain:</color> {_snapshot.TerrainSource}");
+                    b.AppendLine($"<color=#8899AA>Imagery:</color> {_snapshot.SatelliteSource}");
+                    b.AppendLine($"<color=#8899AA>Weather:</color> {_snapshot.WeatherSource}");
+                }
+                else
+                {
+                    b.AppendLine("<color=#8899AA>Procedural</color>");
+                }
+                b.AppendLine();
+                b.AppendLine("<color=#667788><i>Clouds: procedural detail</i></color>");
+                b.AppendLine("<color=#667788><i>Lightning: CAPE-derived</i></color>");
+                Cards[2].Text.text = b.ToString();
+            }
         }
 
         static void Summarise(WeatherDataset weather, out float meanCloud,
@@ -159,6 +232,17 @@ namespace WeatherVR.Core
                 out var parsed)
                 ? parsed.ToString("yyyy-MM-dd HH:mm 'UTC'")
                 : iso;
+        }
+
+        static string FormatCoordinate(double value, string posLabel, string negLabel)
+        {
+            var label = value >= 0 ? posLabel : negLabel;
+            var abs = System.Math.Abs(value);
+            var deg = (int)abs;
+            var minFrac = (abs - deg) * 60.0;
+            var min = (int)minFrac;
+            var sec = (minFrac - min) * 60.0;
+            return $"{deg}°{min:D2}'{sec:F1}\"{label}";
         }
     }
 }

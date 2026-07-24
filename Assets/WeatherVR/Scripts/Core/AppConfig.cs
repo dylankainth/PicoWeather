@@ -17,15 +17,26 @@ namespace WeatherVR.Core
 
         // ---------------------------------------------------------------- region
 
-        [Header("Region (Shanghai)")]
+        [Header("Region (City of London)")]
         [Tooltip("Latitude of the map centre, degrees north.")]
-        public double CenterLatitude = 31.23;
+        public double CenterLatitude = 51.5136;   // the Gherkin / Leadenhall skyscraper cluster
 
         [Tooltip("Longitude of the map centre, degrees east.")]
-        public double CenterLongitude = 121.47;
+        public double CenterLongitude = -0.0832;
 
-        [Tooltip("Edge length of the square region covered by the map, in kilometres.")]
-        public double RegionSpanKm = 50.0;
+        [Tooltip("Edge length of the square region covered by the map, in kilometres. " +
+                 "City-block scale, not the 50 km regional view Shanghai used: London's " +
+                 "relief is a couple of metres and invisible at any honest scale, so this " +
+                 "region is sized for its buildings instead.")]
+        public double RegionSpanKm = 5.0;
+
+        // -------------------------------------------------------------- buildings
+
+        [Header("Buildings")]
+        [Tooltip("Hard cap on building count actually built into the mesh, applied on top " +
+                 "of whatever cap the bake already applied. A second, cheap backstop: a " +
+                 "hand-edited buildings.json cannot blow the triangle budget silently.")]
+        [Range(50, 2000)] public int MaxBuildings = 600;
 
         // ----------------------------------------------------------------- scale
 
@@ -35,16 +46,23 @@ namespace WeatherVR.Core
         public float MapSizeMeters = 2.0f;
 
         [Tooltip("Vertical exaggeration relative to true scale. 1.0 renders altitude " +
-                 "at exactly the same scale as horizontal distance (a 2 km cloud sits " +
-                 "8 cm above a 2 m map). Values above 1 make the atmosphere read as " +
-                 "volumetric rather than as a flat film; the spec's literal '2 km = " +
-                 "4 cm' corresponds to 0.5.")]
-        public float VerticalExaggeration = 4.0f;
+                 "at exactly the same scale as horizontal distance. Values above 1 make " +
+                 "the atmosphere read as volumetric rather than as a flat film. This is " +
+                 "scaled to RegionSpanKm, not an absolute constant: Horizontal (and so " +
+                 "Vertical) is inversely proportional to the span, so shrinking the " +
+                 "region without rescaling this multiplies cloud height by the same " +
+                 "factor the span shrank by. Retune whenever RegionSpanKm changes.")]
+        public float VerticalExaggeration = 0.4f;
 
-        [Tooltip("Extra vertical exaggeration applied to terrain relief only. Real " +
-                 "Shanghai relief is a few tens of metres over 50 km, which is " +
-                 "invisible at true scale, so terrain gets its own boost.")]
-        public float TerrainReliefExaggeration = 12.0f;
+        [Tooltip("Extra vertical exaggeration applied to terrain relief only, on top " +
+                 "of VerticalExaggeration. Same caveat as VerticalExaggeration: it is " +
+                 "tuned for the current RegionSpanKm, not region-independent. This " +
+                 "shipped wrong once already -- left at the Shanghai-era value (12, for " +
+                 "a 50 km span) after the region shrank to London's 5 km span, so the " +
+                 "already-10x-larger Horizontal scale multiplied with it and turned a " +
+                 "43 m hill into an 84 cm spike. tools/verify_logic/Verify.cs checks " +
+                 "this against the real baked terrain.bin peak.")]
+        public float TerrainReliefExaggeration = 1.2f;
 
         // ------------------------------------------------------------ atmosphere
 
@@ -142,6 +160,10 @@ namespace WeatherVR.Core
         /// <summary>Terrain elevation in metres to map-local Y, with relief exaggeration.</summary>
         public float TerrainElevationToMapUnits(float elevationMeters) =>
             Scale.TerrainElevationToMapUnits(elevationMeters);
+
+        /// <summary>A building's true height in metres to map-local Y, no exaggeration.</summary>
+        public float BuildingHeightToMapUnits(float heightMeters) =>
+            Scale.BuildingHeightToMapUnits(heightMeters);
 
         // ------------------------------------------------------------- singleton
 

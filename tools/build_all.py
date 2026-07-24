@@ -28,6 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 STEPS = [
     ("terrain", "fetch_terrain.py", "terrain.bin"),
     ("satellite", "fetch_satellite.py", "satellite.jpg"),
+    ("buildings", "fetch_buildings.py", "buildings.json"),
     ("weather", "fetch_weather.py", "weather.json"),
 ]
 
@@ -44,7 +45,7 @@ def write_manifest(results: dict) -> str:
     manifest = {
         "generatedUtc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "region": {
-            "name": "Shanghai",
+            "name": "City of London",
             "centerLatitude": geo.CENTER_LAT,
             "centerLongitude": geo.CENTER_LON,
             "spanKm": geo.SPAN_KM,
@@ -59,6 +60,7 @@ def write_manifest(results: dict) -> str:
             "and other public sources.",
             "Imagery: (c) Esri -- Maxar, Earthstar Geographics, and the GIS User "
             "Community.",
+            "Buildings: (c) OpenStreetMap contributors, ODbL 1.0.",
             "Weather: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
             "Lightning is not observed: it is derived from CAPE and precipitation "
             "rate. See Atmosphere.LightningPotential.",
@@ -79,6 +81,7 @@ def main() -> int:
                         help="skip a layer (repeatable)")
     parser.add_argument("--terrain-resolution", type=int, default=512)
     parser.add_argument("--satellite-resolution", type=int, default=2048)
+    parser.add_argument("--max-buildings", type=int, default=600)
     parser.add_argument("--weather-grid", type=int, default=12)
     parser.add_argument("--weather-source", choices=["open-meteo", "era5"],
                         default="open-meteo")
@@ -90,6 +93,7 @@ def main() -> int:
     extra = {
         "terrain": ["--resolution", str(args.terrain_resolution)],
         "satellite": ["--resolution", str(args.satellite_resolution)],
+        "buildings": ["--max-buildings", str(args.max_buildings)],
         "weather": ["--grid", str(args.weather_grid),
                     "--source", args.weather_source],
     }

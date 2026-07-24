@@ -14,16 +14,19 @@ namespace WeatherVR.Data
         public TerrainHeightfield Terrain;
         public Texture2D Satellite;
         public WeatherDataset Weather;
+        public BuildingDataset Buildings;
 
         /// <summary>Per-source provenance strings, for the in-app label and the logs.</summary>
         public string TerrainSource = "procedural";
         public string SatelliteSource = "procedural";
         public string WeatherSource = "procedural";
+        public string BuildingsSource = "procedural";
 
         public bool IsComplete => Terrain != null && Weather != null && Weather.IsValid;
 
         public string Describe() =>
-            $"terrain: {TerrainSource} · imagery: {SatelliteSource} · weather: {WeatherSource}";
+            $"terrain: {TerrainSource} · imagery: {SatelliteSource} · " +
+            $"buildings: {BuildingsSource} · weather: {WeatherSource}";
     }
 
     /// <summary>
@@ -42,6 +45,7 @@ namespace WeatherVR.Data
     {
         public const string TerrainFile = "terrain.bin";
         public const string SatelliteFile = "satellite.jpg";
+        public const string BuildingsFile = "buildings.json";
         public const string WeatherFile = "weather.json";
 
         /// <summary>Grid resolution requested from the live API.</summary>
@@ -74,6 +78,7 @@ namespace WeatherVR.Data
 
             yield return LoadTerrain(snapshot, bounds, config);
             yield return LoadSatellite(snapshot);
+            yield return LoadBuildings(snapshot, bounds, config);
             yield return LoadWeather(snapshot, bounds, config);
 
             Snapshot = snapshot;
@@ -149,6 +154,41 @@ namespace WeatherVR.Data
             snapshot.Satellite = ProceduralSatellite.Generate(
                 snapshot.Terrain, 1024, Config.ProceduralSeed);
             snapshot.SatelliteSource = "procedural";
+        }
+
+        // ------------------------------------------------------------ buildings
+
+        IEnumerator LoadBuildings(WeatherSnapshot snapshot, GeoBounds bounds, AppConfig config)
+        {
+            var read = new StreamingDataReader.Result();
+            yield return StreamingDataReader.Read(BuildingsFile, read);
+
+            if (read.Success)
+            {
+                BuildingDataset baked = null;
+                try
+                {
+                    baked = JsonUtility.FromJson<BuildingDataset>(read.Text);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[WeatherVR] {BuildingsFile} unusable ({e.Message}); generating buildings.");
+                }
+
+                if (baked != null && baked.IsValid)
+                {
+                    snapshot.Buildings = baked;
+                    snapshot.BuildingsSource = $"{baked.source} (baked)";
+                    yield break;
+                }
+            }
+            else
+            {
+                Debug.Log($"[WeatherVR] No baked buildings ({read.Error}); generating.");
+            }
+
+            snapshot.Buildings = ProceduralBuildings.Generate(bounds, config.ProceduralSeed);
+            snapshot.BuildingsSource = "procedural";
         }
 
         // ------------------------------------------------------------- weather

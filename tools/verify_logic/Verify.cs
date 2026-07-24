@@ -108,8 +108,8 @@ static class Verify
                   field.MinElevation > -150 && field.MaxElevation < 200,
                   $"{field.MinElevation:F1} to {field.MaxElevation:F1} m");
             Check("bounds match the configured region",
-                  Math.Abs(field.Bounds.CenterLatitude - 31.23) < 0.01 &&
-                  Math.Abs(field.Bounds.CenterLongitude - 121.47) < 0.01,
+                  Math.Abs(field.Bounds.CenterLatitude - 51.5136) < 0.01 &&
+                  Math.Abs(field.Bounds.CenterLongitude - (-0.0832)) < 0.01,
                   $"{field.Bounds.CenterLatitude:F3}N {field.Bounds.CenterLongitude:F3}E");
 
             var samples = new float[10000];
@@ -144,12 +144,20 @@ static class Verify
         // AppConfig is a ScriptableObject and cannot be instantiated outside the Unity
         // runtime, but MapScale -- which holds every unit conversion AppConfig
         // delegates to -- is a plain struct precisely so this can be checked here.
+        //
+        // These numbers must track WeatherVRConfig.asset / AppConfig's defaults, not
+        // some fixed reference region: they are what actually shipped wrong once. The
+        // region moved from Shanghai (50 km span, exaggeration 4/12) to London (5 km
+        // span) without rescaling VerticalExaggeration/TerrainReliefExaggeration, so
+        // the already-10x-larger Horizontal scale multiplied straight through and a
+        // 43 m hill rendered as an 84 cm spike. This block is what should have caught
+        // that -- keep it in sync with the live config or it is decoration, not a guard.
         Console.WriteLine("\n== MapScale (AppConfig defaults) ==");
         const float mapSizeMeters = 2.0f;
         const float atmosphereCeiling = 12_000f;
-        var scale = new MapScale(mapSizeMeters, 50_000f, 4.0f, 12.0f, 200f);
+        var scale = new MapScale(mapSizeMeters, 5_000f, 0.4f, 1.2f, 200f);
 
-        Check("1 VR metre is 25 km", Math.Abs(scale.RepresentativeFraction - 25000) < 1,
+        Check("1 VR metre is 2.5 km", Math.Abs(scale.RepresentativeFraction - 2500) < 1,
               $"1:{scale.RepresentativeFraction:N0}");
 
         float cloudAt2km = scale.AltitudeToVr(2000f);
@@ -172,11 +180,11 @@ static class Verify
               Math.Abs(scale.MetersToMapUnits(1f) * mapSizeMeters - 1f) < 1e-6f,
               $"1 m = {scale.MetersToMapUnits(1f):F3} map units");
 
-        float terrainTopMapUnits = scale.TerrainElevationToMapUnits(82f); // real baked peak
+        float terrainTopMapUnits = scale.TerrainElevationToMapUnits(43.7f); // real baked London peak
         float terrainTopMeters = terrainTopMapUnits * mapSizeMeters;
-        Check("82 m summit renders as a few cm of relief",
-              terrainTopMeters > 0.02f && terrainTopMeters < 0.25f,
-              $"{terrainTopMeters * 100:F1} cm on a {mapSizeMeters:F0} m map");
+        Check("43.7 m summit renders as a gentle bump, not a spike",
+              terrainTopMeters > 0.001f && terrainTopMeters < 0.05f,
+              $"{terrainTopMeters * 100:F2} cm on a {mapSizeMeters:F0} m map");
 
         float boltTopMapUnits = scale.AltitudeToMapUnits(2400f);
         Check("lightning starts above the terrain it strikes",

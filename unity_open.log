@@ -1,0 +1,1257 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-kfhan" at "2026-07-24T11:58:21.4959412Z"
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 16280, path: "C:/Program Files/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.17.4+4293ba1
+  Session Id:              de80a3d212d2454a91a03d2bb64d2243
+  Correlation Id:          1b071d5d86eeb9204962e2d941809b3f
+  External correlation Id: 2788592545402856833
+  Machine Id:              Pc92ZpAKc0TDphhlf8r42Tfk4iw=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-kfhan" (connect: 0.00s, validation: 0.01s, handshake: 0.06s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-kfhan-notifications" at "2026-07-24T11:58:21.5692056Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully updated license
+Built from '2022.3/respin/2022.3.62f2-4af31df585-v2' branch; Version is '2022.3.62f3 (96770f904ca7) revision 9860879'; Using compiler version '192829333'; Build Type 'Release'
+OS: 'Windows 11  (10.0.26200) 64bit CoreSingleLanguage' Language: 'en' Physical Memory: 15710 MB
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Serial number assigned to: "1375557583778-UnityPersXXXX"
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1, IsPro: 0
+[Licensing::Client] Successfully resolved entitlement details
+
+COMMAND LINE ARGUMENTS:
+C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe
+-batchmode
+-nographics
+-quit
+-projectPath
+E:/adventurex/PicoWeather
+-logFile
+E:/adventurex/PicoWeather/unity_open.log
+Successfully changed project path to: E:/adventurex/PicoWeather
+E:/adventurex/PicoWeather
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [28196]  Target information:
+
+Player connection [28196]  * "[IP] 10.68.2.185 [Port] 55504 [Flags] 2 [Guid] 2174971706 [EditorId] 2174971706 [Version] 1048832 [Id] WindowsEditor(7,Farrel) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [28196] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [28196] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+[Package Manager] UpmClient::Connect -- Connected to IPC stream "Upm-33884" after 0.4 seconds.
+[Package Manager] Done resolving packages in 2.92 seconds
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Lock file was created
+[Package Manager] Registered 54 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.collab-proxy@2.12.4 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.collab-proxy@2.12.4)
+    com.unity.textmeshpro@3.0.7 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.textmeshpro@3.0.7)
+    com.unity.timeline@1.7.7 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.timeline@1.7.7)
+    com.unity.visualscripting@1.9.4 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.visualscripting@1.9.4)
+    com.unity.ide.visualstudio@2.0.22 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.visualstudio@2.0.22)
+    com.unity.ide.rider@3.0.36 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.rider@3.0.36)
+    com.unity.ide.vscode@1.2.5 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.vscode@1.2.5)
+    com.unity.editorcoroutines@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.editorcoroutines@1.0.0)
+    com.unity.performance.profile-analyzer@1.2.3 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.performance.profile-analyzer@1.2.3)
+    com.unity.test-framework@1.1.33 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.test-framework@1.1.33)
+    com.unity.testtools.codecoverage@1.2.6 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.testtools.codecoverage@1.2.6)
+    com.unity.xr.management@4.4.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.management@4.4.0)
+    com.unity.xr.interaction.toolkit@2.6.4 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.interaction.toolkit@2.6.4)
+    com.unity.xr.core-utils@2.5.2 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.core-utils@2.5.2)
+    com.unity.settings-manager@2.1.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.settings-manager@2.1.0)
+    com.unity.ext.nunit@1.0.6 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ext.nunit@1.0.6)
+    com.unity.inputsystem@1.14.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.inputsystem@1.14.0)
+    com.unity.mathematics@1.2.6 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.mathematics@1.2.6)
+    com.unity.xr.legacyinputhelpers@2.1.12 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.legacyinputhelpers@2.1.12)
+  Built-in packages:
+    com.unity.feature.development@1.0.1 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.feature.development@1.0.1)
+    com.unity.ugui@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ugui@1.0.0)
+    com.unity.modules.ai@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ai@1.0.0)
+    com.unity.modules.androidjni@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.androidjni@1.0.0)
+    com.unity.modules.animation@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.animation@1.0.0)
+    com.unity.modules.assetbundle@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.assetbundle@1.0.0)
+    com.unity.modules.audio@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.audio@1.0.0)
+    com.unity.modules.cloth@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.cloth@1.0.0)
+    com.unity.modules.director@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.director@1.0.0)
+    com.unity.modules.imageconversion@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imageconversion@1.0.0)
+    com.unity.modules.imgui@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imgui@1.0.0)
+    com.unity.modules.jsonserialize@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.jsonserialize@1.0.0)
+    com.unity.modules.particlesystem@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.particlesystem@1.0.0)
+    com.unity.modules.physics@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics@1.0.0)
+    com.unity.modules.physics2d@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics2d@1.0.0)
+    com.unity.modules.screencapture@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.screencapture@1.0.0)
+    com.unity.modules.terrain@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrain@1.0.0)
+    com.unity.modules.terrainphysics@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrainphysics@1.0.0)
+    com.unity.modules.tilemap@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.tilemap@1.0.0)
+    com.unity.modules.ui@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ui@1.0.0)
+    com.unity.modules.uielements@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.uielements@1.0.0)
+    com.unity.modules.umbra@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.umbra@1.0.0)
+    com.unity.modules.unityanalytics@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unityanalytics@1.0.0)
+    com.unity.modules.unitywebrequest@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequest@1.0.0)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle@1.0.0)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestaudio@1.0.0)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequesttexture@1.0.0)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestwww@1.0.0)
+    com.unity.modules.vehicles@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vehicles@1.0.0)
+    com.unity.modules.video@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.video@1.0.0)
+    com.unity.modules.vr@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vr@1.0.0)
+    com.unity.modules.wind@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.wind@1.0.0)
+    com.unity.modules.xr@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.xr@1.0.0)
+    com.unity.modules.subsystems@1.0.0 (location: E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.subsystems@1.0.0)
+  Embedded packages:
+    com.bytedance.pico.xr@file:E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr (location: E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr)
+[Subsystems] Looking for new subsystems at path E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr
+[Subsystems] Novel subsystem found at Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path E:/adventurex/PicoWeather/Assets
+[Subsystems] Discovering subsystems at path E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr
+[Subsystems] No descriptors matched for  examples in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json.
+[Subsystems] 1 'inputs' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] 1 'displays' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] 1 'meshings' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] No descriptors matched for  examples in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json.
+[Subsystems] 1 'inputs' descriptors matched in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json
+[Subsystems] No descriptors matched for  displays in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json.
+[Subsystems] 1 'meshings' descriptors matched in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json
+Package Manager log level set to [2]
+[Package Manager] Done registering packages in 0.91 seconds
+Artifact Garbage Collection - Removed 257 unused hashed content files
+[Licensing::Client] Successfully resolved entitlement details
+Refreshing native plugins compatible for Editor in 12.89 ms, found 4 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 2022.3.62f3 (96770f904ca7)
+[Subsystems] Discovering subsystems at path C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path E:/adventurex/PicoWeather/Assets
+[Subsystems] Discovering subsystems at path E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr
+[Subsystems] No descriptors matched for  examples in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json.
+[Subsystems] 1 'inputs' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] 1 'displays' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] 1 'meshings' descriptors matched in Packages/com.bytedance.pico.xr/Runtime/UnitySubsystemsManifest.json
+[Subsystems] No descriptors matched for  examples in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json.
+[Subsystems] 1 'inputs' descriptors matched in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json
+[Subsystems] No descriptors matched for  displays in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json.
+[Subsystems] 1 'meshings' descriptors matched in Packages/com.bytedance.pico.xr/Spatial/UnitySubsystemsManifest.json
+Forcing GfxDevice: Null
+GfxDevice: creating device client; threaded=0; jobified=0
+NullGfxDevice:
+    Version:  NULL 1.0 [1.0]
+    Renderer: Null Device
+    Vendor:   Unity Technologies
+Shader Hidden/ProbeVolume/VoxelizeScene is not supported: GPU does not support conservative rasterization
+[Licensing::Client] Successfully resolved entitlement details
+Initialize mono
+Mono path[0] = 'C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Managed'
+Mono path[1] = 'C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56884
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.014078 seconds.
+- Loaded All Assemblies, in  0.376 seconds
+Native extension for WindowsStandalone target not found
+Native extension for Android target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.271 seconds
+Domain Reload Profiling: 644ms
+	BeginReloadAssembly (117ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (32ms)
+	RebuildNativeTypeToScriptingClass (8ms)
+	initialDomainReloadingComplete (72ms)
+	LoadAllAssembliesAndSetupDomain (143ms)
+		LoadAssemblies (114ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (140ms)
+			TypeCache.Refresh (138ms)
+				TypeCache.ScanAssembly (126ms)
+			ScanForSourceGeneratedMonoScriptInfo (0ms)
+			ResolveRequiredComponents (0ms)
+	FinalizeReload (272ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (227ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (55ms)
+			SetLoadedEditorAssemblies (5ms)
+			RefreshPlugins (0ms)
+			BeforeProcessingInitializeOnLoad (2ms)
+			ProcessInitializeOnLoadAttributes (115ms)
+			ProcessInitializeOnLoadMethodAttributes (50ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+The GUID inside 'Packages/com.bytedance.pico.xr/Runtime/CompositionLayers.meta' cannot be extracted by the YAML Parser. Attempting to extract it via string matching instead. Please verify the file does not contain unexpected data.
+Filename: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetCoreRuntime\dotnet.exe
+Arguments: "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Tools/ScriptUpdater/AssemblyUpdater.exe" checkupdaterconfigs -a "E:/adventurex/PicoWeather/Packages/com.bytedance.pico.xr/Runtime/Android/PxrCommon.dll" --timestamp 639205199103866803  -s "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\ref\2.1.0;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netfx;+E:/adventurex/PicoWeather/Assets;+E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.collab-proxy@2.12.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.feature.development@1.0.1;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.textmeshpro@3.0.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.timeline@1.7.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ugui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.visualscripting@1.9.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ai@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.androidjni@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.animation@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.assetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.audio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.cloth@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.director@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imageconversion@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imgui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.jsonserialize@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.particlesystem@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics2d@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.screencapture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrain@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrainphysics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.tilemap@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.uielements@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.umbra@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unityanalytics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequest@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestaudio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequesttexture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestwww@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vehicles@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.video@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.wind@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.xr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.subsystems@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.visualstudio@2.0.22;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.rider@3.0.36;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.vscode@1.2.5;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.editorcoroutines@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.performance.profile-analyzer@1.2.3;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.test-framework@1.1.33;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.testtools.codecoverage@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.management@4.4.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.interaction.toolkit@2.6.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.core-utils@2.5.2;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.settings-manager@2.1.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ext.nunit@1.0.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.inputsystem@1.14.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.mathematics@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.legacyinputhelpers@2.1.12"
+Filename: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetCoreRuntime\dotnet.exe
+Arguments: "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Tools/ScriptUpdater/AssemblyUpdater.exe" checkupdaterconfigs -a "E:/adventurex/PicoWeather/Packages/com.bytedance.pico.xr/InteractionPack/Scripts/Standalone/PXRInteractionLib.dll" --timestamp 639205199101308592  -s "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\ref\2.1.0;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netfx;+E:/adventurex/PicoWeather/Assets;+E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.collab-proxy@2.12.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.feature.development@1.0.1;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.textmeshpro@3.0.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.timeline@1.7.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ugui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.visualscripting@1.9.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ai@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.androidjni@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.animation@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.assetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.audio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.cloth@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.director@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imageconversion@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imgui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.jsonserialize@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.particlesystem@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics2d@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.screencapture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrain@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrainphysics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.tilemap@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.uielements@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.umbra@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unityanalytics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequest@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestaudio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequesttexture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestwww@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vehicles@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.video@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.wind@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.xr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.subsystems@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.visualstudio@2.0.22;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.rider@3.0.36;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.vscode@1.2.5;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.editorcoroutines@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.performance.profile-analyzer@1.2.3;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.test-framework@1.1.33;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.testtools.codecoverage@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.management@4.4.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.interaction.toolkit@2.6.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.core-utils@2.5.2;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.settings-manager@2.1.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ext.nunit@1.0.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.inputsystem@1.14.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.mathematics@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.legacyinputhelpers@2.1.12"
+[API Updater] Processing imported assemblies took 779 ms (2/2 assembly(ies)).
+Filename: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetCoreRuntime\dotnet.exe
+Arguments: "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Tools/ScriptUpdater/AssemblyUpdater.exe" update -a "E:/adventurex/PicoWeather/Packages/com.bytedance.pico.xr/InteractionPack/Scripts/Standalone/PXRInteractionLib.dll" --output "C:/Users/kfhan/AppData/Local/Temp/tmp78915dc0.tmp" --api-version 2022.3.62f3  -s "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\ref\2.1.0;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netfx;+E:/adventurex/PicoWeather/Assets;+E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.collab-proxy@2.12.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.feature.development@1.0.1;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.textmeshpro@3.0.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.timeline@1.7.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ugui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.visualscripting@1.9.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ai@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.androidjni@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.animation@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.assetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.audio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.cloth@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.director@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imageconversion@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imgui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.jsonserialize@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.particlesystem@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics2d@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.screencapture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrain@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrainphysics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.tilemap@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.uielements@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.umbra@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unityanalytics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequest@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestaudio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequesttexture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestwww@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vehicles@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.video@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.wind@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.xr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.subsystems@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.visualstudio@2.0.22;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.rider@3.0.36;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.vscode@1.2.5;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.editorcoroutines@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.performance.profile-analyzer@1.2.3;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.test-framework@1.1.33;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.testtools.codecoverage@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.management@4.4.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.interaction.toolkit@2.6.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.core-utils@2.5.2;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.settings-manager@2.1.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ext.nunit@1.0.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.inputsystem@1.14.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.mathematics@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.legacyinputhelpers@2.1.12;+C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed" "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Managed/UnityEngine.dll"
+Filename: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetCoreRuntime\dotnet.exe
+Arguments: "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Tools/ScriptUpdater/AssemblyUpdater.exe" update -a "E:/adventurex/PicoWeather/Packages/com.bytedance.pico.xr/Runtime/Android/PxrCommon.dll" --output "C:/Users/kfhan/AppData/Local/Temp/tmp7acf6740.tmp" --api-version 2022.3.62f3  -s "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\ref\2.1.0;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard;C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\NetStandard\compat\2.1.0\shims\netfx;+E:/adventurex/PicoWeather/Assets;+E:\adventurex\PicoWeather\Packages\com.bytedance.pico.xr;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.collab-proxy@2.12.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.feature.development@1.0.1;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.textmeshpro@3.0.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.timeline@1.7.7;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ugui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.visualscripting@1.9.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ai@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.androidjni@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.animation@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.assetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.audio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.cloth@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.director@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imageconversion@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.imgui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.jsonserialize@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.particlesystem@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.physics2d@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.screencapture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrain@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.terrainphysics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.tilemap@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.ui@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.uielements@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.umbra@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unityanalytics@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequest@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestaudio@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequesttexture@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.unitywebrequestwww@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vehicles@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.video@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.vr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.wind@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.xr@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.modules.subsystems@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.visualstudio@2.0.22;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.rider@3.0.36;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ide.vscode@1.2.5;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.editorcoroutines@1.0.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.performance.profile-analyzer@1.2.3;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.test-framework@1.1.33;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.testtools.codecoverage@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.management@4.4.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.interaction.toolkit@2.6.4;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.core-utils@2.5.2;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.settings-manager@2.1.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.ext.nunit@1.0.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.inputsystem@1.14.0;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.mathematics@1.2.6;+E:\adventurex\PicoWeather\Library\PackageCache\com.unity.xr.legacyinputhelpers@2.1.12;+C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Managed" "C:/Program Files/Unity/Hub/Editor/2022.3.62f3/Editor/Data/Managed/UnityEngine.dll"
+[API Updater] Assemblies not requiring updates:
+[API Updater] Packages/com.bytedance.pico.xr/InteractionPack/Scripts/Standalone/PXRInteractionLib.dll
+[API Updater] Packages/com.bytedance.pico.xr/Runtime/Android/PxrCommon.dll
+[API Updater] Update finished with success in 1219 ms (0/2 assembly(ies) updated).
+Assembly Updater Post Process Assets time: 2.003036s
+[ScriptCompilation] Requested script compilation because: Assembly Definition File(s) changed
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:80
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: E:\adventurex\PicoWeather\
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 40.1039ms
+Starting: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: E:/adventurex/PicoWeather
+DisplayProgressbar: Compiling Scripts
+ExitCode: 4 Duration: 0s306ms
+Rebuilding DAG because FileSignature timestamp changed: Library/Bee/1300b0aE-inputdata.json
+*** Tundra requires additional run (0.26 seconds), 1 items updated, 498 evaluated
+Starting: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Tools\netcorerun\netcorerun.exe "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\Tools\BuildPipeline\ScriptCompilationBuildProgram.exe" "Library/Bee/1300b0aE.dag.json" "Library/Bee/1300b0aE-inputdata.json" "Library\Bee\buildprogram0.traceevents"
+WorkingDir: E:/adventurex/PicoWeather
+ExitCode: 0 Duration: 0s412ms
+Starting: C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Data\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aE.dag" --continue-on-failure --dagfilejson="Library\Bee\1300b0aE.dag.json" --profile="Library/Bee/backend2.traceevents" ScriptAssemblies
+WorkingDir: E:/adventurex/PicoWeather
+ExitCode: 0 Duration: 10s
+Finished compiling graph: 620 nodes, 8787 flattened edges (7687 ToBuild, 120 ToUse), maximum node priority 498
+[146/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.rsp
+[147/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEngine.XR.LegacyInputHelpers.rsp
+[148/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.UnityAdditionalFile.txt
+[149/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEngine.UI.rsp
+[150/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.rsp
+[151/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.rsp
+[152/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.rsp
+[153/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEditor.UI.rsp
+[154/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.rsp
+[158/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.rsp2
+[164/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.UnityAdditionalFile.txt
+[169/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEngine.SpatialTracking.rsp
+[170/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.rsp2
+[171/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.rsp2
+[172/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.UnityAdditionalFile.txt
+[173/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.dll.mvfrm.rsp
+[174/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.rsp
+[178/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.rsp
+[179/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.dll.mvfrm.rsp
+[180/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.rsp
+[181/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.rsp
+[182/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.dll.mvfrm.rsp
+[183/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.rsp2
+[184/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.Editor.rsp
+[185/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.rsp
+[192/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.UnityAdditionalFile.txt
+[200/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.rsp
+[201/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.UnityAdditionalFile.txt
+[203/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.dll.mvfrm.rsp
+[205/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.rsp2
+[206/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.rsp
+[207/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.dll.mvfrm.rsp
+[208/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.UnityAdditionalFile.txt
+[211/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.rsp
+[212/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.rsp2
+[213/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.rsp
+[214/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.rsp
+[221/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.dll.mvfrm.rsp
+[225/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.Editor.rsp
+[247/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Settings.Editor.rsp
+[248/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.rsp
+[249/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.Editor.rsp
+[266/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.UnityAdditionalFile.txt
+[269/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.dll.mvfrm.rsp
+[272/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.Editor.rsp
+[273/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.rsp2
+[275/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.rsp
+[276/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.rsp
+[278/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.UnityAdditionalFile.txt
+[279/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.rsp2
+[280/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.UnityAdditionalFile.txt
+[281/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.rsp2
+[282/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VSCode.Editor.rsp
+[283/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEditor.XR.LegacyInputHelpers.rsp
+[284/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Shared.Editor.rsp
+[285/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.dll.mvfrm.rsp
+[286/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.EditorCoroutines.Editor.rsp
+[287/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.dll.mvfrm.rsp
+[288/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.Editor.rsp
+[289/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.ForUI.rsp
+[290/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/UnityEditor.SpatialTracking.rsp
+[291/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.Editor.rsp
+[292/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.rsp
+[293/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.UnityAdditionalFile.txt
+[294/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.rsp2
+[295/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.UnityAdditionalFile.txt
+[296/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.UnityAdditionalFile.txt
+[297/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.UnityAdditionalFile.txt
+[298/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.rsp2
+[299/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.rsp2
+[300/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.UnityAdditionalFile.txt
+[301/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.rsp
+[302/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.dll.mvfrm.rsp
+[303/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.dll.mvfrm.rsp
+[304/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.dll.mvfrm.rsp
+[305/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.dll.mvfrm.rsp
+[308/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.SettingsProvider.Editor.rsp
+[322/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.rsp2
+[324/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.Editor.rsp
+[329/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.rsp2
+[334/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.rsp
+[335/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.rsp
+[336/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.rsp
+[337/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.rsp
+[338/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.rsp
+[339/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Performance.Profile-Analyzer.Editor.rsp
+[340/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.dll.mvfrm.rsp
+[341/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.Editor.rsp
+[342/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp-Editor.rsp
+[343/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.PlasticSCM.Editor.Entities.rsp
+[344/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp.rsp
+[345/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.rsp
+[346/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.CollabProxy.Editor.rsp
+[347/617    0s] WriteText Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.Editor.rsp
+[348/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.UI.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.UI.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[351/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.UI.pdb
+[352/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.UI.dll
+[353/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.UI.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.UI.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[370/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.UI.pdb
+[373/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.dll.mvfrm
+[375/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.dll.mvfrm
+[377/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.dll.mvfrm
+[378/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.dll.mvfrm
+[379/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.UI.dll
+[384/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.EditorCoroutines.Editor.dll (+2 others)
+[385/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.dll (+2 others)
+[386/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.dll.mvfrm
+[387/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.dll.mvfrm
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.EditorCoroutines.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[394/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.SpatialTracking.dll (+2 others)
+[396/617    0s] CopyFiles Library/ScriptAssemblies/Unity.EditorCoroutines.Editor.dll
+[397/617    0s] CopyFiles Library/ScriptAssemblies/Unity.EditorCoroutines.Editor.pdb
+[398/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.dll (+2 others)
+[400/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.dll
+[401/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TestTools.CodeCoverage.Editor.OpenCover.Mono.Reflection.pdb
+[402/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[403/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VSCode.Editor.dll (+2 others)
+[406/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Management.pdb
+[407/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Management.dll
+[408/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.SpatialTracking.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[412/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.SpatialTracking.dll
+[413/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.SpatialTracking.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VSCode.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[415/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VSCode.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[418/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Timeline.pdb
+[419/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Timeline.dll
+[421/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.pdb
+[422/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TestTools.CodeCoverage.Editor.OpenCover.Model.dll
+[423/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Settings.Editor.dll (+2 others)
+[424/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.dll (+2 others)
+[425/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VSCode.Editor.dll
+[426/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.CollabProxy.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Settings.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[433/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Settings.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Spatial.Stage.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[434/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Spatial.Stage.pdb
+[435/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Spatial.Stage.dll
+[436/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Settings.Editor.dll
+[437/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.PlasticSCM.Editor.Entities.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.CollabProxy.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[438/617    0s] CopyFiles Library/ScriptAssemblies/Unity.CollabProxy.Editor.dll
+[439/617    0s] CopyFiles Library/ScriptAssemblies/Unity.CollabProxy.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.PlasticSCM.Editor.Entities.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[440/617    0s] CopyFiles Library/ScriptAssemblies/Unity.PlasticSCM.Editor.Entities.pdb
+[441/617    0s] CopyFiles Library/ScriptAssemblies/Unity.PlasticSCM.Editor.Entities.dll
+[442/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.dll (+2 others)
+[443/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.XR.LegacyInputHelpers.dll (+2 others)
+[444/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Performance.Profile-Analyzer.Editor.dll (+2 others)
+[445/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.SpatialTracking.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[448/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TextMeshPro.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEngine.XR.LegacyInputHelpers.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Performance.Profile-Analyzer.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[450/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.XR.LegacyInputHelpers.dll
+[451/617    0s] CopyFiles Library/ScriptAssemblies/UnityEngine.XR.LegacyInputHelpers.pdb
+[453/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Performance.Profile-Analyzer.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.SpatialTracking.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[455/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.SpatialTracking.pdb
+[456/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.SpatialTracking.dll
+[457/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.Editor.dll (+2 others)
+[458/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TextMeshPro.dll
+[459/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Performance.Profile-Analyzer.Editor.dll
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Management.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[461/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Management.Editor.pdb
+[462/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Management.Editor.dll
+[463/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.dll.mvfrm
+[464/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.TextMeshPro.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[466/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TextMeshPro.Editor.pdb
+[467/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.Editor.dll (+2 others)
+[468/617    3s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Timeline.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[470/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Timeline.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[484/617    0s] CopyFiles Library/ScriptAssemblies/Unity.InputSystem.pdb
+[485/617    3s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.dll (+2 others)
+[486/617    0s] CopyFiles Library/ScriptAssemblies/Unity.InputSystem.dll
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[489/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Mathematics.pdb
+[490/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Mathematics.dll
+[491/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Timeline.Editor.dll
+[492/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.ForUI.dll (+2 others)
+[493/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.XR.LegacyInputHelpers.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.InputSystem.ForUI.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[495/617    0s] CopyFiles Library/ScriptAssemblies/Unity.InputSystem.ForUI.dll
+[496/617    0s] CopyFiles Library/ScriptAssemblies/Unity.InputSystem.ForUI.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/UnityEditor.XR.LegacyInputHelpers.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[498/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.XR.LegacyInputHelpers.pdb
+[499/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.dll (+2 others)
+[500/617    0s] CopyFiles Library/ScriptAssemblies/UnityEditor.XR.LegacyInputHelpers.dll
+[501/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[505/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.CoreUtils.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.Mathematics.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[506/617    0s] CopyFiles Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll
+[508/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Mathematics.Editor.dll
+[509/617    0s] CopyFiles Library/ScriptAssemblies/Unity.Mathematics.Editor.pdb
+[510/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.CoreUtils.dll
+[511/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.Editor.dll (+2 others)
+[512/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.CoreUtils.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[514/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.CoreUtils.Editor.pdb
+[518/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Core.pdb
+[519/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Core.dll
+[520/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.dll.mvfrm
+[521/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.CoreUtils.Editor.dll
+[522/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[525/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.pdb
+[526/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.dll
+[527/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.dll.mvfrm
+[528/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.dll.mvfrm
+[529/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.dll.mvfrm
+[530/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.dll.mvfrm
+[531/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.dll.mvfrm
+[532/617    0s] MovedFromExtractorCombine Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.dll.mvfrm
+[533/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[536/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Flow.pdb
+[537/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Flow.dll
+[538/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.dll (+2 others)
+[539/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.SptatialUI.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[540/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.SptatialUI.dll
+[541/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.SptatialUI.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.XR.Interaction.Toolkit.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[542/617    1s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.Editor.dll (+2 others)
+[544/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Core.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[545/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.dll (+2 others)
+[548/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Core.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[550/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.State.dll
+[551/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.State.pdb
+[552/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Core.Editor.dll
+[553/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.dll (+2 others)
+Packages\com.bytedance.pico.xr\Runtime\Debugger\Scripts\UI\Inspector\PXR_InspectorItem.cs(23,22): warning CS0414: The field 'PXR_InspectorItem.hasChild' is assigned but its value is never used
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Debugger.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[554/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Debugger.pdb
+[555/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Debugger.dll
+[556/617    0s] CopyFiles Library/ScriptAssemblies/Unity.XR.Interaction.Toolkit.Editor.dll
+[557/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Flow.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[561/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Flow.Editor.pdb
+[562/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.dll (+2 others)
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SecureMR\Component\Operator\PXR_SecureMROperand.cs(10,23): warning CS0108: 'PXR_SecureMROperand.name' hides inherited member 'Object.name'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SecureMR\Component\Operator\PXR_SecureMRResult.cs(10,23): warning CS0108: 'PXR_SecureMRResult.name' hides inherited member 'Object.name'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2290,19): warning CS0660: 'PxrExtent2Di' defines operator == or operator != but does not override Object.Equals(object o)
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2290,19): warning CS0661: 'PxrExtent2Di' defines operator == or operator != but does not override Object.GetHashCode()
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(241,35): warning CS0109: The member 'PXR_Controller.gripSurfacePosition' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(244,38): warning CS0109: The member 'PXR_Controller.gripSurfaceRotation' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(112,34): warning CS0109: The member 'PXR_HMD.eyeGazeIsTracked' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(115,35): warning CS0109: The member 'PXR_HMD.eyeGazeTrackingState' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(118,35): warning CS0109: The member 'PXR_HMD.eyeGazePosition' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(121,38): warning CS0109: The member 'PXR_HMD.eyeGazeRotation' does not hide an accessible member. The new keyword is not required.
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Utils\LitJson\JsonWriter.cs(387,21): warning CS3021: 'JsonWriter.Write(ulong)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(5126,21): warning CS0219: The variable 'Count' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(364,17): warning CS0618: 'PXR_OverLay' is obsolete: 'PXR_OverLay is obsolete and will be removed in the next version. Please use PXR_CompositionLayer instead.'
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(366,57): warning CS0618: 'PXR_OverlayManager' is obsolete: 'PXR_OverlayManager is obsolete and will be removed in the next version. Please use PXR_CompositionLayerManager instead.'
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(368,57): warning CS0618: 'PXR_OverlayManager' is obsolete: 'PXR_OverlayManager is obsolete and will be removed in the next version. Please use PXR_CompositionLayerManager instead.'
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(371,39): warning CS0618: 'PXR_OverLay' is obsolete: 'PXR_OverLay is obsolete and will be removed in the next version. Please use PXR_CompositionLayer instead.'
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(5178,23): warning CS0219: The variable 'Count' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SensePack\PXR_PlaneDetectionManager.cs(25,9): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(31,23): warning CS0414: The field 'PXR_CameraEffectBlock.b' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Loader.cs(858,29): warning CS0414: The field 'PXR_Loader._isSessionActive' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Controller\PXR_ControllerWithHandAnimator.cs(74,33): warning CS0414: The field 'PXR_ControllerWithHandAnimator.menu_Press_LayerName' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(32,23): warning CS0414: The field 'PXR_CameraEffectBlock.a' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(196,14): warning CS0414: The field 'PXR_Manager.isURP' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(29,23): warning CS0414: The field 'PXR_CameraEffectBlock.r' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(16,21): warning CS0414: The field 'PXR_CameraEffectBlock.col' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(15,21): warning CS0414: The field 'PXR_CameraEffectBlock.row' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(20,23): warning CS0414: The field 'PXR_CameraEffectBlock.saturation' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(30,23): warning CS0414: The field 'PXR_CameraEffectBlock.g' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(3344,33): warning CS0414: The field 'PXR_Plugin.System.isInitAudio' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(18,23): warning CS0414: The field 'PXR_CameraEffectBlock.brightness' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2323,28): warning CS0414: The field 'PXR_Plugin.PXR_API_Version' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Controller\PXR_ControllerWithHandAnimator.cs(80,33): warning CS0414: The field 'PXR_ControllerWithHandAnimator.pico_Press_LayerName' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_CompositionLayerManager.cs(24,14): warning CS0414: The field 'PXR_CompositionLayerManager.isURP' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_OverlayManager.cs(25,14): warning CS0414: The field 'PXR_OverlayManager.isURP' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(19,23): warning CS0414: The field 'PXR_CameraEffectBlock.contrast' is assigned but its value is never used
+[563/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Flow.Editor.dll
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[564/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.pdb
+[565/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.dll
+[566/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.SettingsProvider.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.SettingsProvider.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[567/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.Editor.dll (+2 others)
+[569/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.SettingsProvider.Editor.dll
+[570/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.SettingsProvider.Editor.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.State.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[573/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.State.Editor.pdb
+[574/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.State.Editor.dll
+[575/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.dll (+2 others)
+Packages\com.bytedance.pico.xr\SpatialAudio\Runtime\PXR_Audio_Spatializer_MRSceneGeometryManager.cs(11,65): warning CS0414: The field 'PXR_Audio_Spatializer_MRSceneGeometryManager._instance' is assigned but its value is never used
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[576/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.pdb
+[577/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.dll
+[578/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Shared.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/Unity.VisualScripting.Shared.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[582/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Shared.Editor.dll
+[583/617    0s] CopyFiles Library/ScriptAssemblies/Unity.VisualScripting.Shared.Editor.pdb
+[584/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.dll (+2 others)
+[585/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Spatializer.Example.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[586/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.Example.pdb
+[587/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.Example.dll
+[588/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.Editor.pdb
+[589/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Spatializer.Editor.dll
+[590/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.dll (+2 others)
+Packages\com.bytedance.pico.xr\Editor\PXR_PortalEditor.cs(24,7): warning CS0105: The using directive for 'System.Collections.Generic' appeared previously in this namespace
+
+Packages\com.bytedance.pico.xr\Editor\PXR_Utils.cs(41,7): warning CS0105: The using directive for 'Unity.XR.CoreUtils.Capabilities.Editor' appeared previously in this namespace
+
+Packages\com.bytedance.pico.xr\Editor\PXR_BuildProcessor.cs(50,19): warning CS0219: The variable 'isPxrOpenXRFeatureEnabled' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\PXR_BuildProcessor.cs(51,19): warning CS0219: The variable 'isPxrOpenXRExtensionsEnabled' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\PXR_AppLog.cs(227,30): warning CS0168: The variable 'e' is declared but never used
+
+Packages\com.bytedance.pico.xr\Editor\PXR_AppLog.cs(257,30): warning CS0168: The variable 'e' is declared but never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(770,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.trackingStateRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(771,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.positionRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(777,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokeRotationRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(765,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValuePinchValueLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\PXR_EditorStyles.cs(31,26): warning CS0414: The field 'PXR_EditorStyles._contentArea' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(755,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.positionLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(775,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pinchPositionRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(754,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.trackingStateLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(783,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressValuePointerActivateValueRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(769,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.isTrackedRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(758,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimRotationLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(763,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectPinchTouchedLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(767,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressValuePointerActivateValueLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(764,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValueGraspValueLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(772,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.rotationRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(776,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokePositionRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\PXR_SettingsEditor.cs(50,29): warning CS0414: The field 'PXR_SettingsEditor.hasSpatialAdapterAllUninstalled' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(781,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValuePinchValueRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(757,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimPositionLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(587,29): warning CS0414: The field 'PXR_BuildingBlocksXRHandTracking.isImportSampleStart' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(759,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pinchPositionLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(773,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimPositionRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(780,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValueGraspValueRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(762,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectGraspFirmLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(782,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressPointerActivatedRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(760,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokePositionLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(779,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectPinchTouchedRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(778,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectGraspFirmRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(766,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressPointerActivatedLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(774,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimRotationRightHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(756,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.rotationLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(761,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokeRotationLeftHandPath' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(753,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.isTrackedLeftHandPath' is assigned but its value is never used
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.XR.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[591/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Editor.pdb
+[592/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Interaction.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[593/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Interaction.dll
+[594/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Interaction.pdb
+[595/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.XR.Editor.dll
+[596/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.dll (+2 others)
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayDemo.cs(12,20): warning CS0108: 'VirtualDisplayDemo.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\Enterprise\Sample\CameraRendering\PXR\EnterpriseAPI.cs(14,20): warning CS0108: 'EnterpriseAPI.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayEvent.cs(19,19): warning CS0108: 'VirtualDisplayEvent.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(1439,17): warning CS0219: The variable 'sensorFrameIndex' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2049,22): warning CS0219: The variable 'value' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2093,20): warning CS0219: The variable 'value' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2899,22): warning CS0219: The variable 'value' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(3159,17): warning CS0219: The variable 'sensorFrameIndex' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(35,29): warning CS0414: The field 'PXR_EnterprisePlugin.camOpened' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(38,37): warning CS0414: The field 'PXR_EnterprisePlugin.distortionFrameItemExt' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Sample\CameraRendering\PXR\EnterpriseAPI.cs(25,18): warning CS0414: The field 'EnterpriseAPI.d' is assigned but its value is never used
+
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayDemo.cs(15,18): warning CS0414: The field 'VirtualDisplayDemo.isBind' is assigned but its value is never used
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Enterprise.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[597/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Enterprise.pdb
+[598/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Enterprise.dll
+[599/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.dll (+2 others)
+Packages\com.bytedance.pico.xr\Platform\Samples\SimpleDemo.cs(32,66): warning CS0618: 'Message.GetError()' is obsolete: 'Use Error instead'
+
+Packages\com.bytedance.pico.xr\Platform\Samples\SimpleDemo.cs(32,94): warning CS0618: 'Message.GetError()' is obsolete: 'Use Error instead'
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[600/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.dll (+2 others)
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(18,41): warning CS0108: 'OpenxrCameraAPI.cancellationTokenSource' hides inherited member 'CameraAPI.cancellationTokenSource'. Use the new keyword if hiding was intended.
+
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\CameraAPI.cs(74,41): warning CS1998: This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread.
+
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(73,13): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(160,17): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+[601/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Platform.pdb
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[602/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.CameraPack.pdb
+[603/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Platform.dll
+[604/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.CameraPack.dll
+[605/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.dll (+2 others)
+[606/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.dll (+2 others)
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.Platform.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[607/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Platform.Editor.pdb
+[608/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.Platform.Editor.dll
+[           0s] Csc Library/Bee/artifacts/1300b0aE.dag/ByteDance.PICO.CameraPack.Editor.dll (+2 others) [CacheWrite 00000000000000000000000000000003]
+[609/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.CameraPack.Editor.pdb
+[610/617    0s] CopyFiles Library/ScriptAssemblies/ByteDance.PICO.CameraPack.Editor.dll
+[611/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp.dll (+2 others)
+[612/617    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[613/617    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[614/617    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+[615/617    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[616/617    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (10.17 seconds), 264 items updated, 617 evaluated
+Packages\com.bytedance.pico.xr\Runtime\Debugger\Scripts\UI\Inspector\PXR_InspectorItem.cs(23,22): warning CS0414: The field 'PXR_InspectorItem.hasChild' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SecureMR\Component\Operator\PXR_SecureMROperand.cs(10,23): warning CS0108: 'PXR_SecureMROperand.name' hides inherited member 'Object.name'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SecureMR\Component\Operator\PXR_SecureMRResult.cs(10,23): warning CS0108: 'PXR_SecureMRResult.name' hides inherited member 'Object.name'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2290,19): warning CS0660: 'PxrExtent2Di' defines operator == or operator != but does not override Object.Equals(object o)
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2290,19): warning CS0661: 'PxrExtent2Di' defines operator == or operator != but does not override Object.GetHashCode()
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(241,35): warning CS0109: The member 'PXR_Controller.gripSurfacePosition' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(244,38): warning CS0109: The member 'PXR_Controller.gripSurfaceRotation' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(112,34): warning CS0109: The member 'PXR_HMD.eyeGazeIsTracked' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(115,35): warning CS0109: The member 'PXR_HMD.eyeGazeTrackingState' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(118,35): warning CS0109: The member 'PXR_HMD.eyeGazePosition' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\InputSystem\DeviceLayouts.cs(121,38): warning CS0109: The member 'PXR_HMD.eyeGazeRotation' does not hide an accessible member. The new keyword is not required.
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Utils\LitJson\JsonWriter.cs(387,21): warning CS3021: 'JsonWriter.Write(ulong)' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(5126,21): warning CS0219: The variable 'Count' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(364,17): warning CS0618: 'PXR_OverLay' is obsolete: 'PXR_OverLay is obsolete and will be removed in the next version. Please use PXR_CompositionLayer instead.'
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(366,57): warning CS0618: 'PXR_OverlayManager' is obsolete: 'PXR_OverlayManager is obsolete and will be removed in the next version. Please use PXR_CompositionLayerManager instead.'
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(368,57): warning CS0618: 'PXR_OverlayManager' is obsolete: 'PXR_OverlayManager is obsolete and will be removed in the next version. Please use PXR_CompositionLayerManager instead.'
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(371,39): warning CS0618: 'PXR_OverLay' is obsolete: 'PXR_OverLay is obsolete and will be removed in the next version. Please use PXR_CompositionLayer instead.'
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(5178,23): warning CS0219: The variable 'Count' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\SensePack\PXR_PlaneDetectionManager.cs(25,9): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(31,23): warning CS0414: The field 'PXR_CameraEffectBlock.b' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Loader.cs(858,29): warning CS0414: The field 'PXR_Loader._isSessionActive' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Controller\PXR_ControllerWithHandAnimator.cs(74,33): warning CS0414: The field 'PXR_ControllerWithHandAnimator.menu_Press_LayerName' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(32,23): warning CS0414: The field 'PXR_CameraEffectBlock.a' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Manager.cs(196,14): warning CS0414: The field 'PXR_Manager.isURP' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(29,23): warning CS0414: The field 'PXR_CameraEffectBlock.r' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(16,21): warning CS0414: The field 'PXR_CameraEffectBlock.col' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(15,21): warning CS0414: The field 'PXR_CameraEffectBlock.row' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(20,23): warning CS0414: The field 'PXR_CameraEffectBlock.saturation' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(30,23): warning CS0414: The field 'PXR_CameraEffectBlock.g' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(3344,33): warning CS0414: The field 'PXR_Plugin.System.isInitAudio' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(18,23): warning CS0414: The field 'PXR_CameraEffectBlock.brightness' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_Plugin.cs(2323,28): warning CS0414: The field 'PXR_Plugin.PXR_API_Version' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\Controller\PXR_ControllerWithHandAnimator.cs(80,33): warning CS0414: The field 'PXR_ControllerWithHandAnimator.pico_Press_LayerName' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_CompositionLayerManager.cs(24,14): warning CS0414: The field 'PXR_CompositionLayerManager.isURP' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\Scripts\PXR_OverlayManager.cs(25,14): warning CS0414: The field 'PXR_OverlayManager.isURP' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Runtime\BuildingBlocks\PXR_CameraEffectBlock.cs(19,23): warning CS0414: The field 'PXR_CameraEffectBlock.contrast' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\SpatialAudio\Runtime\PXR_Audio_Spatializer_MRSceneGeometryManager.cs(11,65): warning CS0414: The field 'PXR_Audio_Spatializer_MRSceneGeometryManager._instance' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\PXR_PortalEditor.cs(24,7): warning CS0105: The using directive for 'System.Collections.Generic' appeared previously in this namespace
+Packages\com.bytedance.pico.xr\Editor\PXR_Utils.cs(41,7): warning CS0105: The using directive for 'Unity.XR.CoreUtils.Capabilities.Editor' appeared previously in this namespace
+Packages\com.bytedance.pico.xr\Editor\PXR_BuildProcessor.cs(50,19): warning CS0219: The variable 'isPxrOpenXRFeatureEnabled' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\PXR_BuildProcessor.cs(51,19): warning CS0219: The variable 'isPxrOpenXRExtensionsEnabled' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\PXR_AppLog.cs(227,30): warning CS0168: The variable 'e' is declared but never used
+Packages\com.bytedance.pico.xr\Editor\PXR_AppLog.cs(257,30): warning CS0168: The variable 'e' is declared but never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(770,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.trackingStateRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(771,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.positionRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(777,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokeRotationRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(765,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValuePinchValueLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\PXR_EditorStyles.cs(31,26): warning CS0414: The field 'PXR_EditorStyles._contentArea' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(755,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.positionLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(775,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pinchPositionRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(754,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.trackingStateLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(783,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressValuePointerActivateValueRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(769,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.isTrackedRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(758,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimRotationLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(763,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectPinchTouchedLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(767,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressValuePointerActivateValueLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(764,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValueGraspValueLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(772,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.rotationRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(776,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokePositionRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\PXR_SettingsEditor.cs(50,29): warning CS0414: The field 'PXR_SettingsEditor.hasSpatialAdapterAllUninstalled' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(781,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValuePinchValueRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(757,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimPositionLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(587,29): warning CS0414: The field 'PXR_BuildingBlocksXRHandTracking.isImportSampleStart' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(759,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pinchPositionLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(773,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimPositionRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(780,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectValueGraspValueRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(762,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectGraspFirmLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(782,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressPointerActivatedRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(760,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokePositionLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(779,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectPinchTouchedRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(778,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.selectGraspFirmRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(766,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.uiPressPointerActivatedLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(774,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.aimRotationRightHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(756,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.rotationLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(761,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.pokeRotationLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Editor\BuildingBlocks\PXR_BuildingBlocks.cs(753,23): warning CS0414: The field 'PXR_BuildingBlocksXRIHandInteraction.isTrackedLeftHandPath' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayDemo.cs(12,20): warning CS0108: 'VirtualDisplayDemo.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\Enterprise\Sample\CameraRendering\PXR\EnterpriseAPI.cs(14,20): warning CS0108: 'EnterpriseAPI.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayEvent.cs(19,19): warning CS0108: 'VirtualDisplayEvent.tag' hides inherited member 'Component.tag'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(1439,17): warning CS0219: The variable 'sensorFrameIndex' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2049,22): warning CS0219: The variable 'value' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2093,20): warning CS0219: The variable 'value' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(2899,22): warning CS0219: The variable 'value' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(3159,17): warning CS0219: The variable 'sensorFrameIndex' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(35,29): warning CS0414: The field 'PXR_EnterprisePlugin.camOpened' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Scripts\Plugin\PXR_EnterprisePlugin.cs(38,37): warning CS0414: The field 'PXR_EnterprisePlugin.distortionFrameItemExt' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Sample\CameraRendering\PXR\EnterpriseAPI.cs(25,18): warning CS0414: The field 'EnterpriseAPI.d' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Enterprise\Sample\VirtualDisplay\PXR\VirtualDisplayDemo.cs(15,18): warning CS0414: The field 'VirtualDisplayDemo.isBind' is assigned but its value is never used
+Packages\com.bytedance.pico.xr\Platform\Samples\SimpleDemo.cs(32,66): warning CS0618: 'Message.GetError()' is obsolete: 'Use Error instead'
+Packages\com.bytedance.pico.xr\Platform\Samples\SimpleDemo.cs(32,94): warning CS0618: 'Message.GetError()' is obsolete: 'Use Error instead'
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(18,41): warning CS0108: 'OpenxrCameraAPI.cancellationTokenSource' hides inherited member 'CameraAPI.cancellationTokenSource'. Use the new keyword if hiding was intended.
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\CameraAPI.cs(74,41): warning CS1998: This async method lacks 'await' operators and will run synchronously. Consider using the 'await' operator to await non-blocking API calls, or 'await Task.Run(...)' to do CPU-bound work on a background thread.
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(73,13): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+Packages\com.bytedance.pico.xr\CameraPack\Scripts\CameraAPI\OpenxrCameraAPI.cs(160,17): warning CS4014: Because this call is not awaited, execution of the current method continues before the call is completed. Consider applying the 'await' operator to the result of the call.
+AssetDatabase: script compilation time: 11.530174s
+Begin MonoManager ReloadAssembly
+Total cache size 286564439
+Total cache size after purge 267935038
+- Loaded All Assemblies, in  8.352 seconds
+Refreshing native plugins compatible for Editor in 11.35 ms, found 19 plugins.
+Refreshing native plugins compatible for Editor in 11.32 ms, found 19 plugins.
+Preloading 3 native plugins for Editor in 11.47 ms.
+Start importing ProjectSettings/ProjectSettings.asset using Guid(00000000000000004000000000000000) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: 'cf1df18bef737a68c2ec9c0b972a0fce') in 0.017201 seconds
+Start importing Packages/com.unity.ide.rider/Rider/Editor/Util/StringBuilderExtensions.cs using Guid(302b1bdfb7a645db994491799832912b) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: 'f71e976a851fa607898562c4b61ca929') in 0.011318 seconds
+Start importing Packages/com.unity.visualscripting/Runtime/VisualScripting.Core/Profiling/ProfilingScope.cs using Guid(60666401183e14d97a519e26b9286803) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: 'e1b5b1c2af68e6ecab2cf608f97b3957') in 0.011291 seconds
+Start importing Packages/com.unity.inputsystem/InputSystem/Controls/IntegerControl.cs using Guid(7009ea2cce278c14d852537c8f40c8a0) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '311356d1ec88f9ac9ed3688b006cf1a7') in 0.010518 seconds
+Start importing Packages/com.bytedance.pico.xr/Runtime/Scripts/Utils/LitJson/JsonData.cs using Guid(d3ae25b6b7cd44b40a54c07476a52456) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '079dc2131203ee342dc28dac647739bc') in 0.001800 seconds
+Start importing Packages/com.unity.inputsystem/InputSystem/Controls/ButtonControl.cs using Guid(d618f7e3781548c28836f39ae65d95e1) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '9bd4eec76a017609b15ae6c44715aa4f') in 0.019608 seconds
+Start importing Packages/com.unity.visualscripting/Runtime/VisualScripting.Core/Graphs/GraphData.cs using Guid(e82ba0da11a744d4aa13044f972bf8f0) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '6722f7b6ced3104ed4837fb083eb4c74') in 0.009844 seconds
+Start importing Packages/com.unity.xr.core-utils/Runtime/SerializableGuid.cs using Guid(f9facd22a8f5b48648dab827bbd89ab7) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '9c121ab1cef5cb6b67523bf43e99ccde') in 0.013502 seconds
+Start importing Packages/com.unity.visualscripting/Runtime/VisualScripting.Core/EditorBinding/InspectableAttribute.cs using Guid(1c8eee4ffafe34c72bac99573462a6cc) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '863567efaa8dca7806f7edcd0d685e03') in 0.013761 seconds
+Start importing Packages/com.unity.visualscripting/Editor/VisualScripting.Core/Interface/Edge.cs using Guid(3c82b1307400344c98ccd9a518a66745) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '93d8c4c73acd0842063d6156e49c8d94') in 0.009919 seconds
+Start importing Packages/com.unity.xr.core-utils/Runtime/Extensions/StringExtensions.cs using Guid(bd37ccc84c2cb414eacfa2044d871820) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: 'f3e72f33f69ae13f70240a398be6f884') in 0.010148 seconds
+Start importing Packages/com.unity.visualscripting/Runtime/VisualScripting.Core/StickyNote/StickyNote.cs using Guid(ce4f0beaed75f4949a8bab86dd9acba7) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '13e020e8a5970854afc2444a9762d803') in 0.012328 seconds
+Start importing Packages/com.unity.timeline/Editor/Utilities/PropertyCollector.cs using Guid(1f3a562675833b4448299e4f627b0cec) Importer(-1,00000000000000000000000000000000) [PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ -> (artifact id: '0f1ae8bb79c178baf8ac95cef21d20ef') in 0.009990 seconds
+Refreshing native plugins compatible for Editor in 12.19 ms, found 19 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for Android target not found
+PXRLog [Build Check]RegisterBuildPlayerHandler,Already Do not show: False
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+ByteDance.PICO.XR.Editor.PXR_SDKBuildCheck:.cctor () (at ./Packages/com.bytedance.pico.xr/Editor/PXR_SDKBuildCheck.cs:31)
+System.Runtime.CompilerServices.RuntimeHelpers:RunClassConstructor (System.RuntimeTypeHandle)
+UnityEditor.EditorAssemblies:ProcessInitializeOnLoadAttributes (System.Type[])
+
+(Filename: ./Packages/com.bytedance.pico.xr/Editor/PXR_SDKBuildCheck.cs Line: 31)
+
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.677 seconds
+Domain Reload Profiling: 9024ms
+	BeginReloadAssembly (176ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (5ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (28ms)
+	RebuildCommonClasses (33ms)
+	RebuildNativeTypeToScriptingClass (9ms)
+	initialDomainReloadingComplete (36ms)
+	LoadAllAssembliesAndSetupDomain (8094ms)
+		LoadAssemblies (7956ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (230ms)
+			TypeCache.Refresh (197ms)
+				TypeCache.ScanAssembly (181ms)
+			ScanForSourceGeneratedMonoScriptInfo (22ms)
+			ResolveRequiredComponents (8ms)
+	FinalizeReload (677ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (536ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (20ms)
+			SetLoadedEditorAssemblies (4ms)
+			RefreshPlugins (0ms)
+			BeforeProcessingInitializeOnLoad (55ms)
+			ProcessInitializeOnLoadAttributes (391ms)
+			ProcessInitializeOnLoadMethodAttributes (53ms)
+			AfterProcessingInitializeOnLoad (12ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (10ms)
+Shader Hidden/ProbeVolume/VoxelizeScene is not supported: GPU does not support conservative rasterization
+Refreshing native plugins compatible for Editor in 12.66 ms, found 19 plugins.
+Preloading 3 native plugins for Editor in 0.12 ms.
+Asset Pipeline Refresh (id=555135fdb14b87b4f8dac25df5423c63): Total: 27.364 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=13 (actual=13, local cache=0, cache server=0)
+		Asset DB Process Time: managed=4 ms, native=3418 ms
+		Asset DB Callback time: managed=730 ms, native=397 ms
+		Scripting: domain reloads=1, domain reload time=9224 ms, compile time=13535 ms, other=53 ms
+		Project Asset Count: scripts=6353, non-scripts=1229
+		Asset File Changes: new=912, changed=912, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeBeforeRefreshCallbacks: 1.109ms
+	ApplyChangesToAssetFolders: 0.113ms
+	Scan: 212.585ms
+	OnSourceAssetsModified: 31.919ms
+	GetAllGuidsForCategorization: 1.927ms
+	CategorizeAssets: 197.801ms
+	ImportOutOfDateAssets: 1044.167ms (-12694.283ms without children)
+		ImportManagerImport: 161.593ms (6.780ms without children)
+			ImportInProcess: 154.453ms
+			UpdateCategorizedAssets: 0.360ms
+		CompileScripts: 13535.081ms
+		ReloadNativeAssets: 0.026ms
+		UnloadImportedAssets: 30.814ms
+		ReloadImportedAssets: 3.184ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 3.852ms
+		InitializingProgressBar: 0.306ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.001ms
+		OnDemandSchedulerStart: 3.593ms
+	PostProcessAllAssets: 1129.914ms
+	Hotreload: 15.267ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.507ms
+	UnloadStreamsBegin: 1.372ms
+	PersistCurrentRevisions: 4.973ms
+	UnloadStreamsEnd: 0.553ms
+	GenerateScriptTypeHashes: 3.050ms
+	Untracked: 24721.632ms
+Application.AssetDatabase Initial Refresh End
+Scanning for USB devices : 2.327ms
+Initializing Unity extensions:
+[Licensing::Client] Successfully resolved entitlement details
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-Immersive Weather
+[PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+ProgressiveSceneManager::Cancel()
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 130 unused Assets / (0.5 MB). Loaded Objects now: 5716.
+Memory consumption went from 143.5 MB to 143.0 MB.
+Total: 5.310900 ms (FindLiveObjects: 0.376000 ms CreateObjectMapping: 0.180000 ms MarkObjects: 4.390600 ms  DeleteObjects: 0.363400 ms)
+
+Batchmode quit successfully invoked - shutting down!
+Curl error 42: Callback aborted
+[PhysX] Initialized MultithreadedTaskDispatcher with 16 workers.
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-kfhan-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-kfhan channel disconnected successfully.
+Cleanup mono
+abort_threads: Failed aborting id: 0000000000009290, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000004240, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000008E48, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000009290, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000004240, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000008E48, mono_thread_manage will ignore it
+
+debugger-agent: Unable to listen on 5192
+[Performance] WinEditorMain                                                                                                                                :        1 samples, Peak.  2.60 s (1.0x), Avg.  2.60 s, Total. 2.597 s (7.1%)
+[Performance] WinEditorMain.ConfigureCrashHandler                                                                                                          :        1 samples, Peak.  30.8 us (1.0x), Avg.  30.8 us, Total. 30.80 us (0.0%)
+[Performance] WinEditorMain.CurlRequestInitialize                                                                                                          :        1 samples, Peak.   895 us (1.0x), Avg.   895 us, Total. 895.1 us (0.0%)
+[Performance] WinEditorMain.SetupLogFile                                                                                                                   :        1 samples, Peak.   376 us (1.0x), Avg.   376 us, Total. 375.5 us (0.0%)
+[Performance] WinEditorMain.RunNativeTestsIfRequiredAndExit                                                                                                :        1 samples, Peak.   100 ns (1.0x), Avg.   100 ns, Total. 100.0 ns (0.0%)
+[Performance] WinEditorMain.Licensing                                                                                                                      :        1 samples, Peak.  2.56 s (1.0x), Avg.  2.56 s, Total. 2.561 s (7.0%)
+[Performance] WinEditorMain.InitializeCrashHandler                                                                                                         :        1 samples, Peak.  30.2 ms (1.0x), Avg.  30.2 ms, Total. 30.20 ms (0.1%)
+[Performance] WinEditorMain.CreateApplication                                                                                                              :        1 samples, Peak.   199 us (1.0x), Avg.   199 us, Total. 198.6 us (0.0%)
+[Performance] Application.InitializeProject                                                                                                                :        1 samples, Peak.  33.4 s (1.0x), Avg.  33.4 s, Total. 33.41 s (91.4%)
+[Performance] Application.PackageManager.StartServer                                                                                                       :        1 samples, Peak.  7.23 ms (1.0x), Avg.  7.23 ms, Total. 7.226 ms (0.0%)
+[Performance] Application.AcquireProjectLock                                                                                                               :        1 samples, Peak.  6.95 ms (1.0x), Avg.  6.95 ms, Total. 6.949 ms (0.0%)
+[Performance] Application.InitializeEngineNoGraphics                                                                                                       :        1 samples, Peak.  59.4 ms (1.0x), Avg.  59.4 ms, Total. 59.36 ms (0.2%)
+[Performance] Application.PackageManager.Initialize                                                                                                        :        1 samples, Peak.   420 ms (1.0x), Avg.   420 ms, Total. 420.2 ms (1.1%)
+[Performance] Connecting to Package Manager                                                                                                                :       43 samples, Peak.  76.9 us (20.7x), Avg.  3.71 us, Total. 159.6 us (0.0%)
+[Performance] PackageManager::Api::RunRequestSynchronously                                                                                                 :       50 samples, Peak.  19.1 us (3.7x), Avg.  5.22 us, Total. 260.9 us (0.0%)
+[Performance] Application.EngineGraphics.Initialize                                                                                                        :        1 samples, Peak.  54.9 ms (1.0x), Avg.  54.9 ms, Total. 54.89 ms (0.2%)
+[Performance] Application.GI.Initialize                                                                                                                    :        1 samples, Peak.  3.34 ms (1.0x), Avg.  3.34 ms, Total. 3.341 ms (0.0%)
+[Performance] Application.LoadAllDefaultResourcesFromEditor                                                                                                :        1 samples, Peak.  1.84 ms (1.0x), Avg.  1.84 ms, Total. 1.837 ms (0.0%)
+[Performance] Application.LoadMonoAssemblies                                                                                                               :        1 samples, Peak.   671 ms (1.0x), Avg.   671 ms, Total. 670.8 ms (1.8%)
+[Performance] RestoreManagedReferences                                                                                                                     :        2 samples, Peak.  43.0 ms (2.0x), Avg.  21.5 ms, Total. 43.03 ms (0.1%)
+[Performance] InitializeOnLoad DrivenRectTransformUndo                                                                                                     :        2 samples, Peak.   413 us (1.0x), Avg.   400 us, Total. 799.2 us (0.0%)
+[Performance] InitializeOnLoad SceneSearch                                                                                                                 :        2 samples, Peak.   135 us (1.1x), Avg.   118 us, Total. 235.1 us (0.0%)
+[Performance] InitializeOnLoad CloudBuild                                                                                                                  :        2 samples, Peak.  6.10 us (1.2x), Avg.  4.95 us, Total. 9.900 us (0.0%)
+[Performance] InitializeOnLoad NativeFormatImporterUtility                                                                                                 :        2 samples, Peak.  2.38 ms (1.2x), Avg.  1.95 ms, Total. 3.909 ms (0.0%)
+[Performance] InitializeOnLoad SearchService                                                                                                               :        2 samples, Peak.   119 us (1.0x), Avg.   116 us, Total. 232.5 us (0.0%)
+[Performance] InitializeOnLoad SettingsService                                                                                                             :        2 samples, Peak.  11.5 us (1.2x), Avg.  9.35 us, Total. 18.70 us (0.0%)
+[Performance] InitializeOnLoad WindowLayout                                                                                                                :        2 samples, Peak.   267 us (1.1x), Avg.   252 us, Total. 504.6 us (0.0%)
+[Performance] InitializeOnLoad AssetStoreContext                                                                                                           :        2 samples, Peak.  23.9 ms (1.6x), Avg.  15.2 ms, Total. 30.49 ms (0.1%)
+[Performance] InitializeOnLoad PoolManager                                                                                                                 :        2 samples, Peak.   687 us (1.1x), Avg.   630 us, Total. 1.261 ms (0.0%)
+[Performance] InitializeOnLoad MixerEffectDefinitionReloader                                                                                               :        2 samples, Peak.  2.45 ms (1.2x), Avg.  2.06 ms, Total. 4.116 ms (0.0%)
+[Performance] InitializeOnLoad ProjectSearch                                                                                                               :        2 samples, Peak.   129 us (1.5x), Avg.  88.5 us, Total. 177.0 us (0.0%)
+[Performance] InitializeOnLoad UISystemProfilerRenderService                                                                                               :        2 samples, Peak.  9.00 us (1.1x), Avg.  8.20 us, Total. 16.40 us (0.0%)
+[Performance] InitializeOnLoad EditMode                                                                                                                    :        2 samples, Peak.   943 us (1.5x), Avg.   641 us, Total. 1.282 ms (0.0%)
+[Performance] InitializeOnLoad UnityConnect                                                                                                                :        2 samples, Peak.  62.2 us (1.1x), Avg.  55.0 us, Total. 110.0 us (0.0%)
+[Performance] InitializeOnLoad ManagedDebugger                                                                                                             :        2 samples, Peak.   602 us (1.0x), Avg.   598 us, Total. 1.195 ms (0.0%)
+[Performance] InitializeOnLoad ShortcutIntegration                                                                                                         :        2 samples, Peak.  58.5 us (1.0x), Avg.  57.3 us, Total. 114.7 us (0.0%)
+[Performance] InitializeOnLoad AddComponentWindow                                                                                                          :        2 samples, Peak.   125 us (1.0x), Avg.   121 us, Total. 241.9 us (0.0%)
+[Performance] InitializeOnLoad ManagedDebuggerWindow                                                                                                       :        2 samples, Peak.   173 us (1.2x), Avg.   149 us, Total. 297.0 us (0.0%)
+[Performance] InitializeOnLoad CacheServerWindow                                                                                                           :        2 samples, Peak.  11.8 us (1.1x), Avg.  10.8 us, Total. 21.50 us (0.0%)
+[Performance] InitializeOnLoad PlayModeDownload                                                                                                            :        2 samples, Peak.  2.88 ms (1.9x), Avg.  1.49 ms, Total. 2.981 ms (0.0%)
+[Performance] InitializeOnLoad MenuItems                                                                                                                   :        2 samples, Peak.   104 us (1.1x), Avg.  93.1 us, Total. 186.2 us (0.0%)
+[Performance] InitializeOnLoad PrefabInstanceChangedListener                                                                                               :        2 samples, Peak.   141 us (1.0x), Avg.   138 us, Total. 275.2 us (0.0%)
+[Performance] InitializeOnLoad ObjectSelectorSearch                                                                                                        :        2 samples, Peak.  47.7 us (1.1x), Avg.  44.5 us, Total. 89.00 us (0.0%)
+[Performance] InitializeOnLoad EditorMonitor                                                                                                               :        2 samples, Peak.   639 us (1.2x), Avg.   535 us, Total. 1.069 ms (0.0%)
+[Performance] InitializeOnLoad RetainedMode                                                                                                                :        2 samples, Peak.  2.36 ms (1.1x), Avg.  2.25 ms, Total. 4.504 ms (0.0%)
+[Performance] InitializeOnLoad EditorShaderLoader                                                                                                          :        2 samples, Peak.   854 us (1.1x), Avg.   762 us, Total. 1.525 ms (0.0%)
+[Performance] InitializeOnLoad EditorDelegateRegistration                                                                                                  :        2 samples, Peak.   551 us (1.1x), Avg.   508 us, Total. 1.016 ms (0.0%)
+[Performance] InitializeOnLoad UIDocumentHierarchyWatcher                                                                                                  :        2 samples, Peak.   127 us (1.2x), Avg.   106 us, Total. 212.6 us (0.0%)
+[Performance] InitializeOnLoad LiveReloadTrackerCreator                                                                                                    :        2 samples, Peak.   198 us (1.0x), Avg.   197 us, Total. 394.1 us (0.0%)
+[Performance] InitializeOnLoad UxmlObjectEditorFactories                                                                                                   :        2 samples, Peak.   523 us (1.0x), Avg.   521 us, Total. 1.042 ms (0.0%)
+[Performance] InitializeOnLoad UXMLEditorFactories                                                                                                         :        2 samples, Peak.  62.4 ms (1.1x), Avg.  59.4 ms, Total. 118.8 ms (0.3%)
+[Performance] InitializeOnLoad PurchasingService                                                                                                           :        2 samples, Peak.  6.83 ms (1.0x), Avg.  6.72 ms, Total. 13.45 ms (0.0%)
+[Performance] InitializeOnLoad CloudBuildPoller                                                                                                            :        2 samples, Peak.   122 us (1.1x), Avg.   116 us, Total. 232.4 us (0.0%)
+[Performance] InitializeOnLoad EditorGameServicesAnalytics                                                                                                 :        2 samples, Peak.  1.34 ms (1.3x), Avg.  1.04 ms, Total. 2.079 ms (0.0%)
+[Performance] InitializeOnLoad AnalyticsService                                                                                                            :        2 samples, Peak.   187 us (1.1x), Avg.   176 us, Total. 351.6 us (0.0%)
+[Performance] InitializeOnLoad BuildService                                                                                                                :        2 samples, Peak.   144 us (1.0x), Avg.   142 us, Total. 284.0 us (0.0%)
+[Performance] InitializeOnLoad AdsService                                                                                                                  :        2 samples, Peak.   385 us (1.0x), Avg.   375 us, Total. 750.4 us (0.0%)
+[Performance] InitializeOnLoad UDPService                                                                                                                  :        2 samples, Peak.   165 us (1.1x), Avg.   154 us, Total. 308.5 us (0.0%)
+[Performance] InitializeOnLoad CrashService                                                                                                                :        2 samples, Peak.   142 us (1.0x), Avg.   139 us, Total. 278.1 us (0.0%)
+[Performance] InitializeOnLoad ServicesRepository                                                                                                          :        2 samples, Peak.  1.60 us (1.5x), Avg.  1.10 us, Total. 2.200 us (0.0%)
+[Performance] InitializeOnLoad SearchWindow                                                                                                                :        2 samples, Peak.   159 us (1.2x), Avg.   131 us, Total. 261.3 us (0.0%)
+[Performance] InitializeOnLoad CustomIndexers                                                                                                              :        2 samples, Peak.  19.6 ms (1.1x), Avg.  17.3 ms, Total. 34.59 ms (0.1%)
+[Performance] InitializeOnLoad SearchMonitor                                                                                                               :        2 samples, Peak.  1.79 ms (1.4x), Avg.  1.31 ms, Total. 2.614 ms (0.0%)
+[Performance] InitializeOnLoad ParameterControllerEditor                                                                                                   :        2 samples, Peak.  35.3 us (1.2x), Avg.  28.3 us, Total. 56.50 us (0.0%)
+[Performance] InitializeOnLoad LayerSettingsWindow                                                                                                         :        2 samples, Peak.  35.7 us (1.8x), Avg.  20.1 us, Total. 40.20 us (0.0%)
+[Performance] InitializeOnLoad PackageManagerHookGUIDConverter.RegisterPackagesEventHandler                                                                :        2 samples, Peak.   746 us (1.7x), Avg.   437 us, Total. 874.0 us (0.0%)
+[Performance] InitializeOnLoad EditorDragAndDrop.RegisterEditorClient                                                                                      :        2 samples, Peak.   237 us (1.1x), Avg.   211 us, Total. 422.6 us (0.0%)
+[Performance] InitializeOnLoad EditorEventCallbacks.InitializeFontAssetResourceChangeCallBacks                                                             :        2 samples, Peak.  1.16 ms (1.0x), Avg.  1.15 ms, Total. 2.303 ms (0.0%)
+[Performance] InitializeOnLoad SceneTemplateService.Init                                                                                                   :        2 samples, Peak.  1.24 ms (1.0x), Avg.  1.20 ms, Total. 2.399 ms (0.0%)
+[Performance] InitializeOnLoad DiagnosticSwitchesConsoleMessage.Init                                                                                       :        2 samples, Peak.  11.1 ms (1.9x), Avg.  5.89 ms, Total. 11.78 ms (0.0%)
+[Performance] InitializeOnLoad PackageManagerWindow.EditorInitializedInSafeMode                                                                            :        2 samples, Peak.  25.5 ms (2.0x), Avg.  12.9 ms, Total. 25.73 ms (0.1%)
+[Performance] InitializeOnLoad ToolShortcutContext.Init                                                                                                    :        2 samples, Peak.   172 us (1.1x), Avg.   153 us, Total. 305.5 us (0.0%)
+[Performance] InitializeOnLoad MemoryProfilerCompilationGuard.InjectCompileGuard                                                                           :        2 samples, Peak.   164 us (1.0x), Avg.   158 us, Total. 315.9 us (0.0%)
+[Performance] InitializeOnLoad AssetPostprocessingInternal.RefreshCustomDependencies                                                                       :        2 samples, Peak.  3.04 ms (1.6x), Avg.  1.95 ms, Total. 3.903 ms (0.0%)
+[Performance] InitializeOnLoad SysrootManager.Initialize                                                                                                   :        2 samples, Peak.   479 us (1.0x), Avg.   462 us, Total. 924.6 us (0.0%)
+[Performance] InitializeOnLoad ScopedRegistryAddedPopup.SubscribeToRegistriesAdded                                                                         :        2 samples, Peak.  7.61 ms (2.0x), Avg.  3.86 ms, Total. 7.723 ms (0.0%)
+[Performance] InitializeOnLoad SceneVisibilityManager.Initialize                                                                                           :        2 samples, Peak.  4.87 ms (1.7x), Avg.  2.88 ms, Total. 5.757 ms (0.0%)
+[Performance] InitializeOnLoad EditorWindow.Initialize                                                                                                     :        2 samples, Peak.   262 us (1.1x), Avg.   239 us, Total. 478.6 us (0.0%)
+[Performance] AssemblyReloadEvents.afterAssemblyReload: UnityEditor.SceneTemplate.SceneTemplateService.AfterAssemblyReload                                 :        2 samples, Peak.  2.97 ms (1.8x), Avg.  1.63 ms, Total. 3.259 ms (0.0%)
+[Performance] ProcessService.EditorAfterLoadAllAssemblies                                                                                                  :        2 samples, Peak.   425 us (1.2x), Avg.   363 us, Total. 726.1 us (0.0%)
+[Performance] Application.ReadLicenseInfo                                                                                                                  :        1 samples, Peak.  29.1 ms (1.0x), Avg.  29.1 ms, Total. 29.13 ms (0.1%)
+[Performance] Application.InitialRefresh                                                                                                                   :        1 samples, Peak.  27.4 s (1.0x), Avg.  27.4 s, Total. 27.37 s (74.9%)
+[Performance] ShaderImporter.SourceAssetModified                                                                                                           :        2 samples, Peak.  11.2 ms (1.1x), Avg.  10.5 ms, Total. 21.06 ms (0.1%)
+[Performance] UpgradeShaderAsset                                                                                                                           :       52 samples, Peak.  1.23 ms (3.1x), Avg.   402 us, Total. 20.92 ms (0.1%)
+[Performance] ShaderIncludeImporter.SourceAssetModified                                                                                                    :        2 samples, Peak.  1.12 ms (1.0x), Avg.  1.10 ms, Total. 2.197 ms (0.0%)
+[Performance] UpgradeShaderIncludeAsset                                                                                                                    :        6 samples, Peak.   421 us (1.4x), Avg.   310 us, Total. 1.861 ms (0.0%)
+[Performance] Compiling Scripts                                                                                                                            :        1 samples, Peak.  13.5 s (1.0x), Avg.  13.5 s, Total. 13.53 s (37.0%)
+[Performance] Package.AsyncRequest                                                                                                                         :       18 samples, Peak.  1.55 ms (5.3x), Avg.   293 us, Total. 5.275 ms (0.0%)
+[Performance] AssemblyReloadEvents.beforeAssemblyReload: UnityEditor.SceneTemplate.SceneTemplateService.BeforeAssemblyReload                               :        1 samples, Peak.   429 us (1.0x), Avg.   429 us, Total. 429.1 us (0.0%)
+[Performance] PresetManagerPostProcessor.OnPreprocessAsset                                                                                                 :       13 samples, Peak.  2.18 ms (12.0x), Avg.   181 us, Total. 2.357 ms (0.0%)
+[Performance] CancelSplashScreenOnAssetChange.OnPreprocessAsset                                                                                            :       13 samples, Peak.   396 us (12.1x), Avg.  32.7 us, Total. 425.5 us (0.0%)
+[Performance] InitializeOnLoad TouchSimulation                                                                                                             :        1 samples, Peak.   259 us (1.0x), Avg.   259 us, Total. 258.9 us (0.0%)
+[Performance] InitializeOnLoad InputSystem                                                                                                                 :        1 samples, Peak.  51.6 ms (1.0x), Avg.  51.6 ms, Total. 51.59 ms (0.1%)
+[Performance] InitializeOnLoad InputSystemUIInputModuleEditor                                                                                              :        1 samples, Peak.   128 us (1.0x), Avg.   128 us, Total. 128.4 us (0.0%)
+[Performance] InitializeOnLoad EnableUITKEditor                                                                                                            :        1 samples, Peak.  23.5 us (1.0x), Avg.  23.5 us, Total. 23.50 us (0.0%)
+[Performance] InitializeOnLoad SectorInteraction                                                                                                           :        1 samples, Peak.   466 us (1.0x), Avg.   466 us, Total. 465.9 us (0.0%)
+[Performance] InitializeOnLoad Vector3FallbackComposite                                                                                                    :        1 samples, Peak.   115 us (1.0x), Avg.   115 us, Total. 115.1 us (0.0%)
+[Performance] InitializeOnLoad SimulatedInputLayoutLoader                                                                                                  :        1 samples, Peak.   204 us (1.0x), Avg.   204 us, Total. 204.5 us (0.0%)
+[Performance] InitializeOnLoad IntegerFallbackComposite                                                                                                    :        1 samples, Peak.  69.3 us (1.0x), Avg.  69.3 us, Total. 69.30 us (0.0%)
+[Performance] InitializeOnLoad ButtonFallbackComposite                                                                                                     :        1 samples, Peak.  70.0 us (1.0x), Avg.  70.0 us, Total. 70.00 us (0.0%)
+[Performance] InitializeOnLoad QuaternionFallbackComposite                                                                                                 :        1 samples, Peak.  59.4 us (1.0x), Avg.  59.4 us, Total. 59.40 us (0.0%)
+[Performance] InitializeOnLoad InputLayoutLoader                                                                                                           :        1 samples, Peak.   358 us (1.0x), Avg.   358 us, Total. 358.2 us (0.0%)
+[Performance] InitializeOnLoad PXR_PlatformSetting                                                                                                         :        1 samples, Peak.  12.8 us (1.0x), Avg.  12.8 us, Total. 12.80 us (0.0%)
+[Performance] InitializeOnLoad XRGeneralSettingsPerBuildTarget                                                                                             :        1 samples, Peak.   502 us (1.0x), Avg.   502 us, Total. 501.8 us (0.0%)
+[Performance] InitializeOnLoad XRLegacyUninstaller                                                                                                         :        1 samples, Peak.  7.14 ms (1.0x), Avg.  7.14 ms, Total. 7.143 ms (0.0%)
+[Performance] InitializeOnLoad XRPackageInitializationBootstrap                                                                                            :        1 samples, Peak.  80.0 us (1.0x), Avg.  80.0 us, Total. 80.00 us (0.0%)
+[Performance] InitializeOnLoad XRPackageMetadataStore                                                                                                      :        1 samples, Peak.   518 us (1.0x), Avg.   518 us, Total. 518.2 us (0.0%)
+[Performance] InitializeOnLoad ScriptableSettingsInitializer                                                                                               :        1 samples, Peak.   188 us (1.0x), Avg.   188 us, Total. 188.1 us (0.0%)
+[Performance] InitializeOnLoad BuildValidator                                                                                                              :        1 samples, Peak.   620 us (1.0x), Avg.   620 us, Total. 619.6 us (0.0%)
+[Performance] InitializeOnLoad InteractionLayerUpdater                                                                                                     :        1 samples, Peak.  5.70 us (1.0x), Avg.  5.70 us, Total. 5.700 us (0.0%)
+[Performance] InitializeOnLoad VSUsageUtility                                                                                                              :        1 samples, Peak.  18.3 ms (1.0x), Avg.  18.3 ms, Total. 18.32 ms (0.1%)
+[Performance] InitializeOnLoad PrefabLayoutRebuilder                                                                                                       :        1 samples, Peak.   282 us (1.0x), Avg.   282 us, Total. 281.6 us (0.0%)
+[Performance] InitializeOnLoad BackgroundWatcher                                                                                                           :        1 samples, Peak.   155 us (1.0x), Avg.   155 us, Total. 154.9 us (0.0%)
+[Performance] InitializeOnLoad UnityTestProtocolStarter                                                                                                    :        1 samples, Peak.   266 us (1.0x), Avg.   266 us, Total. 266.3 us (0.0%)
+[Performance] InitializeOnLoad TestStarter                                                                                                                 :        1 samples, Peak.   629 us (1.0x), Avg.   629 us, Total. 629.4 us (0.0%)
+[Performance] InitializeOnLoad RerunCallbackInitializer                                                                                                    :        1 samples, Peak.  3.81 ms (1.0x), Avg.  3.81 ms, Total. 3.811 ms (0.0%)
+[Performance] InitializeOnLoad RiderScriptEditor                                                                                                           :        1 samples, Peak.  12.7 ms (1.0x), Avg.  12.7 ms, Total. 12.73 ms (0.0%)
+[Performance] InitializeOnLoad CallbackInitializer                                                                                                         :        1 samples, Peak.  1.45 ms (1.0x), Avg.  1.45 ms, Total. 1.451 ms (0.0%)
+[Performance] InitializeOnLoad VisualStudioEditor                                                                                                          :        1 samples, Peak.  9.98 ms (1.0x), Avg.  9.98 ms, Total. 9.983 ms (0.0%)
+[Performance] InitializeOnLoad TestRunnerApiListener                                                                                                       :        1 samples, Peak.   832 us (1.0x), Avg.   832 us, Total. 831.5 us (0.0%)
+[Performance] InitializeOnLoad VisualStudioIntegration                                                                                                     :        1 samples, Peak.  2.22 ms (1.0x), Avg.  2.22 ms, Total. 2.216 ms (0.0%)
+[Performance] InitializeOnLoad PackageEntryPoint                                                                                                           :        1 samples, Peak.  81.5 ms (1.0x), Avg.  81.5 ms, Total. 81.51 ms (0.2%)
+[Performance] InitializeOnLoad UnityInternalsInjector                                                                                                      :        1 samples, Peak.  1.05 ms (1.0x), Avg.  1.05 ms, Total. 1.047 ms (0.0%)
+[Performance] InitializeOnLoad UVCSToolbarBoostrap                                                                                                         :        1 samples, Peak.  51.8 ms (1.0x), Avg.  51.8 ms, Total. 51.79 ms (0.1%)
+[Performance] InitializeOnLoad PXR_PortalEditor                                                                                                            :        1 samples, Peak.  16.3 us (1.0x), Avg.  16.3 us, Total. 16.30 us (0.0%)
+[Performance] InitializeOnLoad PXR_Utils                                                                                                                   :        1 samples, Peak.  2.64 ms (1.0x), Avg.  2.64 ms, Total. 2.637 ms (0.0%)
+[Performance] InitializeOnLoad PXR_PicoDebuggerSetup                                                                                                       :        1 samples, Peak.  92.1 us (1.0x), Avg.  92.1 us, Total. 92.10 us (0.0%)
+[Performance] InitializeOnLoad PXR_SDKBuildCheck                                                                                                           :        1 samples, Peak.  2.13 ms (1.0x), Avg.  2.13 ms, Total. 2.134 ms (0.0%)
+[Performance] InitializeOnLoad CoverageReporterStarter                                                                                                     :        1 samples, Peak.  5.35 ms (1.0x), Avg.  5.35 ms, Total. 5.346 ms (0.0%)
+[Performance] InitializeOnLoad VSCodeScriptEditor                                                                                                          :        1 samples, Peak.  3.53 ms (1.0x), Avg.  3.53 ms, Total. 3.527 ms (0.0%)
+[Performance] InitializeOnLoad CoreUtilsAnalytics.RegisterEvents                                                                                           :        1 samples, Peak.   844 us (1.0x), Avg.   844 us, Total. 843.8 us (0.0%)
+[Performance] InitializeOnLoad PXR_ProjectValidationRequired.AddRequiredRules                                                                              :        1 samples, Peak.  6.00 ms (1.0x), Avg.  6.00 ms, Total. 5.999 ms (0.0%)
+[Performance] InitializeOnLoad PXR_InstallPreprocessor.PreHandler                                                                                          :        1 samples, Peak.  44.3 us (1.0x), Avg.  44.3 us, Total. 44.30 us (0.0%)
+[Performance] InitializeOnLoad PXR_Utils.SetDefaultDefineSymbols                                                                                           :        1 samples, Peak.  14.1 ms (1.0x), Avg.  14.1 ms, Total. 14.07 ms (0.0%)
+[Performance] InitializeOnLoad PXR_PortalEditor.InitializeOnLoad                                                                                           :        1 samples, Peak.   355 us (1.0x), Avg.   355 us, Total. 355.4 us (0.0%)
+[Performance] InitializeOnLoad PXR_ProjectValidationRecommend.AddRecommendRules                                                                            :        1 samples, Peak.  3.26 ms (1.0x), Avg.  3.26 ms, Total. 3.263 ms (0.0%)
+[Performance] InitializeOnLoad PXR_ProjectValidationOptional.AddOptionalRules                                                                              :        1 samples, Peak.   491 us (1.0x), Avg.   491 us, Total. 490.7 us (0.0%)
+[Performance] InitializeOnLoad PXR_Utils.IsPicoSpatializerAvailable                                                                                        :        1 samples, Peak.  1.65 ms (1.0x), Avg.  1.65 ms, Total. 1.652 ms (0.0%)
+[Performance] InitializeOnLoad InputSystemPackageControl.SubscribePackageManagerEvent                                                                      :        1 samples, Peak.   140 us (1.0x), Avg.   140 us, Total. 139.6 us (0.0%)
+[Performance] InitializeOnLoad InputSystemPluginControl.CheckForExtension                                                                                  :        1 samples, Peak.  2.23 ms (1.0x), Avg.  2.23 ms, Total. 2.233 ms (0.0%)
+[Performance] InitializeOnLoad TestJobDataHolder.ResumeRunningJobs                                                                                         :        1 samples, Peak.  1.13 ms (1.0x), Avg.  1.13 ms, Total. 1.128 ms (0.0%)
+[Performance] InitializeOnLoad AnalyticsReporter.RegisterCallbacks                                                                                         :        1 samples, Peak.   298 us (1.0x), Avg.   298 us, Total. 298.3 us (0.0%)
+[Performance] InitializeOnLoad VisualStudioEditor.LegacyVisualStudioCodePackageDisabler                                                                    :        1 samples, Peak.  5.27 ms (1.0x), Avg.  5.27 ms, Total. 5.268 ms (0.0%)
+[Performance] InitializeOnLoad CameraProjectValidation.AddRequiredRules                                                                                    :        1 samples, Peak.   673 us (1.0x), Avg.   673 us, Total. 672.8 us (0.0%)
+[Performance] DidReloadScriptsPackageVersionUtility.OnReloadScripts                                                                                        :        1 samples, Peak.  94.5 us (1.0x), Avg.  94.5 us, Total. 94.50 us (0.0%)
+[Performance] DidReloadScriptsAdvancedDropdownWindow.OnScriptReload                                                                                        :        2 samples, Peak.   257 us (1.1x), Avg.   230 us, Total. 459.5 us (0.0%)
+[Performance] DidReloadScriptsTestRunnerWindow.CompilationCallback                                                                                         :        1 samples, Peak.   186 us (1.0x), Avg.   186 us, Total. 186.1 us (0.0%)
+[Performance] DidReloadScriptsTestListCache.ScriptReloaded                                                                                                 :        1 samples, Peak.  1.48 ms (1.0x), Avg.  1.48 ms, Total. 1.479 ms (0.0%)
+[Performance] AssemblyReloadEvents.afterAssemblyReload: UnityEditor.XR.Management.Metadata.XRPackageMetadataStore.AssemblyReloadEvents_afterAssemblyReload :        1 samples, Peak.  2.85 ms (1.0x), Avg.  2.85 ms, Total. 2.847 ms (0.0%)
+[Performance] AssetDatabase.ImportAssets                                                                                                                   :        3 samples, Peak.  8.70 us (2.7x), Avg.  3.17 us, Total. 9.500 us (0.0%)
+[Performance] VersionControl.Task.Wait                                                                                                                     :        1 samples, Peak.   391 us (1.0x), Avg.   391 us, Total. 390.5 us (0.0%)
+[Performance] TMPro_TexturePostProcessor.OnPostprocessAllAssets                                                                                            :        2 samples, Peak.   553 us (1.2x), Avg.   480 us, Total. 960.4 us (0.0%)
+[Performance] UVCSAssetPostprocessor.OnPostprocessAllAssets                                                                                                :        2 samples, Peak.   413 us (1.0x), Avg.   411 us, Total. 822.3 us (0.0%)
+[Performance] BuilderAssetPostprocessor.OnPostprocessAllAssets                                                                                             :        2 samples, Peak.  15.5 ms (1.0x), Avg.  15.5 ms, Total. 30.95 ms (0.1%)
+[Performance] ArtifactBrowserPostProcessor.OnPostprocessAllAssets                                                                                          :        2 samples, Peak.   645 us (1.0x), Avg.   643 us, Total. 1.286 ms (0.0%)
+[Performance] AssetEvents.OnPostprocessAllAssets                                                                                                           :        4 samples, Peak.   285 us (1.7x), Avg.   172 us, Total. 689.3 us (0.0%)
+[Performance] AudioMixerPostprocessor.OnPostprocessAllAssets                                                                                               :        2 samples, Peak.   358 us (1.0x), Avg.   356 us, Total. 713.0 us (0.0%)
+[Performance] StyleCatalogPostProcessor.OnPostprocessAllAssets                                                                                             :        2 samples, Peak.  24.6 ms (1.0x), Avg.  24.6 ms, Total. 49.28 ms (0.1%)
+[Performance] BuildCatalog                                                                                                                                 :        1 samples, Peak.  23.0 ms (1.0x), Avg.  23.0 ms, Total. 23.03 ms (0.1%)
+[Performance] ModelImporterPostProcessor.OnPostprocessAllAssets                                                                                            :        2 samples, Peak.  3.46 ms (1.0x), Avg.  3.46 ms, Total. 6.922 ms (0.0%)
+[Performance] RetainedModeAssetPostprocessor.OnPostprocessAllAssets                                                                                        :        2 samples, Peak.  2.71 ms (1.0x), Avg.  2.71 ms, Total. 5.413 ms (0.0%)
+[Performance] AssetChangedListener.OnPostprocessAllAssets                                                                                                  :        2 samples, Peak.  2.86 ms (1.0x), Avg.  2.86 ms, Total. 5.716 ms (0.0%)
+[Performance] SpeedTreePostProcessor.OnPostprocessAllAssets                                                                                                :        2 samples, Peak.  4.10 ms (1.0x), Avg.  4.10 ms, Total. 8.202 ms (0.0%)
+[Performance] TextAssetPostProcessor.OnPostprocessAllAssets                                                                                                :        2 samples, Peak.  4.52 ms (1.0x), Avg.  4.52 ms, Total. 9.041 ms (0.0%)
+[Performance] AssetCallbacks.OnPostprocessAllAssets                                                                                                        :        2 samples, Peak.  84.5 ms (1.0x), Avg.  84.5 ms, Total. 169.0 ms (0.5%)
+[Performance] InputActionAssetPostprocessor.OnPostprocessAllAssets                                                                                         :        2 samples, Peak.  4.15 ms (1.0x), Avg.  4.14 ms, Total. 8.280 ms (0.0%)
+[Performance] InputActionJsonNameModifierAssetProcessor.OnPostprocessAllAssets                                                                             :        2 samples, Peak.  3.43 ms (1.0x), Avg.  3.43 ms, Total. 6.860 ms (0.0%)
+[Performance] ProjectSettingsPostprocessor.OnPostprocessAllAssets                                                                                          :        2 samples, Peak.   311 us (1.0x), Avg.   309 us, Total. 618.6 us (0.0%)
+[Performance] SyncVS.PostprocessSyncProject                                                                                                                :        1 samples, Peak.   558 ms (1.0x), Avg.   558 ms, Total. 557.9 ms (1.5%)
+[Performance] EditorApplication.projectChanged: UnityEditor.Audio.MixerEffectDefinitionReloader.OnProjectChanged                                           :        1 samples, Peak.   540 us (1.0x), Avg.   540 us, Total. 539.9 us (0.0%)
+[Performance] EditorApplication.projectChanged: UnityEngine.InputSystem.LowLevel.NativeInputRuntime.OnProjectChanged                                       :        1 samples, Peak.   229 us (1.0x), Avg.   229 us, Total. 229.5 us (0.0%)
+[Performance] Application.ImportPackagesAndSetTemplateWhenCreatingProject                                                                                  :        1 samples, Peak.  44.3 ms (1.0x), Avg.  44.3 ms, Total. 44.30 ms (0.1%)
+[Performance] Application.SyncCurrentColorSpace                                                                                                            :        1 samples, Peak.   700 ns (1.0x), Avg.   700 ns, Total. 700.0 ns (0.0%)
+[Performance] Application.OnUsbDevicesChanged                                                                                                              :        1 samples, Peak.  2.39 ms (1.0x), Avg.  2.39 ms, Total. 2.393 ms (0.0%)
+[Performance] Application.AssetInstanceCacheUpdate                                                                                                         :        1 samples, Peak.   200 ns (1.0x), Avg.   200 ns, Total. 200.0 ns (0.0%)
+[Performance] Application.UnityExtensions.Initialize                                                                                                       :        1 samples, Peak.  5.85 ms (1.0x), Avg.  5.85 ms, Total. 5.848 ms (0.0%)
+[Performance] CodeEditorProjectSync.SyncEditorProject                                                                                                      :        1 samples, Peak.   194 ms (1.0x), Avg.   194 ms, Total. 194.4 ms (0.5%)
+[Performance] Application.ExecuteStartups                                                                                                                  :        1 samples, Peak.  57.2 ms (1.0x), Avg.  57.2 ms, Total. 57.16 ms (0.2%)
+[Performance] Menu.RegisterMenuInterface                                                                                                                   :       26 samples, Peak.  1.80 us (5.6x), Avg.   319 ns, Total. 8.300 us (0.0%)
+[Performance] Gizmo.RebuildRenderers                                                                                                                       :        1 samples, Peak.  53.4 ms (1.0x), Avg.  53.4 ms, Total. 53.37 ms (0.1%)
+[Performance] Gizmo.AddGizmoRenderers                                                                                                                      :       97 samples, Peak.  1.56 ms (61.6x), Avg.  25.3 us, Total. 2.459 ms (0.0%)
+[Performance] Application.editorInitializingProject                                                                                                        :        1 samples, Peak.   193 ms (1.0x), Avg.   193 ms, Total. 193.4 ms (0.5%)
+[Performance] Application.InitializeMenu                                                                                                                   :        1 samples, Peak.   132 ms (1.0x), Avg.   132 ms, Total. 132.2 ms (0.4%)
+[Performance] Menu.RebuildAll                                                                                                                              :        1 samples, Peak.   132 ms (1.0x), Avg.   132 ms, Total. 132.2 ms (0.4%)
+[Performance] Menu.BuildRegisteredMenuInterfaces                                                                                                           :        1 samples, Peak.   128 ms (1.0x), Avg.   128 ms, Total. 128.0 ms (0.4%)
+[Performance] Menu.FilterMenuItem                                                                                                                          :      847 samples, Peak.  16.1 ms (831.6x), Avg.  19.3 us, Total. 16.36 ms (0.0%)
+[Performance] UpdateAllMenus                                                                                                                               :        1 samples, Peak.   805 us (1.0x), Avg.   805 us, Total. 804.7 us (0.0%)
+[Performance] Menu.RebuildOSMainMenu                                                                                                                       :        2 samples, Peak.  3.13 ms (1.1x), Avg.  2.98 ms, Total. 5.952 ms (0.0%)
+[Performance] EditorSceneManager.sceneClosing: UnityEditor.SceneVisibilityManager.EditorSceneManagerOnSceneClosing                                         :        1 samples, Peak.   478 us (1.0x), Avg.   478 us, Total. 478.1 us (0.0%)
+[Performance] GUIView.RepaintAll.PlayerLoopController                                                                                                      :        1 samples, Peak.   223 us (1.0x), Avg.   223 us, Total. 223.3 us (0.0%)
+[Performance] EditorSceneManager.newSceneCreated: UnityEditor.SceneTemplate.SceneTemplateService.OnNewSceneCreated                                         :        1 samples, Peak.   260 us (1.0x), Avg.   260 us, Total. 259.6 us (0.0%)
+[Performance] EditorSceneManager.newSceneCreated: UnityEditor.SceneVisibilityManager.EditorSceneManagerOnNewSceneCreated                                   :        1 samples, Peak.   220 us (1.0x), Avg.   220 us, Total. 219.5 us (0.0%)
+[Performance] EditorSceneManager.newSceneCreated: UnityEditor.SceneManagement.StageNavigationManager.OnNewSceneCreated                                     :        1 samples, Peak.  59.4 us (1.0x), Avg.  59.4 us, Total. 59.40 us (0.0%)
+[Performance] Application.InvokeFinishedLoadingProject                                                                                                     :        1 samples, Peak.  22.4 ms (1.0x), Avg.  22.4 ms, Total. 22.42 ms (0.1%)
+[Performance] ProcessService.OnProjectLoaded                                                                                                               :        1 samples, Peak.  51.1 us (1.0x), Avg.  51.1 us, Total. 51.10 us (0.0%)
+[Performance] EditorApplication.quitting: UnityEditor.SettingsManagement.FileSettingsRepository.Save                                                       :        1 samples, Peak.  1.37 ms (1.0x), Avg.  1.37 ms, Total. 1.368 ms (0.0%)
+[Performance] EditorApplication.quitting: callback in UnityEditor.TextCore.Text.EditorEventCallbacks                                                       :        1 samples, Peak.  6.42 ms (1.0x), Avg.  6.42 ms, Total. 6.420 ms (0.0%)
+[Performance] Application.Shutdown.PauseProfilerSession                                                                                                    :        1 samples, Peak.   275 us (1.0x), Avg.   275 us, Total. 275.3 us (0.0%)
+[Performance] Application.Shutdown.PauseAssetImportWorkers                                                                                                 :        1 samples, Peak.   202 us (1.0x), Avg.   202 us, Total. 202.4 us (0.0%)
+[Performance] Application.Shutdown.SaveAssets                                                                                                              :        1 samples, Peak.  14.3 ms (1.0x), Avg.  14.3 ms, Total. 14.35 ms (0.0%)
+[Performance] StateMacroSavedEvent.OnWillSaveAssets                                                                                                        :        1 samples, Peak.   183 us (1.0x), Avg.   183 us, Total. 182.9 us (0.0%)
+[Performance] UnityCloudProjectLinkMonitor.OnWillSaveAssets                                                                                                :        1 samples, Peak.   390 us (1.0x), Avg.   390 us, Total. 389.5 us (0.0%)
+[Performance] UVCSAssetModificationProcessor.OnWillSaveAssets                                                                                              :        1 samples, Peak.   297 us (1.0x), Avg.   297 us, Total. 297.4 us (0.0%)
+[Performance] FlowMacroSavedEvent.OnWillSaveAssets                                                                                                         :        1 samples, Peak.   141 us (1.0x), Avg.   141 us, Total. 140.9 us (0.0%)
+[Performance] BuilderAssetModificationProcessor.OnWillSaveAssets                                                                                           :        1 samples, Peak.   327 us (1.0x), Avg.   327 us, Total. 327.1 us (0.0%)
+[Performance] TerrainModificationProcessor.OnWillSaveAssets                                                                                                :        1 samples, Peak.   619 us (1.0x), Avg.   619 us, Total. 619.3 us (0.0%)
+[Performance] Application.Shutdown.CleanupRenderPipeline                                                                                                   :        1 samples, Peak.  16.1 us (1.0x), Avg.  16.1 us, Total. 16.10 us (0.0%)
+[Performance] Application.Shutdown.StopPreloadManager                                                                                                      :        1 samples, Peak.  9.95 ms (1.0x), Avg.  9.95 ms, Total. 9.948 ms (0.0%)
+[Performance] Application.Shutdown.DestroyWorld                                                                                                            :        1 samples, Peak.   634 us (1.0x), Avg.   634 us, Total. 633.8 us (0.0%)
+[Performance] Application.Shutdown.CleanupAfterLoad                                                                                                        :        1 samples, Peak.  3.64 ms (1.0x), Avg.  3.64 ms, Total. 3.640 ms (0.0%)
+[Performance] Application.Shutdown.Progress                                                                                                                :        1 samples, Peak.  14.0 us (1.0x), Avg.  14.0 us, Total. 14.00 us (0.0%)
+[Performance] Application.Shutdown.GICleanupManagers                                                                                                       :        1 samples, Peak.  3.70 ms (1.0x), Avg.  3.70 ms, Total. 3.697 ms (0.0%)
+[Performance] Application.Shutdown.MenuCleanupClass                                                                                                        :        1 samples, Peak.   323 us (1.0x), Avg.   323 us, Total. 322.7 us (0.0%)
+[Performance] Application.Shutdown.ADBSaveStateBeforeShutdown                                                                                              :        1 samples, Peak.  8.80 us (1.0x), Avg.  8.80 us, Total. 8.800 us (0.0%)
+[Performance] Application.Shutdown.RemoteShutdown                                                                                                          :        1 samples, Peak.  1.20 us (1.0x), Avg.  1.20 us, Total. 1.200 us (0.0%)
+[Performance] Application.Shutdown.CleanupVCProvider                                                                                                       :        1 samples, Peak.  13.8 us (1.0x), Avg.  13.8 us, Total. 13.80 us (0.0%)
+[Performance] Application.Shutdown.InputShutdown                                                                                                           :        1 samples, Peak.   165 us (1.0x), Avg.   165 us, Total. 165.1 us (0.0%)
+[Performance] Application.Shutdown.GizmoManagerDestroy                                                                                                     :        1 samples, Peak.   549 us (1.0x), Avg.   549 us, Total. 548.8 us (0.0%)
+[Performance] Application.Shutdown.ProfilerSession                                                                                                         :        1 samples, Peak.   664 us (1.0x), Avg.   664 us, Total. 664.4 us (0.0%)
+[Performance] Application.Shutdown.ReleaseGfxWindowOnAllGUIViews                                                                                           :        1 samples, Peak.   300 ns (1.0x), Avg.   300 ns, Total. 300.0 ns (0.0%)
+[Performance] Application.Shutdown.CleanupEngine                                                                                                           :        1 samples, Peak.   159 ms (1.0x), Avg.   159 ms, Total. 158.7 ms (0.4%)
+[Performance] Application.Shutdown.CleanupAssetDatabase                                                                                                    :        1 samples, Peak.  12.8 ms (1.0x), Avg.  12.8 ms, Total. 12.84 ms (0.0%)
+[Performance] Application.Shutdown.ScriptCompilationCleanUp                                                                                                :        1 samples, Peak.  22.6 ms (1.0x), Avg.  22.6 ms, Total. 22.58 ms (0.1%)
+[Performance] Application.Shutdown.DestroyJobSystem                                                                                                        :        1 samples, Peak.   114 us (1.0x), Avg.   114 us, Total. 113.7 us (0.0%)
+[Performance] Application.Shutdown.CleanupPersistentManager                                                                                                :        1 samples, Peak.  1.64 ms (1.0x), Avg.  1.64 ms, Total. 1.643 ms (0.0%)
+[Performance] Application.Shutdown.CleanupAsyncReadManager                                                                                                 :        1 samples, Peak.   309 us (1.0x), Avg.   309 us, Total. 309.0 us (0.0%)
+[Performance] Application.Shutdown.CleanupProgressBar                                                                                                      :        1 samples, Peak.   400 ns (1.0x), Avg.   400 ns, Total. 400.0 ns (0.0%)
+[Performance] Application.Shutdown.CleanupMono                                                                                                             :        1 samples, Peak.  64.1 ms (1.0x), Avg.  64.1 ms, Total. 64.10 ms (0.2%)
+[Performance] Application.Shutdown.CleanupStdConverters                                                                                                    :        1 samples, Peak.  8.60 us (1.0x), Avg.  8.60 us, Total. 8.600 us (0.0%)
+[Performance] Application.Shutdown.UnloadAllPlatformSupportModuleNativeDlls                                                                                :        1 samples, Peak.   700 ns (1.0x), Avg.   700 ns, Total. 700.0 ns (0.0%)
+[Performance] Application.Shutdown.UnloadAllPlatformSupportNativeLibraries                                                                                 :        1 samples, Peak. 0.0 (-nan(ind)x), Avg. 0.0, Total. 0.0 (0.0%)
+[Performance] Application.Shutdown.CleanupAutoDocumentation                                                                                                :        1 samples, Peak.   360 us (1.0x), Avg.   360 us, Total. 359.7 us (0.0%)
+[Performance] Application.Shutdown.ShaderNameManagerDestroy                                                                                                :        1 samples, Peak.  56.9 us (1.0x), Avg.  56.9 us, Total. 56.90 us (0.0%)
+[Performance] Application.Shutdown.CleanupCacheServer                                                                                                      :        1 samples, Peak.   100 ns (1.0x), Avg.   100 ns, Total. 100.0 ns (0.0%)
+[Performance] Application.Shutdown.Virtualization_Shutdown                                                                                                 :        1 samples, Peak.   400 ns (1.0x), Avg.   400 ns, Total. 400.0 ns (0.0%)
+[Performance] Application.Shutdown.DevConnections                                                                                                          :        1 samples, Peak.   206 us (1.0x), Avg.   206 us, Total. 206.1 us (0.0%)
+Exiting batchmode successfully now!
+Exiting without the bug reporter. Application will terminate with return code 0

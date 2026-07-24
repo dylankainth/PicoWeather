@@ -12,12 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6a2bc92ebff355c41a740b6d51d8a56a, type: 3}
   m_Name: WeatherVRConfig
   m_EditorClassIdentifier: 
-  CenterLatitude: 31.23
-  CenterLongitude: 121.47
-  RegionSpanKm: 50
+  CenterLatitude: 51.5136
+  CenterLongitude: -0.0832
+  RegionSpanKm: 5
+  MaxBuildings: 600
   MapSizeMeters: 2
-  VerticalExaggeration: 4
-  TerrainReliefExaggeration: 12
+  VerticalExaggeration: 0.4
+  TerrainReliefExaggeration: 1.2
   AtmosphereFloorMeters: 200
   AtmosphereCeilingMeters: 12000
   TerrainMeshResolution: 128

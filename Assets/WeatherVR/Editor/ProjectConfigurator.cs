@@ -222,7 +222,8 @@ namespace WeatherVR.EditorTools
             {
                 "WeatherVR/TerrainSurface",
                 "WeatherVR/VolumetricClouds",
-                "WeatherVR/LightningBolt"
+                "WeatherVR/LightningBolt",
+                "WeatherVR/Buildings"
             };
 
             var graphicsSettings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")

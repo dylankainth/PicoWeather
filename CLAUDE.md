@@ -476,9 +476,17 @@ repository, including deliberate deviations. Read this before editing code.
 | --- | --- |
 | Unity | **2022.3.62f3** (LTS) |
 | Render pipeline | **Built-in RP** (no URP/HDRP package installed) |
-| XR | PICO Unity Integration SDK **0.13.1-Preview** (`com.bytedance.pico.xr`, local package at `C:/Users/dylan/Downloads/PICO-Unity-SDK-0.13.1-Preview/XR`) |
+| XR | PICO Unity Integration SDK **0.13.1-Preview** (`com.bytedance.pico.xr`, vendored in-repo at `Packages/com.bytedance.pico.xr/`, referenced from `Packages/manifest.json` as `file:com.bytedance.pico.xr` — a relative path, portable across machines) |
 | Interaction | XR Interaction Toolkit 2.x, Unity Input System |
-| Project root | `C:/Users/dylan/My project (2)` |
+
+The original handover machine referenced the SDK by absolute path
+(`C:/Users/dylan/Downloads/PICO-Unity-SDK-0.13.1-Preview/XR`), which does not
+exist on other machines — opening the project there fails to resolve the
+package. Fixed by vendoring the SDK folder directly into `Packages/` and
+pointing `manifest.json` at it with a relative `file:` reference instead, so
+the project opens on any machine with the repo checked out. Confirmed clean
+on a second machine: `unity_open.log` shows a batch-mode open/close with no
+compiler errors and no missing-package errors.
 
 ## Deliberate deviations from the spec
 
@@ -543,12 +551,31 @@ My project (2)/
 
 ## Coordinate & scale conventions
 
-- **Region:** Shanghai, centre `31.23°N, 121.47°E`, 50 km × 50 km footprint.
-- **Map size in VR:** 2.0 m across (X/Z). So **1 VR metre = 25 km real**.
-- **Vertical exaggeration:** the spec calls for a 1:50 *relative* boost, i.e.
-  vertical scale = horizontal scale × 50. Horizontal is 1/25000, so vertical
-  is 1/500 → a 2 km cloud sits **4 cm** above the table, matching §4.2.3.
-  `AppConfig.VerticalExaggeration = 50f` is the single knob.
+- **Region:** City of London skyscraper cluster, centre `51.5136°N, -0.0832°E`,
+  5 km × 5 km footprint (`AppConfig.RegionSpanKm`). Originally Shanghai at
+  50 km × 50 km — see "Deliberate deviations" §2 above for why it shrank.
+- **Map size in VR:** 2.0 m across (X/Z). So **1 VR metre = 2.5 km real**
+  (`Horizontal = MapSizeMeters / RegionSpanMeters`, i.e. 1:2 500).
+- **Vertical exaggeration is two knobs, both scaled to `RegionSpanKm`, not
+  absolute constants:**
+  - `AppConfig.VerticalExaggeration` (0.4) sets cloud/atmosphere altitude
+    scale: `Vertical = Horizontal × VerticalExaggeration`. A 2 km cloud sits
+    `(2000 − AtmosphereFloorMeters) × Vertical` ≈ **29 cm** above the table.
+  - `AppConfig.TerrainReliefExaggeration` (1.2) is an *extra* boost applied to
+    terrain relief only, on top of `Vertical`. London's real relief (a few
+    tens of metres over 5 km) is close to invisible at true scale, hence the
+    small extra boost — but only a small one, because buildings carry the
+    visual interest here, not relief.
+  - **Both are tuned for the current `RegionSpanKm` and must be rescaled if it
+    changes** — `Horizontal` (and everything derived from it) is inversely
+    proportional to the span, so shrinking the region 10× without rescaling
+    these two multiplies cloud height and terrain relief by that same 10×.
+    This shipped wrong once: the region moved from Shanghai (50 km) to London
+    (5 km) without retuning them, and a 43.7 m hill rendered as an 84 cm
+    spike instead of a gentle ~0.8 cm bump. `tools/verify_logic/Verify.cs`
+    ("MapScale (AppConfig defaults)") checks these against the real baked
+    `terrain.bin` peak — keep it in sync with `WeatherVRConfig.asset` or it
+    stops being a guard.
 - Local map space is `[-0.5, 0.5]` on X/Z with Y in VR metres above the map
   plane; `GeoBounds` converts lat/lon ⇄ local.
 
@@ -606,6 +633,32 @@ scale before it drops framerate.
    registers them. Without this they return `null` on device only.
 3. **TextMeshPro's essential resources are not imported** in this project, so a
    TMP label renders nothing. The provenance HUD uses built-in UI `Text`.
+4. **`VerticalExaggeration`/`TerrainReliefExaggeration` were left at their
+   Shanghai-era values (4 / 12, tuned for a 50 km span) after the region moved
+   to London's 5 km span.** Both scale inversely with `RegionSpanKm` through
+   `Horizontal`, so the unchanged multipliers on top of the already-10×-larger
+   `Horizontal` rendered the real 43.7 m baked peak as an 84 cm spike and the
+   12 km cloud ceiling as a ~19 m shaft — the terrain and buildings looked
+   "torn" because buildings were sitting on that spiked surface, not because
+   of the OSM building data itself. Fixed by rescaling both 10× (4→0.4,
+   12→1.2) in `WeatherVRConfig.asset` and `AppConfig.cs`'s defaults; see
+   "Coordinate & scale conventions" above. `tools/verify_logic/Verify.cs`'s
+   MapScale block was itself stale (hardcoded the old Shanghai numbers rather
+   than reading the live config), so it hadn't caught this — updated to
+   the current region/config and it now guards this specific regression.
+
+5. **`SceneBuilder.BuildCard`'s world-space canvas scale didn't divide out
+   `mapRoot`'s own scale.** Each provenance card was sized with
+   `localScale = 0.3f / canvasW`, which is only correct if the card's ancestor
+   chain has no scale of its own -- but the card sits under `mapRoot`, whose
+   `localScale = MapSizeMeters` (2.0), so every card actually rendered at
+   double its intended 0.3 m width while the stagger offsets between cards
+   (correctly expressed in map units, ~0.14-0.28 m apart after the same 2×
+   multiply) stayed the same. Three 0.6 m cards spaced ~0.2 m apart pile
+   straight on top of each other -- the jumbled overlapping text this
+   surfaced as. Same unit-convention bug class as issue #4 above and "The
+   unit convention" section below, different call site. Fixed by dividing by
+   `config.MapSizeMeters` in the scale line.
 
 ## How to (re)build everything
 
@@ -678,9 +731,27 @@ it.
   stereo and depth-sampling macros were checked against Unity 2022.3's actual
   `HLSLSupport.cginc`: `SAMPLE_DEPTH_TEXTURE_PROJ` is correctly redefined for
   the texture-array case, so single-pass-instanced sampling is right.
+- **2026-07-24** — region moved to the City of London, buildings pipeline
+  added (`tools/fetch_buildings.py` → OSM Overpass, `BuildingDataset`,
+  `ProceduralBuildings`, `BuildingMeshBuilder`, `BuildingRenderer`,
+  `Buildings.shader`). First render showed spiky terrain and misplaced-looking
+  buildings — traced to known issue #4 above (stale exaggeration constants),
+  not a data or asset problem. Fixed by rescaling `VerticalExaggeration`/
+  `TerrainReliefExaggeration` and updating `tools/verify_logic/Verify.cs` to
+  check the live region/config instead of hardcoded Shanghai numbers;
+  `tools/verify.py` passes every check against the real baked London
+  `terrain.bin` (43.7 m peak renders as 0.84 cm of relief, 2 km cloud sits
+  28.8 cm up, atmosphere column 1.89 m tall). Scene has not yet been rebuilt
+  or pressed-play with this fix — see "Still to do".
 
 ## Still to do
 
+- [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`** and **Press Play** to
+      confirm the exaggeration fix (known issue #4) visually — terrain should
+      now read as a gentle bump under the buildings, not a spike, and the
+      cloud column should sit ~1.9 m above the table rather than towering out
+      of frame. Not yet confirmed in the editor, only checked mathematically
+      via `tools/verify.py`.
 - [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`.** The scene currently on disk
       was generated before the head-tracking fix. The runtime guard makes it work
       anyway, but it will log a warning until the scene is rebuilt.

@@ -13,10 +13,15 @@ import os
 from dataclasses import dataclass
 
 # --- the region -------------------------------------------------------------
-# Shanghai, per the specification.
-CENTER_LAT = 31.23
-CENTER_LON = 121.47
-SPAN_KM = 50.0
+# The City of London skyscraper cluster: the Gherkin, the Leadenhall Building,
+# the Scalpel, Lloyd's and 22 Bishopsgate all sit within a few hundred metres
+# of this point. A city view lives or dies on its buildings, not its relief,
+# so the span is city-block scale rather than the 50 km regional view Shanghai
+# used -- wide enough to hold the cluster, tight enough that a building's true
+# height still reads as more than a millimetre on a 2 m table.
+CENTER_LAT = 51.5136
+CENTER_LON = -0.0832
+SPAN_KM = 5.0
 
 METERS_PER_DEGREE_LAT = 111_320.0
 

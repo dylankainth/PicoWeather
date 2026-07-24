@@ -70,6 +70,17 @@ namespace WeatherVR.Core
         public float TerrainElevationToMapUnits(float elevationMeters)
             => MetersToMapUnits(Mathf.Max(elevationMeters, 0f) * Vertical * TerrainReliefExaggeration);
 
+        /// <summary>
+        /// A building's real height in metres to map-local Y, added on top of its
+        /// footprint's terrain base. Deliberately uses <see cref="Horizontal"/>, not
+        /// <see cref="Vertical"/>: buildings are already visible at true scale (a 180 m
+        /// tower on a 5 km/2 m map is 7 cm), unlike terrain relief or cloud altitude,
+        /// which exist to be exaggerated. Exaggerating buildings too would push a
+        /// skyscraper through the cloud deck.
+        /// </summary>
+        public float BuildingHeightToMapUnits(float heightMeters)
+            => MetersToMapUnits(Mathf.Max(heightMeters, 0f) * Horizontal);
+
         /// <summary>Denominator of the map's representative fraction, e.g. 25 000 for 1:25 000.</summary>
         public float RepresentativeFraction => 1f / Horizontal;
 

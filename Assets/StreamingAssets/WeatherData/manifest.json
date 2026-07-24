@@ -1,14 +1,14 @@
 {
-  "generatedUtc": "2026-07-23T15:39:47Z",
+  "generatedUtc": "2026-07-24T12:43:00Z",
   "region": {
-    "name": "Shanghai",
-    "centerLatitude": 31.23,
-    "centerLongitude": 121.47,
-    "spanKm": 50.0,
-    "minLatitude": 31.005422206252245,
-    "maxLatitude": 31.454577793747756,
-    "minLongitude": 121.20736445182031,
-    "maxLongitude": 121.73263554817969
+    "name": "City of London",
+    "centerLatitude": 51.5136,
+    "centerLongitude": -0.0832,
+    "spanKm": 5.0,
+    "minLatitude": 51.49114222062522,
+    "maxLatitude": 51.53605777937477,
+    "minLongitude": -0.11928667535922247,
+    "maxLongitude": -0.047113324640777526
   },
   "layers": {
     "terrain": {
@@ -19,17 +19,23 @@
     "satellite": {
       "status": "ok",
       "file": "satellite.jpg",
-      "bytes": 1819889
+      "bytes": 1742183
+    },
+    "buildings": {
+      "status": "ok",
+      "file": "buildings.json",
+      "bytes": 398435
     },
     "weather": {
       "status": "ok",
       "file": "weather.json",
-      "bytes": 26616
+      "bytes": 26853
     }
   },
   "attribution": [
     "Elevation: AWS Terrain Tiles (elevation-tiles-prod), derived from SRTM and other public sources.",
     "Imagery: (c) Esri -- Maxar, Earthstar Geographics, and the GIS User Community.",
+    "Buildings: (c) OpenStreetMap contributors, ODbL 1.0.",
     "Weather: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
     "Lightning is not observed: it is derived from CAPE and precipitation rate. See Atmosphere.LightningPotential."
   ]

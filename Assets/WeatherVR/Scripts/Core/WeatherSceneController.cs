@@ -30,6 +30,7 @@ namespace WeatherVR.Core
         [Header("Subsystems")]
         public WeatherDataService DataService;
         public TerrainRenderer Terrain;
+        public BuildingRenderer Buildings;
         public CloudRenderer Clouds;
         public LightningDirector Lightning;
         public AmbientSoundscape Soundscape;
@@ -125,6 +126,7 @@ namespace WeatherVR.Core
             ApplySunLight(snapshot, config);
 
             Terrain?.Apply(snapshot, config);
+            Buildings?.Apply(snapshot, config);
             Clouds?.Apply(snapshot, config);
             Lightning?.Apply(snapshot, config, MapRoot);
             Soundscape?.Apply(snapshot);
