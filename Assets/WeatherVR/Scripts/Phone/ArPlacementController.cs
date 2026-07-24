@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using WeatherVR.Core;
@@ -9,17 +10,21 @@ using WeatherVR.Core;
 namespace WeatherVR.Phone
 {
     /// <summary>
-    /// Phone-AR placement: tap a detected surface to drop the weather map onto it.
+    /// Phone-AR placement: tap a surface to drop the weather map onto it.
     ///
-    /// The headset build places the map by raycasting a controller against physics
-    /// colliders or a fallback plane. On a phone there is no controller and no room
-    /// mesh, so placement instead raycasts the touch point against ARCore's detected
-    /// planes. Everything downstream is unchanged — the map root is the same object
-    /// the headset build moves, so terrain, clouds, lightning and the provenance
-    /// panel all come along for free.
+    /// Two things here are deliberate and were learned the hard way on device.
     ///
-    /// Guarded by WEATHERVR_AR so the project still compiles when AR Foundation is
-    /// not installed (the PICO build does not need it).
+    /// The map is <b>parked out of view rather than deactivated</b> while waiting to
+    /// be placed. Deactivating the root looks equivalent but is not: Unity never runs
+    /// Awake on components of an inactive GameObject, so CloudRenderer.Apply would
+    /// dereference a null MeshRenderer when WeatherSceneController built the scene,
+    /// and the map stayed broken even after it was activated. Parking keeps the whole
+    /// hierarchy live and merely invisible.
+    ///
+    /// And there is a <b>fallback</b>: if ARCore has not produced a plane after a few
+    /// seconds — a blank desk, poor light — a tap places the map at a fixed distance
+    /// in front of the camera anyway. A demo that shows nothing because the room was
+    /// too featureless is worse than one placed slightly imprecisely.
     /// </summary>
     [RequireComponent(typeof(ARRaycastManager))]
     public class ArPlacementController : MonoBehaviour
@@ -30,18 +35,31 @@ namespace WeatherVR.Phone
         [Tooltip("Plane manager, so planes can be hidden once the map is placed.")]
         public ARPlaneManager PlaneManager;
 
+        [Tooltip("On-screen instructions. Optional.")]
+        public Text StatusText;
+
         [Tooltip("Map edge length in metres for the phone build. Smaller than the " +
-                 "headset's 2 m so it fits comfortably on a real desk seen through a phone.")]
+                 "headset's 2 m so it fits on a real desk seen through a phone.")]
         public float PhoneMapSizeMeters = 0.6f;
+
+        [Tooltip("Seconds to wait for plane detection before allowing a tap to place " +
+                 "the map in front of the camera regardless.")]
+        public float FallbackAfterSeconds = 6f;
+
+        [Tooltip("How far in front of the camera the fallback placement sits.")]
+        public float FallbackDistance = 0.7f;
 
         [Tooltip("Hide the detected-plane visualisation once the map is down.")]
         public bool HidePlanesAfterPlacement = true;
 
+        /// <summary>Where the map waits before placement — far below any real surface.</summary>
+        static readonly Vector3 ParkPosition = new Vector3(0f, -5000f, 0f);
+
         ARRaycastManager _raycastManager;
         readonly List<ARRaycastHit> _hits = new List<ARRaycastHit>();
         bool _placed;
+        float _elapsed;
 
-        /// <summary>True once the user has committed the map to a surface.</summary>
         public bool IsPlaced => _placed;
 
         void Awake()
@@ -55,24 +73,55 @@ namespace WeatherVR.Phone
                 if (controller != null) MapRoot = controller.MapRoot;
             }
 
-            // Keep the map out of sight until it has somewhere to sit; otherwise it
-            // hangs in mid-air at the origin while the user is still scanning.
-            if (MapRoot != null) MapRoot.gameObject.SetActive(false);
+            // Park, do not deactivate — see the class comment.
+            if (MapRoot != null)
+            {
+                MapRoot.position = ParkPosition;
+                MapRoot.localScale = Vector3.one * PhoneMapSizeMeters;
+            }
         }
 
         void Update()
         {
             if (MapRoot == null) return;
 
+            _elapsed += Time.deltaTime;
+
+            if (!_placed) UpdateStatus();
+
             if (!TryGetTapPosition(out Vector2 screenPosition)) return;
 
-            if (!_raycastManager.Raycast(screenPosition, _hits, TrackableType.PlaneWithinPolygon))
-                return;
+            if (TryResolvePlacement(screenPosition, out Pose pose)) Place(pose);
+        }
 
-            Pose pose = _hits[0].pose;
+        /// <summary>Plane hit if we have one; otherwise, after a grace period, in front of the camera.</summary>
+        bool TryResolvePlacement(Vector2 screenPosition, out Pose pose)
+        {
+            if (_raycastManager.Raycast(screenPosition, _hits, TrackableType.PlaneWithinPolygon))
+            {
+                pose = _hits[0].pose;
+                return true;
+            }
 
-            // Face the map's "north" edge away from the viewer, matching the headset
-            // build, so the first thing you see is the map the right way up.
+            var camera = Camera.main;
+            if (camera != null && _elapsed >= FallbackAfterSeconds)
+            {
+                Vector3 forward = camera.transform.forward;
+                Vector3 position = camera.transform.position + forward * FallbackDistance;
+                // Drop it a little below eye line so it reads as sitting on something.
+                position.y -= 0.25f;
+                pose = new Pose(position, Quaternion.identity);
+                Debug.Log("[WeatherVR] No AR plane under the tap; using the fallback placement.");
+                return true;
+            }
+
+            pose = default;
+            return false;
+        }
+
+        void Place(Pose pose)
+        {
+            // Face the map's north edge away from the viewer, as the headset build does.
             Vector3 toCamera = Camera.main != null
                 ? Camera.main.transform.position - pose.position
                 : Vector3.back;
@@ -83,7 +132,6 @@ namespace WeatherVR.Phone
 
             MapRoot.SetPositionAndRotation(pose.position, rotation);
             MapRoot.localScale = Vector3.one * PhoneMapSizeMeters;
-            MapRoot.gameObject.SetActive(true);
 
             if (!_placed)
             {
@@ -93,13 +141,31 @@ namespace WeatherVR.Phone
                     PlaneManager.enabled = false;
                     foreach (var plane in PlaneManager.trackables) plane.gameObject.SetActive(false);
                 }
-                Debug.Log($"[WeatherVR] Map placed on an AR plane at {pose.position}.");
+                SetStatus("Tap again to move the map.");
+                Debug.Log($"[WeatherVR] Map placed at {pose.position}.");
             }
         }
 
+        void UpdateStatus()
+        {
+            int planeCount = PlaneManager != null ? PlaneManager.trackables.count : 0;
+
+            if (planeCount > 0)
+                SetStatus("Surface found — tap to place the weather map.");
+            else if (_elapsed >= FallbackAfterSeconds)
+                SetStatus("No surface detected. Tap anywhere to place it in front of you.");
+            else
+                SetStatus("Move your phone slowly to scan a surface…");
+        }
+
+        void SetStatus(string message)
+        {
+            if (StatusText != null && StatusText.text != message) StatusText.text = message;
+        }
+
         /// <summary>
-        /// A tap that began this frame. Reads the new Input System's touchscreen, and
-        /// falls back to the mouse so the same scene can be exercised in the editor.
+        /// A tap that began this frame. Reads the Input System touchscreen, falling
+        /// back to the mouse so the scene can be exercised in the editor.
         /// </summary>
         static bool TryGetTapPosition(out Vector2 position)
         {

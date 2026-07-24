@@ -72,14 +72,20 @@ namespace WeatherVR.EditorTools
 
             // Plane detection + raycasting drive tap-to-place.
             var planeManager = originObject.AddComponent<ARPlaneManager>();
+            // Without a prefab the detected planes are invisible, so the user has no
+            // idea whether ARCore found a surface or where it is safe to tap.
+            planeManager.planePrefab = CreatePlanePrefab();
             originObject.AddComponent<ARRaycastManager>();
 
             // ------------------------------------------------- weather content
             var content = SceneBuilder.BuildWeatherContent(config);
 
+            var statusText = BuildStatusOverlay();
+
             var placement = originObject.AddComponent<ArPlacementController>();
             placement.MapRoot = content.MapRoot;
             placement.PlaneManager = planeManager;
+            placement.StatusText = statusText;
 
             // A phone-sized map: 2 m is right for a headset you walk around, but on a
             // desk seen through a phone it swallows the room.
@@ -94,6 +100,83 @@ namespace WeatherVR.EditorTools
             EditorSceneManager.SaveScene(scene, ScenePath);
 
             Debug.Log($"[WeatherVR] Phone AR scene saved to {ScenePath}.");
+        }
+
+        const string PlanePrefabPath = "Assets/WeatherVR/Prefabs/ARPlaneVisualiser.prefab";
+
+        /// <summary>
+        /// A translucent visualiser so detected planes are actually visible. ARCore
+        /// finds surfaces regardless, but with no prefab the user is staring at a raw
+        /// camera feed with no feedback about whether it is working.
+        /// </summary>
+        static GameObject CreatePlanePrefab()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(PlanePrefabPath));
+
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(PlanePrefabPath);
+            if (existing != null) return existing;
+
+            var temp = new GameObject("ARPlaneVisualiser");
+            temp.AddComponent<ARPlane>();
+            temp.AddComponent<MeshFilter>();
+            temp.AddComponent<ARPlaneMeshVisualizer>();
+
+            var meshRenderer = temp.AddComponent<MeshRenderer>();
+            var shader = Shader.Find("Sprites/Default") ?? Shader.Find("Unlit/Color");
+            var material = new Material(shader)
+            {
+                name = "ARPlaneVisualiser",
+                color = new Color(0.35f, 0.75f, 1f, 0.28f)
+            };
+            AssetDatabase.CreateAsset(material, "Assets/WeatherVR/Prefabs/ARPlaneVisualiser.mat");
+            meshRenderer.sharedMaterial = material;
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+
+            var prefab = PrefabUtility.SaveAsPrefabAsset(temp, PlanePrefabPath);
+            Object.DestroyImmediate(temp);
+            AssetDatabase.SaveAssets();
+            return prefab;
+        }
+
+        /// <summary>
+        /// Screen-space instructions. AR placement is not discoverable — without a
+        /// prompt the user does not know they are meant to scan and then tap.
+        /// </summary>
+        static UnityEngine.UI.Text BuildStatusOverlay()
+        {
+            var canvasObject = new GameObject("AR UI");
+            var canvas = canvasObject.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObject.AddComponent<UnityEngine.UI.CanvasScaler>().uiScaleMode =
+                UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            canvasObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+
+            var panelObject = new GameObject("StatusPanel");
+            panelObject.transform.SetParent(canvasObject.transform, false);
+            var panel = panelObject.AddComponent<UnityEngine.UI.Image>();
+            panel.color = new Color(0f, 0f, 0f, 0.55f);
+            var panelRect = panel.rectTransform;
+            panelRect.anchorMin = new Vector2(0.05f, 0.86f);
+            panelRect.anchorMax = new Vector2(0.95f, 0.97f);
+            panelRect.offsetMin = Vector2.zero;
+            panelRect.offsetMax = Vector2.zero;
+
+            var textObject = new GameObject("StatusText");
+            textObject.transform.SetParent(panelObject.transform, false);
+            var text = textObject.AddComponent<UnityEngine.UI.Text>();
+            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            text.fontSize = 30;
+            text.alignment = TextAnchor.MiddleCenter;
+            text.color = Color.white;
+            text.text = "Move your phone slowly to scan a surface…";
+            var textRect = text.rectTransform;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.offsetMin = new Vector2(12f, 8f);
+            textRect.offsetMax = new Vector2(-12f, -8f);
+
+            return text;
         }
     }
 }
