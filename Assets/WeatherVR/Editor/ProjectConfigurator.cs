@@ -221,13 +221,9 @@ namespace WeatherVR.EditorTools
             string[] shaderNames =
             {
                 "WeatherVR/TerrainSurface",
-                "WeatherVR/VolumetricClouds",
-                "WeatherVR/LightningBolt",
                 "WeatherVR/Buildings",
                 "WeatherVR/StudioSky",
                 "WeatherVR/Pedestal",
-                "WeatherVR/Rain",
-                "WeatherVR/GlassEnvironment"
             };
 
             var graphicsSettings = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/GraphicsSettings.asset")

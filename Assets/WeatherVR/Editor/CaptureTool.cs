@@ -3,10 +3,8 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using WeatherVR.Clouds;
 using WeatherVR.Core;
 using WeatherVR.Data;
-using WeatherVR.Lightning;
 using WeatherVR.Terrain;
 
 namespace WeatherVR.EditorTools
@@ -127,8 +125,6 @@ namespace WeatherVR.EditorTools
                 mapRoot.transform.localScale = Vector3.one * config.MapSizeMeters;
 
                 BuildTerrain(mapRoot.transform, snapshot, config, created);
-                BuildClouds(mapRoot.transform, snapshot, config, sunDir, created);
-                BuildLightning(mapRoot.transform, snapshot, config, created);
 
                 // --- camera -----------------------------------------------------
                 var cameraObject = new GameObject("CaptureCamera");
@@ -278,105 +274,6 @@ namespace WeatherVR.EditorTools
             material.SetFloat("_WaterSmoothness", 0.25f);
             material.SetFloat("_WaterSpecular", 0.1f);
             obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-        }
-
-        static void BuildClouds(Transform parent, WeatherSnapshot snapshot, AppConfig config,
-                                Vector3 sunDir,
-                                System.Collections.Generic.List<UnityEngine.Object> created)
-        {
-            var density = CloudVolumeBuilder.BuildDensityVolume(snapshot.Weather, config);
-            var detail = CloudVolumeBuilder.BuildDetailVolume(48, config.ProceduralSeed);
-
-            float maxCov = 0f, meanCov = 0f;
-            foreach (var c in snapshot.Weather.cells) { maxCov = Mathf.Max(maxCov, c.cloudTotal); meanCov += c.cloudTotal; }
-            meanCov /= snapshot.Weather.cells.Length;
-
-            var shader = Shader.Find("WeatherVR/VolumetricClouds");
-            Debug.Log($"[WeatherVR] cloud shader found={shader != null} supported={(shader != null && shader.isSupported)}, " +
-                      $"weather cover max={maxCov:F2} mean={meanCov:F2}, " +
-                      $"density volume {density.width}x{density.height}x{density.depth} {density.graphicsFormat}, " +
-                      $"peak voxel={CloudVolumeBuilder.LastBuildMaxDensity}/255, {CloudVolumeBuilder.LastBuildDiagnostics}");
-
-            var obj = new GameObject("Clouds");
-            created.Add(obj);
-            obj.transform.SetParent(parent, false);
-            obj.AddComponent<MeshFilter>().sharedMesh = CloudRenderer.BuildUnitCube();
-
-            var material = new Material(shader);
-            material.SetTexture("_DensityVolume", density);
-            material.SetTexture("_DetailNoise", detail);
-            material.SetFloat("_StepCount", 96);      // offline: max quality
-            material.SetFloat("_LightSteps", 6);
-            material.SetFloat("_DepthClip", 0f);      // no depth texture in this render
-            material.SetFloat("_Cull", 1f);           // Front, as on device
-            if (Environment.GetEnvironmentVariable("WEATHERVR_DEBUG_FOG") == "1")
-                material.SetFloat("_DebugFog", 0.6f); // isolate volume vs render path
-            // The density volume is now full-scale, so this is tuned for translucent,
-            // detailed cloud rather than the solid slab a high scale produces.
-            material.SetFloat("_DensityScale", 1.0f);
-            material.SetFloat("_Absorption", 1.4f);
-            material.SetFloat("_CoverageBias", -0.05f);   // erode the coverage edges
-            material.SetFloat("_DetailStrength", 0.7f);   // break up the base shapes
-            material.SetFloat("_DetailScale", 6.0f);
-            material.SetFloat("_SunIntensity", 2.6f);
-            material.SetFloat("_SilverIntensity", 2.0f);
-            material.SetFloat("_PowderStrength", 0.6f);
-            material.SetVector("_WindScroll", new Vector4(0.35f, 0.1f, 0.2f, 0f));
-            // Ambient tint matched to the studio sky so the clouds sit in the scene.
-            material.SetColor("_AmbientSky", new Color(0.34f, 0.42f, 0.56f));
-            material.SetColor("_AmbientGround", new Color(0.14f, 0.14f, 0.17f));
-            material.SetColor("_ScatterColor", new Color(1.0f, 0.95f, 0.88f));
-            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-
-            float heightInMapUnits = config.AtmosphereHeightVr / Mathf.Max(config.MapSizeMeters, 1e-4f);
-            obj.transform.localScale = new Vector3(1f, heightInMapUnits, 1f);
-            obj.transform.localPosition = new Vector3(0f, heightInMapUnits * 0.5f, 0f);
-
-            var renderer = obj.GetComponent<MeshRenderer>();
-            Debug.Log($"[WeatherVR] cloud box world bounds center={renderer.bounds.center} size={renderer.bounds.size}");
-        }
-
-        static void BuildLightning(Transform parent, WeatherSnapshot snapshot, AppConfig config,
-                                   System.Collections.Generic.List<UnityEngine.Object> created)
-        {
-            // Find the most active cell so the frozen strike lands where the storm is.
-            var weather = snapshot.Weather;
-            int best = 0; float peak = 0f;
-            for (int i = 0; i < weather.cells.Length; i++)
-                if (weather.cells[i].lightningPotential > peak)
-                { peak = weather.cells[i].lightningPotential; best = i; }
-
-            float u = (best % weather.gridWidth + 0.5f) / weather.gridWidth;
-            float v = (best / weather.gridWidth + 0.5f) / weather.gridHeight;
-
-            float groundY = config.TerrainElevationToMapUnits(snapshot.Terrain.SampleElevation(u, v));
-            float topY = config.AltitudeToMapUnits(2600f);
-            var ground = new Vector3(u - 0.5f, groundY, v - 0.5f);
-            var top = new Vector3(ground.x + 0.02f, topY, ground.z - 0.01f);
-
-            var material = new Material(Shader.Find("WeatherVR/LightningBolt"));
-
-            var obj = new GameObject("Lightning");
-            created.Add(obj);
-            obj.transform.SetParent(parent, false);
-            obj.AddComponent<MeshFilter>();
-            obj.AddComponent<MeshRenderer>().sharedMaterial = material;
-            var bolt = obj.AddComponent<LightningBolt>();
-            // Dimmer point light than the runtime default, which at intensity 8 blows
-            // the flat map to white; the in-cloud glow carries the effect instead.
-            bolt.LightIntensity = 2.5f;
-            bolt.RenderStatic(top, ground, config.ProceduralSeed ^ 0x1234, 1.0f);
-
-            // Also light the cloud volume from within, which is most of the effect.
-            Vector3 worldStrike = parent.TransformPoint(Vector3.Lerp(ground, top, 0.5f));
-            var positions = new Vector4[4];
-            var colors = new Vector4[4];
-            positions[0] = new Vector4(worldStrike.x, worldStrike.y, worldStrike.z, config.MapSizeMeters * 0.4f);
-            Color glow = bolt.BoltColor * 2.4f;
-            colors[0] = new Vector4(glow.r, glow.g, glow.b, 1f);
-            Shader.SetGlobalInt("_BoltCount", 1);
-            Shader.SetGlobalVectorArray("_BoltPositions", positions);
-            Shader.SetGlobalVectorArray("_BoltColors", colors);
         }
 
         static string Encode(RenderTexture source, int width, int height, string outputPath)

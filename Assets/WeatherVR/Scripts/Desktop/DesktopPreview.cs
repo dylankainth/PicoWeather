@@ -79,18 +79,11 @@ namespace WeatherVR.Desktop
             var driver = _camera.GetComponent<TrackedPoseDriver>();
             if (driver != null) driver.enabled = false;
 
-            // Place the map for the user and retire the pointer-driven placement.
+            // Place the map for the user at the origin.
             var controller = FindObjectOfType<WeatherSceneController>();
             Transform mapRoot = controller != null ? controller.MapRoot : null;
 
-            var placement = FindObjectOfType<MapPlacementController>();
-            if (placement != null)
-            {
-                placement.PlaceAt(new Pose(Vector3.zero, Quaternion.identity));
-                placement.enabled = false;
-                mapRoot = placement.MapRoot != null ? placement.MapRoot : mapRoot;
-            }
-            else if (mapRoot != null)
+            if (mapRoot != null)
             {
                 mapRoot.position = Vector3.zero;
                 mapRoot.rotation = Quaternion.identity;

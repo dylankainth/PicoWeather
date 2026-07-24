@@ -6,18 +6,14 @@ using WeatherVR.Interaction;
 namespace WeatherVR.Weather
 {
     /// <summary>
-    /// Self-installs the head-follow, the glass environment and the weather-scene
-    /// director into the running scene, exactly the way the carousel self-installs.
+    /// Self-installs the head-follow, the glass sky and the new weather system into
+    /// the running scene, the same way the carousel self-installs. Pressing Play is
+    /// enough — no scene rebuild required — and everything here is idempotent, so a
+    /// scene that SceneBuilder already populated is left as-is.
     ///
-    /// This exists because those three used to be added only by the editor's
-    /// SceneBuilder, so a scene (or APK) that had not been regenerated ran with none
-    /// of them — the map stayed world-locked, the surround stayed the old sky, and
-    /// tapping a card did nothing, i.e. it looked identical to before the feature
-    /// existed. Building them at runtime removes that "did you rebuild the scene?"
-    /// trap: pressing Play is enough.
-    ///
-    /// Everything here is idempotent. If SceneBuilder already put these components in
-    /// the scene, the bootstrap finds them and wires nothing twice.
+    /// It deliberately installs only the new <see cref="WeatherVisuals"/>; the old
+    /// volumetric cloud / particle rain / lightning-bolt renderers are not created or
+    /// referenced anywhere in the app any more.
     /// </summary>
     [DefaultExecutionOrder(-140)]
     public sealed class WeatherSceneBootstrap : MonoBehaviour
@@ -46,25 +42,18 @@ namespace WeatherVR.Weather
             XRPointer pointer = FindObjectOfType<XRPointer>();
 
             InstallFollow(controller, cam, pointer);
-            EnvironmentController environment = InstallEnvironment(cam);
-            WeatherSceneDirector director = InstallDirector(controller, environment);
+            EnvironmentController environment = InstallEnvironment();
+            WeatherVisuals visuals = InstallVisuals(controller);
+            WeatherSceneDirector director = InstallDirector(controller, visuals, environment);
 
-            // Initialise the director and show a bright default so the terrain is
-            // visible immediately, whatever the underlying data says. The carousel
-            // then switches scenes on tap.
             if (controller.IsReady)
-                Begin(director, controller.Snapshot);
+                Begin(director);
             else
-                controller.Ready += snapshot => Begin(director, snapshot);
+                controller.Ready += _ => Begin(director);
         }
 
         void InstallFollow(WeatherSceneController controller, Transform cam, XRPointer pointer)
         {
-            // The map rides the head instead of being placed on a surface. Disable the
-            // old placement controller so it does not fight the follow by world-locking.
-            if (controller.Placement != null)
-                controller.Placement.enabled = false;
-
             Transform mapRoot = controller.MapRoot;
             if (mapRoot == null) return;
 
@@ -80,44 +69,48 @@ namespace WeatherVR.Weather
             }
         }
 
-        EnvironmentController InstallEnvironment(Transform cam)
+        EnvironmentController InstallEnvironment()
         {
             var environment = FindObjectOfType<EnvironmentController>();
             if (environment == null)
-            {
-                var go = new GameObject("Environment");
-                environment = go.AddComponent<EnvironmentController>();
-            }
-            if (environment.Head == null) environment.Head = cam;
+                environment = new GameObject("Environment").AddComponent<EnvironmentController>();
             return environment;
         }
 
+        WeatherVisuals InstallVisuals(WeatherSceneController controller)
+        {
+            var visuals = FindObjectOfType<WeatherVisuals>();
+            if (visuals != null) return visuals;
+
+            // Lives under the map root so it is in map-local units and travels with the table.
+            var parent = controller.MapRoot != null ? controller.MapRoot : controller.transform;
+            var go = new GameObject("WeatherVisuals");
+            go.transform.SetParent(parent, false);
+            return go.AddComponent<WeatherVisuals>();
+        }
+
         WeatherSceneDirector InstallDirector(
-            WeatherSceneController controller, EnvironmentController environment)
+            WeatherSceneController controller, WeatherVisuals visuals, EnvironmentController environment)
         {
             var director = controller.SceneDirector != null
                 ? controller.SceneDirector
                 : FindObjectOfType<WeatherSceneDirector>();
 
             if (director == null)
-            {
                 director = controller.gameObject.AddComponent<WeatherSceneDirector>();
-                director.Clouds = controller.Clouds;
-                director.Rain = controller.Rain;
-                director.Lightning = controller.Lightning;
-                director.Sun = controller.SunLight;
-                director.MapRoot = controller.MapRoot;
-            }
 
+            if (director.Visuals == null) director.Visuals = visuals;
+            if (director.Sun == null) director.Sun = controller.SunLight;
             if (director.Environment == null) director.Environment = environment;
+
             controller.SceneDirector = director;
             return director;
         }
 
-        static void Begin(WeatherSceneDirector director, Data.WeatherSnapshot snapshot)
+        static void Begin(WeatherSceneDirector director)
         {
-            if (director == null || snapshot == null) return;
-            director.Initialize(snapshot, AppConfig.Instance);
+            if (director == null) return;
+            director.Initialize(AppConfig.Instance);
             director.ApplyKind(WeatherSceneKind.Clear);
         }
     }
