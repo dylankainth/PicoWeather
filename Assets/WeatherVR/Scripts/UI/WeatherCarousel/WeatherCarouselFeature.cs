@@ -29,7 +29,7 @@ namespace WeatherVR.UI.Carousel
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate()
         {
-            // ONLY ATTACH TO THE LONDON PICO IMMERSIVE SCENE.
+            // Only attach to the Pico immersive weather scene.
             string sceneName = SceneManager.GetActiveScene().name;
             if (sceneName != "WeatherVR")
                 return;

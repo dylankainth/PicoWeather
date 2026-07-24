@@ -22,6 +22,9 @@ namespace WeatherVR.Weather
         static readonly int SunColorId = Shader.PropertyToID("_SunColor");
         static readonly int SunGlowId = Shader.PropertyToID("_SunGlow");
         static readonly int SunDirId = Shader.PropertyToID("_SunDir");
+        static readonly int PrismColorId = Shader.PropertyToID("_PrismColor");
+        static readonly int PrismStrengthId = Shader.PropertyToID("_PrismStrength");
+        static readonly int LatticeStrengthId = Shader.PropertyToID("_LatticeStrength");
 
         void Awake()
         {
@@ -49,12 +52,31 @@ namespace WeatherVR.Weather
             if (_skyMaterial == null) _skyMaterial = RenderSettings.skybox;
             if (_skyMaterial == null) return;
 
-            _skyMaterial.SetColor(ZenithId, profile.SkyZenith);
-            _skyMaterial.SetColor(HorizonId, profile.SkyHorizon);
-            _skyMaterial.SetColor(NadirId, profile.SkyNadir);
+            Color neutral = new Color(0.18f, 0.24f, 0.23f);
+            _skyMaterial.SetColor(
+                ZenithId,
+                Color.Lerp(profile.SkyZenith, neutral, 0.60f));
+            _skyMaterial.SetColor(
+                HorizonId,
+                Color.Lerp(profile.SkyHorizon, neutral, 0.58f));
+            _skyMaterial.SetColor(
+                NadirId,
+                Color.Lerp(profile.SkyNadir, neutral, 0.68f));
             _skyMaterial.SetColor(SunColorId, profile.SunGlow);
-            _skyMaterial.SetFloat(SunGlowId, profile.SunGlowStrength);
+            _skyMaterial.SetFloat(SunGlowId, profile.SunGlowStrength * 0.62f);
             _skyMaterial.SetVector(SunDirId, sunDirection);
+
+            // Keep the surround weather-reactive, but within a narrow, comfortable
+            // range so changing cards never produces an abrupt peripheral flash.
+            Color jade = new Color(0.28f, 0.67f, 0.64f);
+            Color prism = Color.Lerp(jade, profile.SunGlow, 0.28f);
+            _skyMaterial.SetColor(PrismColorId, prism);
+            _skyMaterial.SetFloat(
+                PrismStrengthId,
+                Mathf.Lerp(0.13f, 0.17f, profile.CloudDarkness));
+            _skyMaterial.SetFloat(
+                LatticeStrengthId,
+                Mathf.Lerp(0.035f, 0.050f, profile.CloudDarkness));
         }
     }
 }

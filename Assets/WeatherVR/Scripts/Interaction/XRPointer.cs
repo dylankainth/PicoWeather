@@ -195,7 +195,7 @@ namespace WeatherVR.Interaction
 
         bool TryReadHand(ref bool selecting, ref bool tracked)
         {
-#if ENABLE_PICO_XR_SDK
+#if ENABLE_PICO_XR_SDK && UNITY_ANDROID && !UNITY_EDITOR
             if (_handTrackingUnavailable) return false;
 
             try
@@ -214,6 +214,9 @@ namespace WeatherVR.Interaction
                 return false;
             }
 #else
+            // PICO's native hand API is not safe to probe from the Windows editor:
+            // some SDK builds crash inside the DLL before managed exception handling
+            // can run. Controllers and PoseSource remain available for the emulator.
             return false;
 #endif
         }

@@ -70,6 +70,8 @@ namespace WeatherVR.UI.Carousel
 
         public void Select(int index) => Select(index, false);
 
+        public void SelectImmediate(int index) => Select(index, true);
+
         public void BeginXRDrag()
         {
             dragging = true;
@@ -216,6 +218,11 @@ namespace WeatherVR.UI.Carousel
         public void SetSelected(bool selected)
         {
             targetEmphasis = selected ? 1f : (hovered ? 0.40f : 0f);
+            if (!Application.isPlaying)
+            {
+                emphasis = targetEmphasis;
+                ApplyVisuals();
+            }
         }
 
         void Update()
@@ -225,13 +232,18 @@ namespace WeatherVR.UI.Carousel
                 targetEmphasis,
                 1f - Mathf.Exp(-Time.unscaledDeltaTime * 12f));
 
-            float scale = Mathf.Lerp(0.88f, 1f, emphasis);
+            ApplyVisuals();
+        }
+
+        void ApplyVisuals()
+        {
+            float scale = Mathf.Lerp(0.94f, 1f, emphasis);
             rect.localScale = new Vector3(scale, scale, 1f);
-            canvasGroup.alpha = Mathf.Lerp(0.55f, 1f, emphasis);
+            canvasGroup.alpha = Mathf.Lerp(0.72f, 1f, emphasis);
             if (selectionRing != null)
             {
                 Color color = selectionRing.color;
-                color.a = Mathf.Lerp(0.12f, 0.88f, emphasis);
+                color.a = Mathf.Lerp(0.08f, 0.48f, emphasis);
                 selectionRing.color = color;
             }
         }

@@ -9,8 +9,8 @@ namespace WeatherVR.UI.Carousel
     /// </summary>
     public sealed class WeatherCarouselGlassGraphic : MaskableGraphic
     {
-        [SerializeField] Color top = new Color(0.30f, 0.43f, 0.68f, 0.44f);
-        [SerializeField] Color bottom = new Color(0.05f, 0.09f, 0.17f, 0.72f);
+        [SerializeField] Color top = new Color(0.22f, 0.38f, 0.46f, 0.34f);
+        [SerializeField] Color bottom = new Color(0.06f, 0.11f, 0.15f, 0.66f);
 
         public void SetColors(Color topColor, Color bottomColor)
         {

@@ -1,26 +1,26 @@
-// Studio environment skybox.
+// Calm kaleidoscope environment for the tabletop exhibit.
 //
-// A dark, graded gradient rather than a literal daytime sky: the app is a
-// tabletop exhibit, and a product shot of an exhibit wants a controlled studio
-// backdrop, not a bright blue sky it appears to float in. A faint warm glow is
-// placed in the sun's direction so the clouds have something to be backlit
-// against, which is most of what sells them as volumetric.
+// The pattern is analytic and deliberately low-frequency: broad mirrored facets
+// give the surround a prismatic identity without creating fast, high-contrast
+// detail in peripheral vision. Both hemispheres use the same atmospheric blend,
+// so there is no hard horizon or dark "floor" under the table.
 Shader "WeatherVR/StudioSky"
 {
     Properties
     {
-        // Glass-studio gradient. Brighter than the original near-black backdrop so the
-        // area around the tabletop reads as a lit environment; WeatherSceneDirector
-        // re-tints these per weather scene at runtime.
-        _Zenith     ("Zenith",  Color) = (0.10, 0.20, 0.40, 1)
-        _Horizon    ("Horizon", Color) = (0.40, 0.50, 0.62, 1)
-        _Nadir      ("Nadir",   Color) = (0.06, 0.08, 0.13, 1)
-        _HorizonSharpness ("Horizon Sharpness", Range(0.5, 6)) = 2.2
+        _Zenith     ("Zenith",  Color) = (0.12, 0.22, 0.34, 1)
+        _Horizon    ("Horizon", Color) = (0.30, 0.42, 0.52, 1)
+        _Nadir      ("Nadir",   Color) = (0.10, 0.17, 0.24, 1)
+        _HorizonSharpness ("Vertical Blend", Range(0.5, 6)) = 1.45
 
-        _SunColor   ("Sun Glow Color", Color) = (0.55, 0.42, 0.30, 1)
-        _SunGlow    ("Sun Glow Strength", Range(0, 4)) = 1.4
-        _SunSharp   ("Sun Glow Sharpness", Range(1, 200)) = 18
+        _SunColor   ("Sun Glow Color", Color) = (0.72, 0.78, 0.74, 1)
+        _SunGlow    ("Sun Glow Strength", Range(0, 4)) = 0.75
+        _SunSharp   ("Sun Glow Sharpness", Range(1, 200)) = 12
         _SunDir     ("Sun Direction", Vector) = (0.3, 0.15, -0.9, 0)
+
+        _PrismColor    ("Prism Accent", Color) = (0.30, 0.68, 0.66, 1)
+        _PrismStrength ("Prism Strength", Range(0, 1)) = 0.15
+        _LatticeStrength ("Lattice Strength", Range(0, 1)) = 0.045
     }
 
     SubShader
@@ -38,8 +38,9 @@ Shader "WeatherVR/StudioSky"
             struct appdata { float4 vertex : POSITION; };
             struct v2f { float4 pos : SV_POSITION; float3 dir : TEXCOORD0; };
 
-            half4 _Zenith, _Horizon, _Nadir, _SunColor;
+            half4 _Zenith, _Horizon, _Nadir, _SunColor, _PrismColor;
             half _HorizonSharpness, _SunGlow, _SunSharp;
+            half _PrismStrength, _LatticeStrength;
             float4 _SunDir;
 
             v2f vert(appdata v)
@@ -54,18 +55,38 @@ Shader "WeatherVR/StudioSky"
             {
                 float3 dir = normalize(i.dir);
 
-                // Vertical gradient. The horizon band is narrowed by the sharpness
-                // exponent so the studio "floor" reads as a distinct dark base.
+                // Continuous two-hemisphere gradient. The lower sky remains visible
+                // atmosphere rather than collapsing into a floor-like dark band.
                 half up = pow(saturate(dir.y), 1.0 / _HorizonSharpness);
                 half down = pow(saturate(-dir.y), 1.0 / _HorizonSharpness);
                 half3 col = _Horizon.rgb;
                 col = lerp(col, _Zenith.rgb, up);
                 col = lerp(col, _Nadir.rgb, down);
 
-                // Atmospheric glow toward the sun, only in the upper hemisphere so the
-                // floor stays clean.
+                // Mirror the azimuth into six broad wedges, then add only a soft
+                // luminance variation. This reads as a kaleidoscope in motion while
+                // avoiding sharp geometry in peripheral vision.
+                const half Tau = 6.2831853h;
+                half angle = atan2(dir.z, dir.x);
+                half wedge = Tau / 12.0h;
+                half folded = abs(frac((angle + wedge * 0.5h) / wedge) - 0.5h) * 2.0h;
+                half radial = sqrt(saturate(1.0h - dir.y * dir.y));
+                half facet = 0.5h + 0.5h * cos(folded * 3.1415926h + dir.y * 4.2h);
+                facet = smoothstep(0.12h, 0.88h, facet);
+                col = lerp(col, col + _PrismColor.rgb * (facet - 0.45h),
+                           _PrismStrength * radial);
+
+                // Fine lattice is intentionally very faint and wide. It borrows the
+                // rhythm of a geometric screen without drawing literal ornament.
+                half seam = 1.0h - smoothstep(0.0h, 0.075h, min(folded, 1.0h - folded));
+                half latitude = 1.0h - smoothstep(0.0h, 0.055h,
+                    abs(frac((dir.y + 1.0h) * 2.25h) - 0.5h));
+                col += _PrismColor.rgb * max(seam * 0.7h, latitude * 0.25h)
+                       * _LatticeStrength * radial;
+
+                // Broad atmospheric glow rather than a hard bright hotspot.
                 float3 sun = normalize(_SunDir.xyz);
-                half glow = pow(saturate(dot(dir, sun)), _SunSharp) * saturate(dir.y + 0.15);
+                half glow = pow(saturate(dot(dir, sun)), _SunSharp);
                 col += _SunColor.rgb * _SunGlow * glow;
 
                 return fixed4(col, 1);

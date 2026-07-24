@@ -29,7 +29,7 @@ namespace WeatherVR.Weather
         ParticleSystemRenderer _precipRenderer;
 
         Material _cloudMaterial, _rainMaterial, _snowMaterial, _boltMaterial;
-        Texture2D _softCircle, _streak;
+        Texture2D _softCircle, _cloudTexture, _streak;
 
         Light _flashLight;
         LineRenderer _bolt;
@@ -62,10 +62,15 @@ namespace WeatherVR.Weather
         void BuildTextures()
         {
             _softCircle = SoftCircle(64);
+            _cloudTexture = SoftCloud(96, _config.ProceduralSeed ^ 0xC10D);
             _streak = Streak(16, 64);
 
             var sprite = Shader.Find("Sprites/Default");
-            _cloudMaterial = new Material(sprite) { name = "Cloud (runtime)", mainTexture = _softCircle };
+            _cloudMaterial = new Material(sprite)
+            {
+                name = "Cloud (runtime)",
+                mainTexture = _cloudTexture
+            };
             _rainMaterial = new Material(sprite) { name = "Rain (runtime)", mainTexture = _streak };
             _snowMaterial = new Material(sprite) { name = "Snow (runtime)", mainTexture = _softCircle };
             _boltMaterial = new Material(sprite) { name = "Bolt (runtime)" };
@@ -92,14 +97,14 @@ namespace WeatherVR.Weather
             main.playOnAwake = false;
             main.startLifetime = 14f;
             main.startSpeed = 0f;
-            main.startSize = 0.5f;
+            main.startSize = 0.32f;
             main.maxParticles = 700;
             main.gravityModifier = 0f;
 
             var shape = _clouds.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(1.05f, Mathf.Max(0.001f, _cloudTopMap - _cloudBaseMap), 1.05f);
+            shape.scale = new Vector3(0.82f, Mathf.Max(0.001f, _cloudTopMap - _cloudBaseMap), 0.82f);
 
             var emission = _clouds.emission;
             emission.enabled = true;
@@ -150,7 +155,7 @@ namespace WeatherVR.Weather
             lightGo.transform.localPosition = new Vector3(0f, _cloudBaseMap, 0f);
             _flashLight = lightGo.AddComponent<Light>();
             _flashLight.type = LightType.Point;
-            _flashLight.color = new Color(0.8f, 0.85f, 1f);
+            _flashLight.color = new Color(0.76f, 0.84f, 0.96f);
             _flashLight.range = _config.MapSizeMeters * 2.5f;
             _flashLight.intensity = 0f;
             _flashLight.shadows = LightShadows.None;
@@ -159,7 +164,7 @@ namespace WeatherVR.Weather
             boltGo.transform.SetParent(transform, false);
             _bolt = boltGo.AddComponent<LineRenderer>();
             _bolt.useWorldSpace = false;
-            _bolt.widthMultiplier = 0.006f;
+            _bolt.widthMultiplier = 0.004f;
             _bolt.numCapVertices = 1;
             _bolt.sharedMaterial = _boltMaterial;
             _bolt.textureMode = LineTextureMode.Stretch;
@@ -197,18 +202,24 @@ namespace WeatherVR.Weather
         void ShowClouds(WeatherSceneProfile p)
         {
             float amount = Mathf.Clamp01(p.CloudAmount);
+            if (amount < 0.08f)
+            {
+                _clouds.Stop();
+                _clouds.Clear();
+                return;
+            }
 
             var emission = _clouds.emission;
-            emission.rateOverTime = Mathf.Lerp(0f, 55f, amount);
+            emission.rateOverTime = Mathf.Lerp(0f, 34f, amount);
 
             var main = _clouds.main;
             // Bright cumulus white grading to storm grey.
             Color bright = new Color(0.98f, 0.98f, 1f);
-            Color dark = new Color(0.34f, 0.36f, 0.42f);
+            Color dark = new Color(0.38f, 0.41f, 0.45f);
             Color c = Color.Lerp(bright, dark, Mathf.Clamp01(p.CloudDarkness));
-            c.a = Mathf.Lerp(0.32f, 0.62f, amount);
+            c.a = Mathf.Lerp(0.14f, 0.40f, amount);
             main.startColor = c;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.35f, 0.7f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.22f, 0.46f);
 
             // Drift with the wind, exaggerated so it is perceptible at 1:2500.
             var vel = _clouds.velocityOverLifetime;
@@ -247,10 +258,10 @@ namespace WeatherVR.Weather
             main.startLifetime = fallSeconds;
             main.startColor = snow
                 ? new Color(1f, 1f, 1f, 0.9f)
-                : new Color(0.78f, 0.86f, 1f, 0.6f);
+                : new Color(0.70f, 0.82f, 0.91f, 0.32f);
             main.startSize = snow
                 ? new ParticleSystem.MinMaxCurve(0.006f, 0.012f)
-                : new ParticleSystem.MinMaxCurve(0.004f, 0.008f);
+                : new ParticleSystem.MinMaxCurve(0.002f, 0.0045f);
 
             var vel = _precip.velocityOverLifetime;
             vel.y = new ParticleSystem.MinMaxCurve(-fall);
@@ -258,7 +269,7 @@ namespace WeatherVR.Weather
             vel.x = new ParticleSystem.MinMaxCurve(sideDrift);
 
             var emission = _precip.emission;
-            float maxRate = snow ? 700f : 2200f;
+            float maxRate = snow ? 560f : 950f;
             emission.rateOverTime = Mathf.Lerp(0f, maxRate, Mathf.Clamp01(p.PrecipIntensity));
 
             main.maxParticles = Mathf.CeilToInt(maxRate * fallSeconds) + 128;
@@ -276,14 +287,14 @@ namespace WeatherVR.Weather
             {
                 _flashEnergy = 1f;
                 float u = Mathf.Clamp((float)_rng.NextDouble(), 1e-3f, 1f);
-                _nextFlashTime = Time.time + Mathf.Lerp(1.5f, 5.5f, -Mathf.Log(u) * 0.4f);
+                _nextFlashTime = Time.time + Mathf.Lerp(2.4f, 6.5f, -Mathf.Log(u) * 0.4f);
                 StrikeBolt();
             }
 
             _flashEnergy = Mathf.Max(0f, _flashEnergy - Time.deltaTime * 3.2f);
             // Flicker while decaying so it reads as a real multi-stroke flash.
             float flicker = _flashEnergy * (0.6f + 0.4f * Mathf.Sin(Time.time * 60f));
-            _flashLight.intensity = flicker * 6f;
+            _flashLight.intensity = flicker * 3.2f;
 
             if (_bolt.enabled)
             {
@@ -339,6 +350,52 @@ namespace WeatherVR.Weather
             return tex;
         }
 
+        static Texture2D SoftCloud(int size, int seed)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "SoftCloud",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            var random = new System.Random(seed);
+            const int blobCount = 11;
+            var centres = new Vector2[blobCount];
+            var radii = new float[blobCount];
+            for (int i = 0; i < blobCount; i++)
+            {
+                centres[i] = new Vector2(
+                    Mathf.Lerp(-0.52f, 0.52f, (float)random.NextDouble()),
+                    Mathf.Lerp(-0.24f, 0.30f, (float)random.NextDouble()));
+                radii[i] = Mathf.Lerp(0.22f, 0.48f, (float)random.NextDouble());
+            }
+
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float u = ((x + 0.5f) / size - 0.5f) * 2f;
+                float v = ((y + 0.5f) / size - 0.5f) * 2f;
+                float density = 0f;
+
+                for (int i = 0; i < blobCount; i++)
+                {
+                    float dx = u - centres[i].x;
+                    float dy = (v - centres[i].y) * 1.25f;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy) / radii[i];
+                    density = Mathf.Max(density, Mathf.SmoothStep(1f, 0f, d));
+                }
+
+                float envelope = Mathf.Clamp01(1f - Mathf.Sqrt(u * u * 0.70f + v * v));
+                float alpha = density * envelope;
+                alpha = alpha * alpha * (3f - 2f * alpha);
+                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+            }
+
+            tex.Apply();
+            return tex;
+        }
+
         static Texture2D Streak(int w, int h)
         {
             var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { name = "Streak" };
@@ -362,6 +419,7 @@ namespace WeatherVR.Weather
             if (_snowMaterial != null) Destroy(_snowMaterial);
             if (_boltMaterial != null) Destroy(_boltMaterial);
             if (_softCircle != null) Destroy(_softCircle);
+            if (_cloudTexture != null) Destroy(_cloudTexture);
             if (_streak != null) Destroy(_streak);
         }
     }
