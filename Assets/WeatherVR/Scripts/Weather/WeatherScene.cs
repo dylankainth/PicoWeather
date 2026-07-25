@@ -3,8 +3,10 @@ using UnityEngine;
 namespace WeatherVR.Weather
 {
     /// <summary>
-    /// The weather cases the carousel can switch between. This is the full set the
-    /// app renders — the carousel shows one card per case.
+    /// The weather cases the app renders. The carousel does not show one card per case
+    /// any more — its cards are days, and each day's timeline maps hours of the day onto
+    /// these (see <c>WeatherCarouselItem.KindAtHour</c>), so a case is reached by picking
+    /// a day and scrubbing to the right hour rather than by tapping the case directly.
     /// </summary>
     public enum WeatherSceneKind
     {
@@ -58,6 +60,15 @@ namespace WeatherVR.Weather
         public float SunElevation, SunAzimuth;
         public Color Ambient;
         public Color FogColor;  public float FogDensity;
+
+        // ---- glass UI accent ---------------------------------------------------
+        // Consumed by SceneKindCarouselDataProvider (WeatherCarouselData.cs) for the
+        // carousel card's accent icon colour and glass tint. Previously the
+        // carousel kept its own, entirely separate hardcoded palette -- the two
+        // could drift. Living here means the pedestal, the floor, the sky and the
+        // carousel all grade from one source per weather case.
+        public Color GlassAccent;
+        public Color GlassTint;
     }
 
     public static class WeatherScene
@@ -93,7 +104,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(1.00f, 0.97f, 0.90f), SunIntensity = 1.55f,
                         SunElevation = 58f, SunAzimuth = 145f,
                         Ambient = new Color(0.44f, 0.50f, 0.58f),
-                        FogColor = new Color(0.55f, 0.68f, 0.82f), FogDensity = 0.015f
+                        FogColor = new Color(0.55f, 0.68f, 0.82f), FogDensity = 0.015f,
+                        GlassAccent = new Color(1.00f, 0.85f, 0.55f),
+                        GlassTint = new Color(0.30f, 0.25f, 0.66f, 0.76f)
                     };
 
                 case WeatherSceneKind.PartlyCloudy:
@@ -109,7 +122,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.99f, 0.96f, 0.90f), SunIntensity = 1.30f,
                         SunElevation = 52f, SunAzimuth = 150f,
                         Ambient = new Color(0.42f, 0.47f, 0.55f),
-                        FogColor = new Color(0.52f, 0.63f, 0.76f), FogDensity = 0.02f
+                        FogColor = new Color(0.52f, 0.63f, 0.76f), FogDensity = 0.02f,
+                        GlassAccent = new Color(0.98f, 0.86f, 0.64f),
+                        GlassTint = new Color(0.28f, 0.30f, 0.58f, 0.76f)
                     };
 
                 case WeatherSceneKind.Cloudy:
@@ -125,7 +140,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.88f, 0.90f, 0.94f), SunIntensity = 0.95f,
                         SunElevation = 46f, SunAzimuth = 155f,
                         Ambient = new Color(0.40f, 0.43f, 0.48f),
-                        FogColor = new Color(0.48f, 0.52f, 0.58f), FogDensity = 0.04f
+                        FogColor = new Color(0.48f, 0.52f, 0.58f), FogDensity = 0.04f,
+                        GlassAccent = new Color(0.82f, 0.85f, 0.90f),
+                        GlassTint = new Color(0.22f, 0.25f, 0.34f, 0.76f)
                     };
 
                 case WeatherSceneKind.Overcast:
@@ -141,7 +158,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.78f, 0.80f, 0.84f), SunIntensity = 0.7f,
                         SunElevation = 40f, SunAzimuth = 160f,
                         Ambient = new Color(0.38f, 0.40f, 0.44f),
-                        FogColor = new Color(0.46f, 0.48f, 0.52f), FogDensity = 0.06f
+                        FogColor = new Color(0.46f, 0.48f, 0.52f), FogDensity = 0.06f,
+                        GlassAccent = new Color(0.70f, 0.73f, 0.78f),
+                        GlassTint = new Color(0.20f, 0.22f, 0.28f, 0.78f)
                     };
 
                 case WeatherSceneKind.Fog:
@@ -157,7 +176,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.82f, 0.84f, 0.86f), SunIntensity = 0.6f,
                         SunElevation = 35f, SunAzimuth = 160f,
                         Ambient = new Color(0.50f, 0.52f, 0.55f),
-                        FogColor = new Color(0.72f, 0.74f, 0.77f), FogDensity = 0.30f
+                        FogColor = new Color(0.72f, 0.74f, 0.77f), FogDensity = 0.30f,
+                        GlassAccent = new Color(0.80f, 0.82f, 0.84f),
+                        GlassTint = new Color(0.42f, 0.44f, 0.47f, 0.80f)
                     };
 
                 case WeatherSceneKind.Drizzle:
@@ -173,7 +194,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.76f, 0.80f, 0.86f), SunIntensity = 0.7f,
                         SunElevation = 38f, SunAzimuth = 160f,
                         Ambient = new Color(0.36f, 0.40f, 0.45f),
-                        FogColor = new Color(0.42f, 0.47f, 0.54f), FogDensity = 0.09f
+                        FogColor = new Color(0.42f, 0.47f, 0.54f), FogDensity = 0.09f,
+                        GlassAccent = new Color(0.60f, 0.72f, 0.86f),
+                        GlassTint = new Color(0.18f, 0.26f, 0.36f, 0.76f)
                     };
 
                 case WeatherSceneKind.Rain:
@@ -189,7 +212,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.68f, 0.74f, 0.84f), SunIntensity = 0.55f,
                         SunElevation = 32f, SunAzimuth = 165f,
                         Ambient = new Color(0.30f, 0.34f, 0.40f),
-                        FogColor = new Color(0.30f, 0.36f, 0.44f), FogDensity = 0.12f
+                        FogColor = new Color(0.30f, 0.36f, 0.44f), FogDensity = 0.12f,
+                        GlassAccent = new Color(0.43f, 0.80f, 1.00f),
+                        GlassTint = new Color(0.16f, 0.32f, 0.44f, 0.72f)
                     };
 
                 case WeatherSceneKind.Thunderstorm:
@@ -205,7 +230,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.56f, 0.60f, 0.78f), SunIntensity = 0.4f,
                         SunElevation = 26f, SunAzimuth = 170f,
                         Ambient = new Color(0.22f, 0.24f, 0.34f),
-                        FogColor = new Color(0.16f, 0.18f, 0.28f), FogDensity = 0.16f
+                        FogColor = new Color(0.16f, 0.18f, 0.28f), FogDensity = 0.16f,
+                        GlassAccent = new Color(0.73f, 0.66f, 1.00f),
+                        GlassTint = new Color(0.26f, 0.27f, 0.43f, 0.72f)
                     };
 
                 default: // Snow
@@ -221,7 +248,9 @@ namespace WeatherVR.Weather
                         SunColor = new Color(0.86f, 0.90f, 0.98f), SunIntensity = 0.85f,
                         SunElevation = 34f, SunAzimuth = 160f,
                         Ambient = new Color(0.46f, 0.50f, 0.58f),
-                        FogColor = new Color(0.62f, 0.68f, 0.78f), FogDensity = 0.10f
+                        FogColor = new Color(0.62f, 0.68f, 0.78f), FogDensity = 0.10f,
+                        GlassAccent = new Color(0.86f, 0.92f, 1.00f),
+                        GlassTint = new Color(0.30f, 0.36f, 0.46f, 0.74f)
                     };
             }
         }

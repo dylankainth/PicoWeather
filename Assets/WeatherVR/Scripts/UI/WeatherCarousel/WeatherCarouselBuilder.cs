@@ -12,6 +12,72 @@ namespace WeatherVR.UI.Carousel
         public GameObject Root;
         public CanvasGroup Visibility;
         public WeatherCarouselController Controller;
+
+        /// <summary>
+        /// The four storm-surge preset buttons (+0/+2/+5/+10 m), hidden by default.
+        /// Only shown while the selected card is Thunderstorm — see
+        /// <see cref="WeatherCarouselFeature"/>.
+        /// </summary>
+        public List<GameObject> FloodButtons;
+
+        /// <summary>The time-of-day scrubber under the metrics strip.</summary>
+        public WeatherCarouselTimeSlider TimeSlider;
+    }
+
+    /// <summary>
+    /// The time-of-day scrubber's view: track, fill, knob and the two labels.
+    ///
+    /// Deliberately knows nothing about weather. <see cref="WeatherCarouselFeature"/>
+    /// owns the hour, resolves it against the selected day's timeline, and hands back
+    /// text to display — so the hour has exactly one owner and this stays a dumb view.
+    /// </summary>
+    public sealed class WeatherCarouselTimeSlider : MonoBehaviour
+    {
+        public RectTransform Track;
+        public RectTransform Fill;
+        public RectTransform Knob;
+        public Text TimeLabel;
+        public Text ConditionLabel;
+        public Image FillImage;
+        public Image KnobImage;
+
+        /// <summary>Moves the knob/fill and re-labels the clock. <paramref name="hour"/> is 0..24.</summary>
+        public void SetHour(float hour)
+        {
+            float value = Mathf.Clamp01(hour / 24f);
+            float width = Track != null ? Track.rect.width : 0f;
+
+            if (Fill != null)
+                Fill.sizeDelta = new Vector2(width * value, Fill.sizeDelta.y);
+            if (Knob != null)
+                Knob.anchoredPosition = new Vector2(width * value, 0f);
+            if (TimeLabel != null)
+                TimeLabel.text = FormatHour(hour);
+        }
+
+        /// <summary>Names the case currently resolved for this hour, in the card's accent.</summary>
+        public void SetCondition(string english, string chinese, Color accent)
+        {
+            if (ConditionLabel != null)
+            {
+                ConditionLabel.text = string.IsNullOrEmpty(chinese)
+                    ? english.ToUpperInvariant()
+                    : english.ToUpperInvariant() + "  " + chinese;
+            }
+
+            if (FillImage != null)
+                FillImage.color = new Color(accent.r, accent.g, accent.b, 0.85f);
+            if (KnobImage != null)
+                KnobImage.color = new Color(accent.r, accent.g, accent.b, 1f);
+        }
+
+        public static string FormatHour(float hour)
+        {
+            hour = Mathf.Clamp(hour, 0f, 24f);
+            int wholeHours = Mathf.Clamp(Mathf.FloorToInt(hour), 0, 23);
+            int minutes = Mathf.Clamp(Mathf.RoundToInt((hour - wholeHours) * 60f), 0, 59);
+            return wholeHours.ToString("00") + ":" + minutes.ToString("00");
+        }
     }
 
     /// <summary>
@@ -28,10 +94,17 @@ namespace WeatherVR.UI.Carousel
 
         Font font;
 
+        static readonly (string Label, int Preset)[] FloodPresets =
+        {
+            ("+0m", 0), ("+2m", 1), ("+5m", 2), ("+10m", 3)
+        };
+
         public BuiltWeatherCarousel Build(
             WeatherCarouselDataset dataset,
             Transform head,
-            XRPointer pointer)
+            XRPointer pointer,
+            Action<int> onFloodPresetSelected,
+            Action<float> onHourNormalized = null)
         {
             font = FindBilingualFont();
             EnsureDesktopEventSystem();
@@ -55,7 +128,11 @@ namespace WeatherVR.UI.Carousel
             canvas.sortingOrder = 50;
 
             RectTransform canvasRect = canvasObject.GetComponent<RectTransform>();
-            canvasRect.sizeDelta = new Vector2(1280f, 440f);
+            // Grown from 440 to fit the time scrubber. The extra height is added
+            // BELOW the old content rather than around it (see CreateGlassPanel's
+            // off-centre panel), so every tuned y position above still means what it
+            // meant before and the wall-mount does not need retuning.
+            canvasRect.sizeDelta = new Vector2(1280f, 540f);
             canvasRect.localScale = Vector3.one * CanvasScale;
             canvasRect.localPosition = Vector3.zero;
             canvasRect.localRotation = Quaternion.identity;
@@ -121,6 +198,15 @@ namespace WeatherVR.UI.Carousel
                 xrInput.RegisterCard(cardRects[i], () => controller.Select(capturedIndex));
             }
 
+            // Sits in the header's free gap between the location text and the source
+            // pill, hidden until the selected card is Thunderstorm — see
+            // WeatherCarouselFeature.OnCardSelected. On the same canvas and xrInput as
+            // the cards/arrows above, so it needs no second XR ray-hit setup.
+            List<GameObject> floodButtons = CreateFloodRow(canvasRect, xrInput, onFloodPresetSelected);
+
+            WeatherCarouselTimeSlider timeSlider =
+                CreateTimeRow(canvasRect, xrInput, onHourNormalized);
+
             controller.Configure(
                 scrollRect,
                 content,
@@ -137,9 +223,17 @@ namespace WeatherVR.UI.Carousel
             {
                 Root = root,
                 Visibility = visibility,
-                Controller = controller
+                Controller = controller,
+                FloodButtons = floodButtons,
+                TimeSlider = timeSlider
             };
         }
+
+        // The panel is centred at y = -28, not 0: it grew downward to take the time
+        // scrubber, so its top edge stays at the +195 it has always been while the
+        // bottom drops to -251. Centring the growth instead would have pushed every
+        // element in the panel up by 50 units and left a dead band above the header.
+        const float PanelCentreY = -28f;
 
         void CreateGlassPanel(RectTransform parent)
         {
@@ -148,21 +242,21 @@ namespace WeatherVR.UI.Carousel
                 parent,
                 new Color(0f, 0f, 0f, 0.20f),
                 WeatherCarouselSprites.Rounded);
-            SetRect(shadow.rectTransform, new Vector2(1170f, 402f), new Vector2(0f, -10f));
+            SetRect(shadow.rectTransform, new Vector2(1170f, 458f), new Vector2(0f, PanelCentreY - 10f));
 
             Image edge = CreateImage(
                 "Glass Edge",
                 parent,
                 new Color(0.58f, 0.42f, 0.66f, 0.34f),
                 WeatherCarouselSprites.Rounded);
-            SetRect(edge.rectTransform, new Vector2(1164f, 396f), Vector2.zero);
+            SetRect(edge.rectTransform, new Vector2(1164f, 452f), new Vector2(0f, PanelCentreY));
 
             Image surface = CreateImage(
                 "Glass Surface",
                 parent,
-                new Color(0.075f, 0.052f, 0.105f, 0.78f),
+                new Color(0.075f, 0.052f, 0.105f, 0.62f),
                 WeatherCarouselSprites.Rounded);
-            SetRect(surface.rectTransform, new Vector2(1158f, 390f), Vector2.zero);
+            SetRect(surface.rectTransform, new Vector2(1158f, 446f), new Vector2(0f, PanelCentreY));
             surface.gameObject.AddComponent<Mask>().showMaskGraphic = true;
 
             WeatherCarouselGlassGraphic gradient =
@@ -352,7 +446,7 @@ namespace WeatherVR.UI.Carousel
             Image shell = CreateImage(
                 "Glass Card",
                 cardRoot,
-                new Color(0.075f, 0.052f, 0.105f, 0.80f),
+                new Color(0.075f, 0.052f, 0.105f, 0.66f),
                 WeatherCarouselSprites.Rounded);
             Stretch(shell.rectTransform, 2f);
             shell.gameObject.AddComponent<Mask>().showMaskGraphic = true;
@@ -561,6 +655,189 @@ namespace WeatherVR.UI.Carousel
             SetRect(value.rectTransform, new Vector2(195f, 24f), new Vector2(0f, -17f));
             value.alignment = TextAnchor.MiddleLeft;
             return value;
+        }
+
+        // Bottom band of the grown panel: y in roughly [-251, -195], below the metrics
+        // strip (which ends at -192). A clock block on the left, the track filling the
+        // rest, hour ticks beneath it.
+        WeatherCarouselTimeSlider CreateTimeRow(
+            RectTransform parent,
+            WeatherCarouselInput xrInput,
+            Action<float> onNormalized)
+        {
+            var slider = parent.gameObject.AddComponent<WeatherCarouselTimeSlider>();
+
+            Text time = CreateText(
+                "Time Value",
+                parent,
+                "12:00",
+                30,
+                FontStyle.Bold,
+                new Color(0.95f, 0.97f, 0.98f));
+            SetRect(time.rectTransform, new Vector2(210f, 36f), new Vector2(-460f, -200f));
+            time.alignment = TextAnchor.MiddleLeft;
+
+            Text condition = CreateText(
+                "Time Condition",
+                parent,
+                "",
+                12,
+                FontStyle.Bold,
+                new Color(0.86f, 0.92f, 0.94f, 0.88f));
+            SetRect(condition.rectTransform, new Vector2(230f, 20f), new Vector2(-450f, -230f));
+            condition.alignment = TextAnchor.MiddleLeft;
+
+            // The hit rect is 40 tall while the bar it draws is 8: a controller ray at
+            // arm's length is nowhere near pixel-accurate, and this is the only control
+            // on the panel that has to be *dragged* rather than just hit.
+            RectTransform track = CreateRect("Time Track", parent);
+            SetRect(track, new Vector2(860f, 40f), new Vector2(105f, -214f));
+
+            Image bar = CreateImage(
+                "Track Bar",
+                track,
+                new Color(1f, 1f, 1f, 0.14f),
+                WeatherCarouselSprites.Rounded);
+            bar.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            bar.rectTransform.anchorMax = new Vector2(1f, 0.5f);
+            bar.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            bar.rectTransform.offsetMin = new Vector2(0f, -4f);
+            bar.rectTransform.offsetMax = new Vector2(0f, 4f);
+            bar.raycastTarget = false;
+
+            Image fill = CreateImage(
+                "Track Fill",
+                track,
+                new Color(0.55f, 0.72f, 0.95f, 0.85f),
+                WeatherCarouselSprites.Rounded);
+            fill.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            fill.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            fill.rectTransform.pivot = new Vector2(0f, 0.5f);
+            fill.rectTransform.sizeDelta = new Vector2(0f, 8f);
+            fill.rectTransform.anchoredPosition = Vector2.zero;
+            fill.raycastTarget = false;
+
+            Image knob = CreateImage(
+                "Track Knob",
+                track,
+                Color.white,
+                WeatherCarouselSprites.Circle);
+            knob.rectTransform.anchorMin = new Vector2(0f, 0.5f);
+            knob.rectTransform.anchorMax = new Vector2(0f, 0.5f);
+            knob.rectTransform.pivot = new Vector2(0.5f, 0.5f);
+            knob.rectTransform.sizeDelta = new Vector2(24f, 24f);
+            knob.raycastTarget = false;
+
+            CreateHourTicks(track);
+
+            slider.Track = track;
+            slider.Fill = fill.rectTransform;
+            slider.Knob = knob.rectTransform;
+            slider.FillImage = fill;
+            slider.KnobImage = knob;
+            slider.TimeLabel = time;
+            slider.ConditionLabel = condition;
+
+            if (onNormalized != null)
+                xrInput.RegisterSlider(track, onNormalized);
+
+            return slider;
+        }
+
+        // 00 / 06 / 12 / 18 / 24 under the bar. Anchored fractionally rather than at
+        // computed pixel offsets so they stay aligned with the fill if the track is
+        // ever resized.
+        void CreateHourTicks(RectTransform track)
+        {
+            for (int hour = 0; hour <= 24; hour += 6)
+            {
+                float fraction = hour / 24f;
+
+                Image tick = CreateImage(
+                    "Tick " + hour,
+                    track,
+                    new Color(1f, 1f, 1f, 0.22f),
+                    null);
+                tick.raycastTarget = false;
+                tick.rectTransform.anchorMin = new Vector2(fraction, 0.5f);
+                tick.rectTransform.anchorMax = new Vector2(fraction, 0.5f);
+                tick.rectTransform.pivot = new Vector2(0.5f, 1f);
+                tick.rectTransform.sizeDelta = new Vector2(2f, 7f);
+                tick.rectTransform.anchoredPosition = new Vector2(0f, -7f);
+
+                Text label = CreateText(
+                    "Tick Label " + hour,
+                    track,
+                    hour.ToString("00"),
+                    9,
+                    FontStyle.Normal,
+                    new Color(0.80f, 0.87f, 0.90f, 0.62f));
+                label.alignment = TextAnchor.MiddleCenter;
+                label.rectTransform.anchorMin = new Vector2(fraction, 0.5f);
+                label.rectTransform.anchorMax = new Vector2(fraction, 0.5f);
+                label.rectTransform.pivot = new Vector2(0.5f, 1f);
+                label.rectTransform.sizeDelta = new Vector2(40f, 14f);
+                label.rectTransform.anchoredPosition = new Vector2(0f, -15f);
+            }
+        }
+
+        // Free header gap is x in [-205, 399] (location text ends ~-205, source pill
+        // starts ~399), same y row as both (157). Four 90-wide buttons spaced 100
+        // apart, centred in that gap, fit with margin either side.
+        List<GameObject> CreateFloodRow(
+            RectTransform parent,
+            WeatherCarouselInput xrInput,
+            Action<int> onSelect)
+        {
+            var buttons = new List<GameObject>();
+            const float centerX = 97f;
+            const float spacing = 100f;
+            float startX = centerX - (FloodPresets.Length - 1) * spacing * 0.5f;
+
+            for (int i = 0; i < FloodPresets.Length; i++)
+            {
+                (string label, int preset) = FloodPresets[i];
+                Vector2 position = new Vector2(startX + i * spacing, 157f);
+                GameObject button = CreateFloodButton(parent, xrInput, position, label,
+                    () => onSelect?.Invoke(preset));
+                button.SetActive(false);
+                buttons.Add(button);
+            }
+
+            return buttons;
+        }
+
+        GameObject CreateFloodButton(
+            RectTransform parent,
+            WeatherCarouselInput xrInput,
+            Vector2 position,
+            string label,
+            Action clicked)
+        {
+            Color normal = new Color(0.20f, 0.38f, 0.56f, 0.70f);
+            Color hover = new Color(0.36f, 0.62f, 0.90f, 0.85f);
+
+            Image surface = CreateImage(
+                "Flood " + label,
+                parent,
+                normal,
+                WeatherCarouselSprites.Rounded);
+            SetRect(surface.rectTransform, new Vector2(90f, 40f), position);
+
+            Text text = CreateText(
+                "Label",
+                surface.rectTransform,
+                label,
+                16,
+                FontStyle.Bold,
+                Color.white);
+            Stretch(text.rectTransform);
+            text.alignment = TextAnchor.MiddleCenter;
+            text.raycastTarget = false;
+
+            xrInput.RegisterButton(surface.rectTransform, surface, clicked, normal, hover);
+
+            return surface.gameObject;
         }
 
         void CreateNavigationButton(

@@ -5,6 +5,7 @@ using UnityEngine;
 using WeatherVR.Audio;
 using WeatherVR.Core;
 using WeatherVR.Data;
+using WeatherVR.Flood;
 using WeatherVR.Interaction;
 using WeatherVR.Terrain;
 using WeatherVR.Weather;
@@ -77,6 +78,11 @@ namespace WeatherVR.EditorTools
             camera.farClipPlane = 200f;
             // The cloud shader clips its raymarch against scene depth.
             camera.depthTextureMode = DepthTextureMode.Depth;
+            // Nothing in the project needs HDR (PostFX.shader is editor-only, used
+            // by CaptureTool for offline screenshots, and is not in the always-
+            // included shader list). An FP16 4x-MSAA tile buffer at this resolution
+            // is real bandwidth on a Quest-class GPU for zero visible benefit.
+            camera.allowHDR = false;
             cameraObject.AddComponent<AudioListener>();
 
             // Same implementation the runtime re-asserts, so the two cannot drift.
@@ -182,6 +188,11 @@ namespace WeatherVR.EditorTools
             buildingsObject.transform.SetParent(mapRoot.transform, false);
             var buildings = buildingsObject.AddComponent<BuildingRenderer>();
 
+            // Manual storm-surge overlay, off by default (see FloodRenderer.SetSurge).
+            var waterObject = new GameObject("WaterSurface");
+            waterObject.transform.SetParent(mapRoot.transform, false);
+            var flood = waterObject.AddComponent<FloodRenderer>();
+
             // ---------------------------------------------------------- audio
             var audioRoot = new GameObject("Audio");
             audioRoot.transform.SetParent(mapRoot.transform, false);
@@ -198,10 +209,11 @@ namespace WeatherVR.EditorTools
             var visuals = visualsObject.AddComponent<WeatherVisuals>();
 
             // ------------------------------------------------------- environment
-            // Studio sky only (the glass floor was removed): re-tinted per scene so the
-            // blue surround shifts with the weather instead of sitting in flat black.
+            // Studio sky + the world-locked glass floor, both re-tinted per scene so
+            // the surround shifts with the weather instead of sitting in flat black.
             var environmentObject = new GameObject("Environment");
             var environment = environmentObject.AddComponent<EnvironmentController>();
+            environment.MapRoot = mapRoot.transform;
 
             // --------------------------------------------------- app controller
             var appObject = new GameObject("WeatherVRApp");
@@ -219,6 +231,7 @@ namespace WeatherVR.EditorTools
             controller.Terrain = terrain;
             controller.Buildings = buildings;
             controller.Soundscape = soundscape;
+            controller.Flood = flood;
             controller.SunLight = sun;
             controller.SceneDirector = sceneDirector;
 

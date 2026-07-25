@@ -117,7 +117,7 @@ namespace WeatherVR.EditorTools
 
                 WeatherCarouselDataset dataset = BuildDataset();
                 BuiltWeatherCarousel carousel =
-                    new WeatherCarouselBuilder().Build(dataset, camera.transform, null);
+                    new WeatherCarouselBuilder().Build(dataset, camera.transform, null, null);
                 created.Add(carousel.Root);
                 carousel.Visibility.alpha = 1f;
                 carousel.Visibility.interactable = true;

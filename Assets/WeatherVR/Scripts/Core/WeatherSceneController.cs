@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using WeatherVR.Audio;
 using WeatherVR.Data;
+using WeatherVR.Flood;
 using WeatherVR.Interaction;
 using WeatherVR.Terrain;
 using WeatherVR.Weather;
@@ -31,6 +32,10 @@ namespace WeatherVR.Core
         public TerrainRenderer Terrain;
         public BuildingRenderer Buildings;
         public AmbientSoundscape Soundscape;
+
+        [Tooltip("Manual storm-surge overlay. Optional — a scene with no water assigned " +
+                 "simply never shows a flood layer.")]
+        public FloodRenderer Flood;
 
         [Tooltip("Drives weather-scene switching from the carousel. The initial load hands it " +
                  "the loaded terrain/imagery so every scene it synthesises reuses them.")]
@@ -119,11 +124,18 @@ namespace WeatherVR.Core
             Terrain?.Apply(snapshot, config);
             Buildings?.Apply(snapshot, config);
             Soundscape?.Apply(snapshot);
+            Flood?.Apply(snapshot, config);
 
             SceneDirector?.Initialize(config);
 
             Debug.Log($"[WeatherVR] Scene built — {snapshot.Describe()}");
         }
+
+        /// <summary>
+        /// Selects a storm-surge preset by index (see <see cref="FloodRenderer.SurgePresetsMeters"/>).
+        /// The entry point the flood panel's carousel-style buttons call.
+        /// </summary>
+        public void SetSurge(int presetIndex) => Flood?.SetSurge(presetIndex);
 
         /// <summary>
         /// Points the key light where the sun actually was.

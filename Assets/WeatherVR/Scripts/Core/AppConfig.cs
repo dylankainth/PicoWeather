@@ -128,6 +128,30 @@ namespace WeatherVR.Core
                  "'procedural' on screen, so this shows a storm without claiming one.")]
         public bool ForceProceduralWeather = false;
 
+        [Header("Kaleidoscope surround")]
+        [Tooltip("0 = plain .xyz liquid glass: a single unfolded environment reflection, " +
+                 "no facet dispersion, a plain gradient sky and a Cartesian floor grid. " +
+                 "1 = full kaleidoscope fold. Continuous, so the accent can be dialled " +
+                 "back rather than switched off -- reverting the look never means " +
+                 "reverting code. Published by EnvironmentController as the " +
+                 "_WVRKaleidoAmount shader global and read by the skybox, the glass " +
+                 "floor and the plinth, so all three fold together.")]
+        [Range(0f, 1f)] public float PedestalKaleidoscope = 1f;
+
+        [Tooltip("How many mirror wedges the whole surround folds into -- the sky, the " +
+                 "floor's radial spokes and the plinth's reflections all share this one " +
+                 "count. 8 matches the pedestal's eight physical facets, which is what " +
+                 "makes a facet's reflection line up with the sky it is reflecting; the " +
+                 "shader rounds it to an integer, since a fractional count leaves one " +
+                 "discontinuous seam where the azimuth wraps.")]
+        [Range(3f, 16f)] public float KaleidoSegments = 8f;
+
+        [Tooltip("Radians per second the fold rotates. Small on purpose, and note that " +
+                 "only the sky and the glass reflections spin -- the floor's structural " +
+                 "spokes are deliberately static, because a rotating line across the " +
+                 "lower field of view is a vection trigger (see GlassSurround.shader).")]
+        [Range(-1f, 1f)] public float KaleidoSpin = 0.06f;
+
         // ------------------------------------------------------- derived values
 
         /// <summary>

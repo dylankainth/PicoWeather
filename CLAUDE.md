@@ -544,8 +544,10 @@ My project (2)/
       │  ├─ Interaction/  ComfortFollow, XRPointer, HeadTracking, MapPlacementController
       │  ├─ Weather/      WeatherScene (profiles+synth), WeatherSceneDirector, EnvironmentController
       │  ├─ Audio/        AmbientSoundscape, ProceduralAudio
-      │  └─ Core/         WeatherSceneController, AppConfig, PerfGovernor
-      ├─ Shaders/         VolumetricClouds.shader, LightningBolt.shader, GlassEnvironment.shader, Terrain*.shader
+      │  └─ Core/         WeatherSceneController, AppConfig
+      ├─ Shaders/         Pedestal.shader, GlassSurround.shader (Resources/), StudioSky.shader,
+      │                   Water.shader, TerrainSurface.shader, Buildings.shader,
+      │                   WeatherVRGlass.cginc, StudioSkyGradient.cginc
       ├─ Materials/
       └─ Editor/          SceneBuilder.cs, BuildAPK.cs, DataBakeWindow.cs
 ```
@@ -604,8 +606,13 @@ across runs.
 | Lightning | ≤ 3 concurrent bolts, ≤ 512 tris each |
 | Everything else | ≤ 2 ms CPU |
 
-`PerfGovernor` measures frame time and drops raymarch steps / resolution
-scale before it drops framerate.
+**Correction (2026-07-25): no `PerfGovernor` exists.** This budget table and the
+line above describe a runtime adaptive-quality system that was planned but
+never built — there is no such file anywhere in the project, and nothing sets
+`Application.targetFrameRate` or scales raymarch steps/resolution at runtime.
+`AppConfig.CloudMarchStepsMin` and the "perf governor" fields on `AppConfig`
+are read by nothing. Treat the table above as a target checked by hand (or by
+the profiler on device), not as something the app enforces on its own.
 
 ## Conventions
 
@@ -782,6 +789,177 @@ it.
   (bright, terrain visible) instead of the initial data's weather; the carousel
   no longer auto-applies card 0 on load (weather changes on tap only); and
   `DesktopPreview` no longer forces the demo storm. Still uncompiled/untested.
+- **2026-07-25 (flood layer)** — added a manual storm-surge overlay: `Shaders/Water.shader`
+  (hand-written transparent vert/frag, `ZWrite Off` in the Transparent queue so opaque
+  terrain/buildings already in the depth buffer occlude it correctly, single-pass-stereo
+  instancing macros added since no existing shader in the repo had them), `Scripts/Flood/FloodRenderer.cs`
+  (mirrors `TerrainRenderer`/`BuildingRenderer`: lazy `Shader.Find` material, a single quad
+  spanning the map's `[-0.5, 0.5]` square, `SetSurge(index)` over four presets — +0/+2/+5/+10 m
+  above the snapshot's `TerrainHeightfield.MinElevation` — converted to map-local Y via
+  `AppConfig.TerrainElevationToMapUnits`, the same conversion the terrain mesh itself uses, so
+  water and terrain share one vertical frame). Wired into `WeatherSceneController.Build()`'s
+  fan-out and a new `SetSurge` entry point, `SceneBuilder.Populate` (WaterSurface under mapRoot),
+  `WeatherSceneBootstrap.InstallFlood` (idempotent runtime self-install, same pattern as
+  `InstallVisuals`), and `ProjectConfigurator`'s always-included shader list. Control surface is a
+  new standalone `Scripts/UI/Flood/FloodPanelBuilder.cs` + `FloodPanelFeature.cs` — four preset
+  buttons on their own small world-space panel (reusing `WeatherCarouselInput`'s ray-hit button
+  plumbing and `WeatherCarouselFollower`'s wall-mount, stacked below the forecast carousel via a
+  `WallHeight` offset), deliberately not folded into the forecast carousel's dataset/scroll
+  machinery since flood presets aren't forecast days. Written to compile against the existing
+  APIs but **not yet compiled in Unity, scene not yet rebuilt, not yet pressed-play** — see
+  "Still to do".
+- **2026-07-25 (flood follow-up)** — first live test: controller presses did nothing on the
+  flood panel. Root cause: the panel was a *second*, independent `WeatherCarouselFollower` +
+  `WeatherCarouselInput` with a hand-guessed `WallHeight` offset — untested placement math with
+  no relation to the carousel's own (working) wall-mount, so it likely rendered somewhere the
+  controller ray never reached. Replaced entirely: deleted `Scripts/UI/Flood/FloodPanelBuilder.cs`
+  and `FloodPanelFeature.cs`; the four surge-preset buttons are now built directly on the
+  existing forecast carousel's own canvas (`WeatherCarouselBuilder.CreateFloodRow`, in the
+  header's free gap between the location text and the source pill), reusing the exact `xrInput`/
+  `canvasRect` the cards and nav arrows already use successfully — no second ray-hit setup, no
+  guessed offset. Also implements "flood only in thunderstorms": the buttons are built inactive
+  and `WeatherCarouselFeature.OnCardSelected` toggles them active only when the selected card's
+  kind is `WeatherSceneKind.Thunderstorm`, and calls `SetSurge(0)` on leaving it so raised water
+  doesn't linger into Clear/Rain/etc. Still uncompiled/untested — see "Still to do".
+- **2026-07-25 (pedestal + scenery redesign, `.xyz` theme)** — documentation drift
+  correction first: the 2026-07-25 entries above describe `WeatherScene` as "five
+  profiles" and mention a `GlassEnvironment.shader` being added — neither is what
+  actually shipped. `WeatherScene` has **9** profiles (Clear/PartlyCloudy/Cloudy/
+  Overcast/Fog/Drizzle/Rain/Thunderstorm/Snow), and no `GlassEnvironment.shader`
+  was ever created; the glass surfaces are `Pedestal.shader`, the new
+  `GlassSurround.shader`, and `StudioSky.shader`. Also: `PerfGovernor` does not
+  exist (see the corrected Performance budget section above) — CLAUDE.md had
+  documented one since the project's start with no such file ever existing.
+  Real work this round: the hackathon requires one theme from
+  {kaleidoscope, .xyz, pawn, reverse} — chose **`.xyz`**, since the app is
+  literally x/y/z spatial data (lat/lon, altitude, cloud height), with a
+  kaleidoscope facet accent layered on top, toggleable back to plain `.xyz` via
+  `AppConfig.PedestalKaleidoscope` (a continuous material float, not a shader
+  keyword — every material in this project is created at runtime via
+  `Shader.Find` with no material asset backing it, so a `shader_feature` variant
+  would have nothing to keep it alive and would be silently stripped on device).
+    - **Pedestal** (`PedestalMeshBuilder.cs`, `Pedestal.shader`): went from a
+      4-corner square 3-ring plinth to a **chamfered-square, 5-ring, 8-facet**
+      profile (32 distinct flat normals across 4 bands). A regular hexagon was
+      considered and rejected: the terrain is a square with corners at radius
+      0.707, so a hexagon needs a 3.3 m plinth under this 2 m map to cover them
+      and would force the carousel's 4-wall mount to become 6-wall — the
+      chamfered square keeps the existing footprint and the carousel's wall-snap
+      completely untouched. The shader is a two-pass trick on one closed mesh
+      (Cull Front opaque interior pass writes depth so the terrain's heightfield
+      is never see-through to nothing; Cull Back premultiplied-blend glass pass
+      over it) — no `GrabPass`, no framebuffer read anywhere. Coordinate ticks
+      use an analytically anti-aliased `AxisLines` (pixel-width lines + a
+      distance-based fade, in `WeatherVRGlass.cginc`) so the graticule doesn't
+      shimmer at grazing VR angles the way a naive `frac()` grid would.
+      Kaleidoscope folds the reflected sky (`KaleidoFold`, matching the sky
+      gradient extracted into `StudioSkyGradient.cginc` so pedestal and skybox
+      can't drift) through an 8-segment mirror matching the 8 facets, with a
+      triple-power fresnel standing in for chromatic dispersion.
+    - **Surround**: the glass floor disc that was deleted (see
+      `EnvironmentController`'s original header comment) is reintroduced, but
+      **opaque**, not blended — `EnvironmentController.EnsureSurround()` builds
+      it world-locked, aligned under the map root in XZ. Opaque + `ZWrite On`
+      means it writes depth before the skybox draws, so those pixels are
+      z-rejected out of the skybox pass entirely: the floor *replaces* fill cost
+      rather than adding a blended layer, which was the single biggest
+      fill-rate risk identified for this change. `EnvironmentController` is now
+      also the one place that publishes the sky palette as shader globals
+      (`_WVRSkyZenith` etc.) so every glass surface reflects the same sky
+      without re-deriving it.
+    - **One palette, not two**: `WeatherSceneProfile` gained `GlassAccent`/
+      `GlassTint`, and `SceneKindCarouselDataProvider` (`WeatherCarouselData.cs`)
+      now reads them instead of keeping its own independent hardcoded palette —
+      the two could previously drift.
+    - **Stereo fix**: `Pedestal.shader` and `StudioSky.shader` had no single-pass-
+      instanced macros at all. Added, copying `Water.shader`'s (the only shader
+      in the repo that had them correctly) — the project's two stereo-mode
+      settings files disagree (`PXR_Settings.asset` says multipass,
+      `OpenXR Package Settings.asset` says single-pass), so every hand-written
+      shader must carry the macros regardless of which one is actually active.
+    - **Free perf win taken in passing**: `camera.allowHDR` was never set and
+      defaulted true, so the camera was running an FP16 4×MSAA tile buffer for
+      no reason — nothing in the project needs HDR (`PostFX.shader` is
+      editor-only and not in the always-included list). Set to `false` in
+      `SceneBuilder`.
+    - **Carousel**: only a modest alpha retint of the existing glass panels/cards
+      toward genuine translucency (0.80→0.62, 0.84→0.66) landed this round — the
+      diagonal-sheen mesh rewrite and kaleidoscope facet-chip decoration
+      discussed during design were descoped to avoid risking the carousel's
+      working controller-ray input, which has broken once already in this
+      project (see the flood-panel entries above). Left as a follow-up.
+  Written to compile against the existing APIs but **not yet compiled in Unity,
+  scene not yet rebuilt, not yet pressed-play** — see "Still to do".
+
+- **2026-07-25 (one kaleidoscope, and a 24-hour time slider)** — two changes this
+  round, on top of a merge of `master` (18 commits: Cesium, phone AR/touch builds,
+  XR simulation settings) into this branch.
+    - **The surround was carrying three unrelated symmetries.** `StudioSky.shader`
+      folded the azimuth into 12 wedges with its own hand-rolled copy of the fold
+      maths; `Pedestal.shader` and `GlassSurround.shader` folded into 8 via
+      `KaleidoFold`; and the floor's grid was plain Cartesian with no fold at all.
+      So a pedestal facet never reflected a sky that matched it, which is why the
+      "these facets are splitting the light" claim in Pedestal.shader's header was
+      not actually true on screen. Fixed by moving the whole thing into one place
+      (`WeatherVRGlass.cginc`: `KaleidoSegments`/`KaleidoCell`/`KaleidoSplit`/
+      `KaleidoDisperse`, replacing `KaleidoFold`) and publishing amount/segments/spin
+      as `_WVRKaleido*` globals from `EnvironmentController` — same single-publisher
+      pattern, and same reasoning, as the `_WVRSky*` palette globals. `AppConfig`
+      gained `KaleidoSegments` (8, matching the plinth's 8 physical facets) and
+      `KaleidoSpin`; `PedestalKaleidoscope` now gates the whole surround rather than
+      just the plinth, and the sky honours it at last (it previously ignored the
+      documented `= 0` plain-`.xyz` fallback entirely).
+      Real visual changes on top of the unification: the sky samples its gradient
+      along the *folded* direction, so the sun resolves once per wedge — a ring of
+      mirrored suns, mirrored *content* rather than the old luminance ripple, and it
+      costs zero extra `pow()` because the fold preserves y and the vertical gradient
+      never sees it. The floor gained radial mirror spokes on the same wedge layout
+      (deliberately **not** spun — a rotating structural line across the lower field
+      of view is textbook vection; the moving part stays in the reflection) plus a
+      dispersed, seam-lit reflection. The pedestal dropped its per-facet phase offset:
+      it randomised each facet's slice, which destroyed the very alignment that makes
+      the effect legible now that the surround folds into the same 8 wedges the mesh
+      physically has. The sky runs the fold at **0.25× the shared spin rate**, which
+      is a comfort decision, not taste: it now carries high-contrast detail across the
+      whole periphery, where the rest of the surround is explicitly tuned not to move
+      anything fast.
+    - **Carousel is days again, plus an hour scrubber.** It had become a flat
+      one-card-per-case picker (9 cards). Now: 5 day cards, each carrying a
+      `WeatherTimeSegment[]` timeline, and a time slider under the metrics strip
+      scrubbing 0–24 h in half-hour steps. Weather is `(day, hour)` resolved through
+      `WeatherCarouselItem.KindAtHour`. The authored week covers all 9
+      `WeatherSceneKind` cases, because dropping from 9 picker cards to 5 day cards
+      must not make any scene unreachable — see
+      `DayTimelineCarouselDataProvider`'s header for the two constraints that shaped
+      it. `SceneKindCarouselDataProvider` is kept: it is still the quickest way to
+      reach one specific case when debugging, and `VisualReviewCapture` uses it.
+      The **two-tier update is the load-bearing part**: `WeatherSceneDirector` gained
+      `SetTimeOfDay` (sun angle/colour, ambient, fog, sky palette — cheap, runs on
+      every frame of a drag) separately from `ApplyKind` (rebuilds the cloud density
+      `Texture3D` — runs only when a scrub crosses a timeline boundary into a
+      different case). This is the debounce the previous round's "Still to do" asked
+      for, arrived at from the other direction. Time of day drives a real 24 h solar
+      arc (sunrise 06:00, solar noon 12:00, sunset 18:00, exactly periodic so
+      dragging across midnight cannot step), warming the light toward the horizon and
+      cooling it to a moonlit floor at night; the profile's `SunAzimuth` is now
+      ignored, since with a clock the azimuth has to come from the clock or the sun
+      would rise and set in the same place. `WeatherCarouselInput` gained
+      `RegisterSlider` — the panel's first *dragged* control rather than a discrete
+      hit, on the same canvas/ray plumbing the cards and flood buttons already use
+      (deliberately not a second input stack: that is exactly what broke the flood
+      panel two rounds ago). The panel canvas grew 440 → 540 downward only, so every
+      tuned y position above it still means what it meant and the wall-mount needed
+      no retuning.
+    - **Two latent bugs found and fixed in `EnvironmentController.Apply` while in
+      there**, both products of the `master` merge: the storm-tint block dereferenced
+      `_skyMaterial` with no null guard (the guarded block above it had already
+      established it can be null), and it published the *raw* `profile.Sky*` colours
+      as the `_WVRSky*` globals while setting the *storm-graded* colours on the skybox
+      — so every glass surface was reflecting a sky that was not the one overhead,
+      which is precisely the drift the single-publisher arrangement exists to
+      prevent. Now grades once and publishes what it set.
+  Written to compile against the existing APIs but **not yet compiled in Unity, scene
+  not rebuilt, not pressed-play** — see "Still to do".
 
 ## Still to do
 
@@ -808,3 +986,65 @@ it.
 - [ ] Re-check the cloud/rain/lightning `Apply` cost on a card tap (it rebuilds the
       density `Texture3D`). Fine as an occasional switch; if a rapid card-swipe
       stutters, debounce `ApplyKind` behind the carousel's settle.
+- [ ] **Flood layer (2026-07-25):** run `Tools ▸ WeatherVR ▸ Add Shaders to Always-Included`
+      (registers `WeatherVR/Water`), then `Tools ▸ WeatherVR ▸ Build Scene`, then Press Play.
+      Confirm: (1) no compiler/shader errors; (2) the four surge buttons are invisible/inert on
+      every card except Thunderstorm, and appear in the header's free gap (next to the location
+      text, left of the source pill) only when Thunderstorm is selected; (3) pressing one with
+      the controller ray actually raises water this time — this is the specific thing that
+      failed last round; (4) +0 shows no water, +2/+5/+10 raise a translucent surface with the
+      ~43.7 m peak and taller buildings visibly poking through, low ground submerging first;
+      (5) switching away from Thunderstorm hides the buttons and drops the water; (6) on device,
+      water renders to **both eyes** (the new stereo macros are this repo's first use of them,
+      unverified) and the 72 FPS budget still holds.
+- [ ] **Pedestal + scenery redesign (2026-07-25):** run
+      `Tools ▸ WeatherVR ▸ Add Shaders to Always-Included`, then
+      `Tools ▸ WeatherVR ▸ Build Scene`, then Press Play. Confirm: (1) no
+      compiler/shader errors; (2) the plinth reads as a faceted glass shell over a
+      darker interior with coordinate ticks visible *through* the glass, and the
+      terrain's corners are fully covered by it (the specific geometry regression
+      the chamfer-vs-terrain-radius check in `PedestalMeshBuilder.cs` guards
+      against); (3) a floor grid is visible under the table, fading toward its
+      edge, with no hard disc boundary; (4) tapping through all 9 carousel cards
+      shifts sky, fog, floor tint and pedestal rim together (the palette-unification
+      payoff — the fastest way to spot a value that was left hardcoded); (5) the
+      carousel still mounts correctly and the controller ray still hits every
+      card and the flood buttons (the wall-mount math itself was not changed,
+      but confirm it — carousel input has broken silently once before); (6) with
+      `AppConfig.PedestalKaleidoscope` set to 0 on `WeatherVRConfig.asset`, the
+      pedestal and floor still render correctly as plain `.xyz` glass with no
+      facet fold and no error/pink shaders — this fallback path is designed but
+      not yet proven. On device specifically: floor/pedestal/sky render to both
+      eyes (new stereo macros, ambiguous stereo-mode setting), and check frame
+      time looking across the floor at a grazing angle (worst case for both fill
+      rate and grid aliasing) and during a Thunderstorm with a flood surge raised
+      (densest frame the app can produce).
+- [ ] **Unified kaleidoscope (2026-07-25):** compile, then Press Play. Confirm:
+      (1) no shader errors — `WeatherVRGlass.cginc` is now included by four shaders
+      and the `_WVRKaleido*` globals are declared in three of them; (2) the sky shows
+      a ring of mirrored suns near the horizon rather than one sun, and the wedge
+      seams in the sky line up with the plinth's facets and the floor's spokes (that
+      alignment is the entire point of the change — if the counts look different,
+      something is not reading the shared global); (3) with
+      `AppConfig.PedestalKaleidoscope = 0` the sky is a plain gradient with a single
+      sun, the floor has no spokes, and the plinth has one unfolded reflection —
+      this fallback never worked for the sky before, so it is genuinely untested;
+      (4) on device, the sky's 0.25× spin is slow enough to be comfortable in
+      peripheral vision — the one judgement call here that a still frame cannot
+      settle.
+- [ ] **Day/hour carousel (2026-07-25):** compile, then Press Play. Confirm:
+      (1) five day cards (TODAY/TOMORROW/weekday) instead of nine case cards, and the
+      panel is taller with a time row below the metrics strip; (2) the controller ray
+      can *drag* the knob — this is the panel's first dragged control and the input
+      path most likely to be wrong; (3) the clock and condition labels track the drag,
+      and the knob does not read 00:00 while pinned to the far right; (4) scrubbing
+      within one timeline segment changes only the light, while crossing a boundary
+      visibly switches the weather — if a scrub stutters continuously, the
+      cheap/expensive split in `WeatherSceneDirector` is not holding; (5) 03:00 is
+      night with a dim blue sky and a moonlit floor, 06:00/18:00 warm and low,
+      12:00 full daylight, and the sun visibly tracks east→west across the drag;
+      (6) selecting the storm day and scrubbing into its 12:00–17:00 Thunderstorm
+      window makes the flood buttons appear, and scrubbing out hides them and drops
+      the water; (7) all 9 cases are reachable across the five days
+      (Fog/Clear/PartlyCloudy day 1, Cloudy/Overcast/Drizzle/Rain day 2,
+      Thunderstorm day 3, Snow day 5).

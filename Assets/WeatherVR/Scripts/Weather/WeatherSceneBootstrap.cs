@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using WeatherVR.Core;
+using WeatherVR.Flood;
 using WeatherVR.Interaction;
 using WeatherVR.IntroEarth;
 
@@ -48,8 +49,9 @@ namespace WeatherVR.Weather
             }
 
             WorldLockMap(controller);
-            EnvironmentController environment = InstallEnvironment();
+            EnvironmentController environment = InstallEnvironment(controller);
             WeatherVisuals visuals = InstallVisuals(controller);
+            InstallFlood(controller);
             WeatherSceneDirector director = InstallDirector(controller, visuals, environment);
 
             if (controller.IsReady)
@@ -160,11 +162,19 @@ namespace WeatherVR.Weather
             Debug.Log("[WeatherVR] Table exhibit placed in front of the starting view.");
         }
 
-        EnvironmentController InstallEnvironment()
+        EnvironmentController InstallEnvironment(WeatherSceneController controller)
         {
             var environment = FindObjectOfType<EnvironmentController>();
             if (environment == null)
                 environment = new GameObject("Environment").AddComponent<EnvironmentController>();
+
+            // A scene generated before the glass floor existed will have no MapRoot
+            // wired up on its Environment object; back-fill it so the floor aligns
+            // under the table without a scene rebuild, same as the flood/visuals
+            // installers above.
+            if (environment.MapRoot == null)
+                environment.MapRoot = controller.MapRoot;
+
             return environment;
         }
 
@@ -178,6 +188,26 @@ namespace WeatherVR.Weather
             var go = new GameObject("WeatherVisuals");
             go.transform.SetParent(parent, false);
             return go.AddComponent<WeatherVisuals>();
+        }
+
+        // A scene generated before the flood layer existed will have no FloodRenderer
+        // wired up; self-install one under the map root so Press Play works without a
+        // scene rebuild, same as InstallVisuals above.
+        FloodRenderer InstallFlood(WeatherSceneController controller)
+        {
+            if (controller.Flood != null) return controller.Flood;
+
+            var flood = FindObjectOfType<FloodRenderer>();
+            if (flood == null)
+            {
+                var parent = controller.MapRoot != null ? controller.MapRoot : controller.transform;
+                var go = new GameObject("WaterSurface");
+                go.transform.SetParent(parent, false);
+                flood = go.AddComponent<FloodRenderer>();
+            }
+
+            controller.Flood = flood;
+            return flood;
         }
 
         WeatherSceneDirector InstallDirector(

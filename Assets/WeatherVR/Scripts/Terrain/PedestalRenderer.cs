@@ -3,7 +3,7 @@ using UnityEngine;
 namespace WeatherVR.Terrain
 {
     /// <summary>
-    /// Owns the compact graphite table under the map. Needs no weather snapshot --
+    /// Owns the liquid-glass plinth mesh under the map. Needs no weather snapshot --
     /// it is pure geometry -- so it builds itself once in <see cref="Awake"/>.
     /// Sits under the map root alongside <see cref="TerrainRenderer"/>, so it
     /// inherits the map's placement and scale for free.
@@ -40,6 +40,15 @@ namespace WeatherVR.Terrain
             }
 
             _material = new Material(shader) { name = "Pedestal (runtime)" };
+
+            // The kaleidoscope/plain-xyz fallback lever is still a continuous float
+            // rather than a shader keyword -- every material here is created at
+            // runtime via Shader.Find with no material asset backing it, so a
+            // shader_feature variant would have nothing to keep it alive and would
+            // be stripped from the device build. It is no longer set here, though:
+            // EnvironmentController publishes it (and the segment count and spin) as
+            // _WVRKaleido* globals, because the plinth has to fold identically to
+            // the sky it reflects and the floor beside it.
             meshRenderer.sharedMaterial = _material;
         }
 

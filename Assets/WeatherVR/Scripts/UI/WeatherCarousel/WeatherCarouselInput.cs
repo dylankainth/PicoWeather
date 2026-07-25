@@ -35,6 +35,10 @@ namespace WeatherVR.UI.Carousel
         bool dragging;
         float previousCanvasX;
         float totalDrag;
+
+        RectTransform sliderTrack;
+        Action<float> sliderChanged;
+        bool draggingSlider;
         HitTarget gazeTarget;
         float gazeSeconds;
         const float GazeDwellSeconds = 1.25f;
@@ -74,6 +78,21 @@ namespace WeatherVR.UI.Carousel
             cards.Add(new HitTarget { Rect = rect, Click = clicked });
         }
 
+        /// <summary>
+        /// The one continuously-dragged control on the panel (the time slider), as
+        /// opposed to the discrete cards and buttons above.
+        ///
+        /// <paramref name="normalizedChanged"/> receives 0..1 along the track and is
+        /// called on press and on every frame of the drag, so it must be cheap — see
+        /// WeatherCarouselFeature, which separates the per-frame sun update from the
+        /// scene rebuild that only runs when the resolved weather case changes.
+        /// </summary>
+        public void RegisterSlider(RectTransform track, Action<float> normalizedChanged)
+        {
+            sliderTrack = track;
+            sliderChanged = normalizedChanged;
+        }
+
         void Update()
         {
             if (canvasRect == null || controller == null)
@@ -103,6 +122,7 @@ namespace WeatherVR.UI.Carousel
                 ProcessScreenPointer(
                     screenPosition,
                     screenPressed,
+                    screenHeld,
                     screenReleased,
                     Camera.main);
                 return;
@@ -184,11 +204,32 @@ namespace WeatherVR.UI.Carousel
         void ProcessScreenPointer(
             Vector2 screenPosition,
             bool pressed,
+            bool held,
             bool released,
             Camera camera)
         {
             HitTarget button = FindScreenTarget(buttons, screenPosition, camera);
             SetHoveredButton(button);
+
+            // The slider needs a *position along* the track rather than a yes/no hit,
+            // so it goes through the same canvas-plane intersection the XR ray uses
+            // instead of the screen-rect containment test the discrete targets use.
+            if ((pressed || (held && draggingSlider)) &&
+                TryGetCanvasHit(camera.ScreenPointToRay(screenPosition),
+                                out Vector3 sliderPoint, out _))
+            {
+                if (pressed && Contains(sliderTrack, sliderPoint))
+                    draggingSlider = true;
+
+                if (draggingSlider)
+                {
+                    ReportSlider(sliderPoint);
+                    return;
+                }
+            }
+
+            if (released || !held)
+                draggingSlider = false;
 
             if (!pressed)
                 return;
@@ -217,11 +258,35 @@ namespace WeatherVR.UI.Carousel
                 SetHoveredButton(null);
                 if (dragging && released)
                     FinishDrag();
+                if (released)
+                    draggingSlider = false;
                 return;
             }
 
             HitTarget button = FindTarget(buttons, worldPoint);
             SetHoveredButton(button);
+
+            // The slider claims the drag before the deck does, and keeps it until
+            // release even if the ray wanders off the track — that is what makes a
+            // slider feel like a slider rather than something that drops the value
+            // the moment the hand drifts a couple of centimetres.
+            if (pressed && button == null && Contains(sliderTrack, worldPoint))
+                draggingSlider = true;
+
+            if (draggingSlider)
+            {
+                bool down = pressed || held;
+                if (down)
+                    ReportSlider(worldPoint);
+
+                // Released, or the button came up without a release event ever being
+                // seen (tracking loss mid-drag). Without the second condition a stuck
+                // flag would keep scrubbing the clock from bare ray movement, with no
+                // press involved at all.
+                if (released || !down)
+                    draggingSlider = false;
+                return;
+            }
 
             if (pressed)
             {
@@ -282,6 +347,24 @@ namespace WeatherVR.UI.Carousel
             position = default;
             pressed = held = released = false;
             return false;
+        }
+
+        /// <summary>
+        /// Turns a point on the canvas into 0..1 along the slider track. Measured from
+        /// the rect's own xMin rather than assuming a centred pivot, so the track can be
+        /// laid out however the builder likes.
+        /// </summary>
+        void ReportSlider(Vector3 worldPoint)
+        {
+            if (sliderTrack == null || sliderChanged == null)
+                return;
+
+            Rect rect = sliderTrack.rect;
+            if (rect.width <= 0f)
+                return;
+
+            float local = sliderTrack.InverseTransformPoint(worldPoint).x;
+            sliderChanged(Mathf.Clamp01((local - rect.xMin) / rect.width));
         }
 
         void FinishDrag()

@@ -15,6 +15,25 @@ namespace WeatherVR.UI.Carousel
         Storm
     }
 
+    /// <summary>
+    /// One stretch of a day that renders as a single weather case: "from
+    /// <see cref="StartHour"/> until the next segment's start, it is this kind".
+    ///
+    /// Stored as a start-time list rather than 24 per-hour entries because that is
+    /// how the data reads when authored ("the front arrives at 14:00") and because
+    /// the thing downstream cares about is precisely the boundary: crossing one is
+    /// the only moment the expensive scene rebuild has to run.
+    /// </summary>
+    [Serializable]
+    public struct WeatherTimeSegment
+    {
+        [Tooltip("Hour of day this segment starts, inclusive. 0..24.")]
+        public float StartHour;
+
+        /// <summary>The scene to render during this segment, as <c>(int)WeatherSceneKind</c>.</summary>
+        public int SceneKind;
+    }
+
     [Serializable]
     public sealed class WeatherCarouselItem
     {
@@ -31,8 +50,50 @@ namespace WeatherVR.UI.Carousel
         public Color Accent;
         public Color GlassTint;
 
-        /// <summary>Which weather scene this card selects, as <c>(int)WeatherSceneKind</c>.</summary>
+        /// <summary>
+        /// The card's headline scene, as <c>(int)WeatherSceneKind</c> — what the day is
+        /// remembered as, and the fallback for a card with no <see cref="Timeline"/>.
+        /// </summary>
         public int SceneKind;
+
+        /// <summary>
+        /// This day's weather hour by hour, driven by the carousel's time slider.
+        /// May be null or empty, in which case the whole day is <see cref="SceneKind"/> —
+        /// that is what keeps datasets built before the slider existed (see
+        /// <c>VisualReviewCapture</c>) working unchanged.
+        /// </summary>
+        public WeatherTimeSegment[] Timeline;
+
+        /// <summary>
+        /// Which case is showing at a given hour of day.
+        ///
+        /// Picks the latest segment starting at or before <paramref name="hour"/>, and
+        /// deliberately does not assume the segments are sorted — an unsorted timeline
+        /// would otherwise resolve to something arbitrary rather than obviously wrong.
+        /// An hour before every segment's start wraps to the last segment of the day,
+        /// which is the overnight one.
+        /// </summary>
+        public WeatherSceneKind KindAtHour(float hour)
+        {
+            if (Timeline == null || Timeline.Length == 0)
+                return (WeatherSceneKind)SceneKind;
+
+            hour = Mathf.Repeat(hour, 24f);
+
+            int chosen = -1;
+            float bestStart = float.NegativeInfinity;
+            int latest = 0;
+            float latestStart = float.NegativeInfinity;
+
+            for (int i = 0; i < Timeline.Length; i++)
+            {
+                float start = Timeline[i].StartHour;
+                if (start > latestStart) { latestStart = start; latest = i; }
+                if (start <= hour && start > bestStart) { bestStart = start; chosen = i; }
+            }
+
+            return (WeatherSceneKind)Timeline[chosen >= 0 ? chosen : latest].SceneKind;
+        }
     }
 
     public sealed class WeatherCarouselDataset
@@ -62,11 +123,174 @@ namespace WeatherVR.UI.Carousel
         public static IWeatherCarouselDataProvider CreateDefault()
         {
             // ================================================================
-            // The carousel is now a weather PICKER: one card per weather case.
-            // Tapping a card switches the rendered scene. To drive it from a live
-            // forecast instead, return your own IWeatherCarouselDataProvider here.
+            // The carousel shows one card per DAY, and the time slider picks the
+            // hour within the selected day. Weather comes from that day's timeline,
+            // so the same day reads differently at 03:00 and at 15:00. To drive it
+            // from a live forecast instead, return your own provider here — it only
+            // has to fill WeatherCarouselItem.Timeline.
+            //
+            // SceneKindCarouselDataProvider below is the older flat picker (one card
+            // per case, no timeline). Kept because it is still the quickest way to
+            // reach a specific case when debugging one.
             // ================================================================
-            return new SceneKindCarouselDataProvider();
+            return new DayTimelineCarouselDataProvider();
+        }
+    }
+
+    /// <summary>
+    /// Five day cards, each carrying an hour-by-hour timeline for the slider to scrub.
+    ///
+    /// The week is hand-authored under two constraints. Every one of the nine
+    /// <see cref="WeatherSceneKind"/> cases has to appear somewhere, because the
+    /// carousel used to be a flat one-card-per-case picker and moving to day cards
+    /// must not leave any scene unreachable. And each day has to read as a plausible
+    /// day rather than a shuffle: fog burning off into sun, a front arriving as
+    /// drizzle then rain, a storm peaking in the afternoon heat and easing by night.
+    /// </summary>
+    public sealed class DayTimelineCarouselDataProvider : IWeatherCarouselDataProvider
+    {
+        static WeatherTimeSegment Seg(float hour, WeatherSceneKind kind) =>
+            new WeatherTimeSegment { StartHour = hour, SceneKind = (int)kind };
+
+        static readonly WeatherTimeSegment[][] Week =
+        {
+            // Today — river fog before dawn, then a clear bright day.
+            new[]
+            {
+                Seg(0f,  WeatherSceneKind.Fog),
+                Seg(7f,  WeatherSceneKind.PartlyCloudy),
+                Seg(11f, WeatherSceneKind.Clear),
+                Seg(17f, WeatherSceneKind.PartlyCloudy),
+                Seg(21f, WeatherSceneKind.Clear),
+            },
+            // Tomorrow — a warm front arrives through the afternoon.
+            new[]
+            {
+                Seg(0f,  WeatherSceneKind.Cloudy),
+                Seg(9f,  WeatherSceneKind.Overcast),
+                Seg(14f, WeatherSceneKind.Drizzle),
+                Seg(18f, WeatherSceneKind.Rain),
+                Seg(22f, WeatherSceneKind.Cloudy),
+            },
+            // Day 3 — the unstable one: storms build in the afternoon.
+            new[]
+            {
+                Seg(0f,  WeatherSceneKind.Overcast),
+                Seg(6f,  WeatherSceneKind.Rain),
+                Seg(12f, WeatherSceneKind.Thunderstorm),
+                Seg(17f, WeatherSceneKind.Rain),
+                Seg(21f, WeatherSceneKind.Overcast),
+            },
+            // Day 4 — clearing behind the front, cloud building by midday.
+            new[]
+            {
+                Seg(0f,  WeatherSceneKind.Clear),
+                Seg(5f,  WeatherSceneKind.PartlyCloudy),
+                Seg(10f, WeatherSceneKind.Cloudy),
+                Seg(15f, WeatherSceneKind.PartlyCloudy),
+                Seg(20f, WeatherSceneKind.Clear),
+            },
+            // Day 5 — cold air in: snow, a lull, more snow, freezing fog overnight.
+            new[]
+            {
+                Seg(0f,  WeatherSceneKind.Snow),
+                Seg(8f,  WeatherSceneKind.Overcast),
+                Seg(13f, WeatherSceneKind.Snow),
+                Seg(19f, WeatherSceneKind.Fog),
+            },
+        };
+
+        /// <summary>What each day is remembered as — the card's icon and headline
+        /// condition. Authored rather than derived: the most memorable weather of a
+        /// day is rarely whatever happens to be showing at noon.</summary>
+        static readonly WeatherSceneKind[] Headlines =
+        {
+            WeatherSceneKind.Clear,
+            WeatherSceneKind.Rain,
+            WeatherSceneKind.Thunderstorm,
+            WeatherSceneKind.PartlyCloudy,
+            WeatherSceneKind.Snow,
+        };
+
+        public IEnumerator Load(
+            WeatherSnapshot sceneSnapshot,
+            Action<WeatherCarouselDataset> completed,
+            Action<string> failed)
+        {
+            // Kept coroutine-shaped so a live backend can drop in without changing the UI.
+            yield return null;
+
+            var dataset = new WeatherCarouselDataset
+            {
+                SourceEnglish = "5 DAY x 24 HOUR",
+                SourceChinese = "五天 · 24小时",
+                Items = new WeatherCarouselItem[Week.Length]
+            };
+
+            DateTime today = DateTime.Now.Date;
+
+            for (int day = 0; day < Week.Length; day++)
+            {
+                WeatherSceneKind headline = Headlines[day];
+                WeatherSceneProfile p = WeatherScene.Default(headline);
+
+                SceneKindCarouselDataProvider.Describe(
+                    headline, out string chinese, out WeatherCarouselIcon icon,
+                    out int temperature, out int rainChance, out int humidity);
+
+                DateTime date = today.AddDays(day);
+                DayLabel(day, date, out string dayEnglish, out string dayChinese);
+
+                dataset.Items[day] = new WeatherCarouselItem
+                {
+                    DayEnglish = dayEnglish,
+                    DayChinese = dayChinese,
+                    DateEnglish = date.ToString("d MMM").ToUpperInvariant(),
+                    ConditionEnglish = p.DisplayName,
+                    ConditionChinese = chinese,
+                    TemperatureC = temperature,
+                    RainChance = rainChance,
+                    Humidity = humidity,
+                    WindKmh = Mathf.RoundToInt(p.WindMs * 3.6f),
+                    Icon = icon,
+                    // Accent/tint come from the profile itself (WeatherScene.cs) rather
+                    // than a second hardcoded palette here, so the card, the pedestal,
+                    // the floor and the sky can never drift apart on a given case.
+                    Accent = p.GlassAccent,
+                    GlassTint = p.GlassTint,
+                    SceneKind = (int)headline,
+                    Timeline = Week[day]
+                };
+            }
+
+            completed?.Invoke(dataset);
+        }
+
+        static void DayLabel(int offset, DateTime date, out string english, out string chinese)
+        {
+            switch (offset)
+            {
+                case 0: english = "TODAY"; chinese = "今天"; return;
+                case 1: english = "TOMORROW"; chinese = "明天"; return;
+                default:
+                    english = date.ToString("dddd").ToUpperInvariant();
+                    chinese = ChineseWeekday(date.DayOfWeek);
+                    return;
+            }
+        }
+
+        static string ChineseWeekday(DayOfWeek day)
+        {
+            switch (day)
+            {
+                case DayOfWeek.Monday: return "星期一";
+                case DayOfWeek.Tuesday: return "星期二";
+                case DayOfWeek.Wednesday: return "星期三";
+                case DayOfWeek.Thursday: return "星期四";
+                case DayOfWeek.Friday: return "星期五";
+                case DayOfWeek.Saturday: return "星期六";
+                default: return "星期日";
+            }
         }
     }
 
@@ -95,9 +319,11 @@ namespace WeatherVR.UI.Carousel
                 WeatherSceneKind kind = kinds[i];
                 WeatherSceneProfile p = WeatherScene.Default(kind);
 
+                // Accent/tint come from the profile itself (WeatherScene.cs) rather
+                // than a second hardcoded palette here, so the card, the pedestal,
+                // the floor and the sky can never drift apart on a given case.
                 Describe(kind, out string chinese, out WeatherCarouselIcon icon,
-                         out Color accent, out Color tint, out int temperature,
-                         out int rainChance, out int humidity);
+                         out int temperature, out int rainChance, out int humidity);
 
                 dataset.Items[i] = new WeatherCarouselItem
                 {
@@ -111,8 +337,8 @@ namespace WeatherVR.UI.Carousel
                     Humidity = humidity,
                     WindKmh = Mathf.RoundToInt(p.WindMs * 3.6f),
                     Icon = icon,
-                    Accent = accent,
-                    GlassTint = tint,
+                    Accent = p.GlassAccent,
+                    GlassTint = p.GlassTint,
                     SceneKind = (int)kind
                 };
             }
@@ -120,12 +346,15 @@ namespace WeatherVR.UI.Carousel
             completed?.Invoke(dataset);
         }
 
-        static void Describe(
+        /// <summary>
+        /// Per-case presentation values. Internal rather than private because
+        /// <see cref="DayTimelineCarouselDataProvider"/> needs the same table for its
+        /// headline card — two copies of this would be two things to keep in step.
+        /// </summary>
+        internal static void Describe(
             WeatherSceneKind kind,
             out string chinese,
             out WeatherCarouselIcon icon,
-            out Color accent,
-            out Color tint,
             out int temperature,
             out int rainChance,
             out int humidity)
@@ -134,39 +363,30 @@ namespace WeatherVR.UI.Carousel
             {
                 case WeatherSceneKind.Clear:
                     chinese = "晴朗"; icon = WeatherCarouselIcon.Sunny;
-                    accent = new Color(1f, 0.82f, 0.38f); tint = new Color(0.30f, 0.25f, 0.66f, 0.76f);
                     temperature = 24; rainChance = 2; humidity = 42; return;
                 case WeatherSceneKind.PartlyCloudy:
                     chinese = "局部多云"; icon = WeatherCarouselIcon.PartlyCloudy;
-                    accent = new Color(1f, 0.81f, 0.39f); tint = new Color(0.23f, 0.34f, 0.53f, 0.72f);
                     temperature = 21; rainChance = 10; humidity = 55; return;
                 case WeatherSceneKind.Cloudy:
                     chinese = "多云"; icon = WeatherCarouselIcon.Cloudy;
-                    accent = new Color(0.78f, 0.88f, 0.96f); tint = new Color(0.23f, 0.31f, 0.40f, 0.72f);
                     temperature = 17; rainChance = 25; humidity = 68; return;
                 case WeatherSceneKind.Overcast:
                     chinese = "阴天"; icon = WeatherCarouselIcon.Cloudy;
-                    accent = new Color(0.70f, 0.76f, 0.82f); tint = new Color(0.22f, 0.26f, 0.32f, 0.74f);
                     temperature = 15; rainChance = 35; humidity = 74; return;
                 case WeatherSceneKind.Fog:
                     chinese = "雾"; icon = WeatherCarouselIcon.Cloudy;
-                    accent = new Color(0.82f, 0.86f, 0.90f); tint = new Color(0.40f, 0.43f, 0.47f, 0.74f);
                     temperature = 12; rainChance = 20; humidity = 96; return;
                 case WeatherSceneKind.Drizzle:
                     chinese = "毛毛雨"; icon = WeatherCarouselIcon.Rain;
-                    accent = new Color(0.55f, 0.82f, 1f); tint = new Color(0.18f, 0.30f, 0.42f, 0.72f);
                     temperature = 13; rainChance = 60; humidity = 88; return;
                 case WeatherSceneKind.Rain:
                     chinese = "降雨"; icon = WeatherCarouselIcon.Rain;
-                    accent = new Color(0.43f, 0.80f, 1f); tint = new Color(0.16f, 0.32f, 0.44f, 0.72f);
                     temperature = 12; rainChance = 85; humidity = 92; return;
                 case WeatherSceneKind.Thunderstorm:
                     chinese = "雷暴"; icon = WeatherCarouselIcon.Storm;
-                    accent = new Color(0.73f, 0.66f, 1f); tint = new Color(0.26f, 0.27f, 0.43f, 0.72f);
                     temperature = 18; rainChance = 95; humidity = 90; return;
                 default: // Snow
                     chinese = "雪"; icon = WeatherCarouselIcon.Cloudy;
-                    accent = new Color(0.86f, 0.92f, 1f); tint = new Color(0.34f, 0.40f, 0.52f, 0.74f);
                     temperature = -1; rainChance = 70; humidity = 84; return;
             }
         }

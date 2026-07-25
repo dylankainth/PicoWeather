@@ -18,6 +18,13 @@ namespace WeatherVR.UI.Carousel
     [DefaultExecutionOrder(-150)]
     public sealed class WeatherCarouselFeature : MonoBehaviour
     {
+        /// <summary>Slider resolution. Half-hour steps: fine enough to land on any
+        /// timeline boundary in the authored week (all of which fall on the hour), and
+        /// coarse enough that a shaky controller ray does not jitter the clock.</summary>
+        const float HourStep = 0.5f;
+
+        const float DefaultHour = 12f;
+
         WeatherSceneController sceneController;
         BuiltWeatherCarousel built;
         WeatherCarouselDataset activeDataset;
@@ -26,6 +33,11 @@ namespace WeatherVR.UI.Carousel
         bool loading;
         float targetAlpha;
         bool introHidden;
+
+        // The carousel owns (day, hour); everything rendered is derived from that pair.
+        float hour = DefaultHour;
+        bool hasAppliedKind;
+        WeatherSceneKind appliedKind;
 
         /// <summary>
         /// Hides an already-built carousel while the launch globe is playing. This
@@ -112,7 +124,10 @@ namespace WeatherVR.UI.Carousel
                 yield break;
             }
 
-            built = new WeatherCarouselBuilder().Build(dataset, head, pointer);
+            built = new WeatherCarouselBuilder().Build(
+                dataset, head, pointer,
+                presetIndex => sceneController.SetSurge(presetIndex),
+                OnHourScrubbed);
             built.Root.transform.SetParent(transform, true);
             activeDataset = dataset;
 
@@ -132,25 +147,123 @@ namespace WeatherVR.UI.Carousel
 
             // Subscribe only — do not apply a scene on load. The bootstrap has already
             // shown a bright default so the terrain is visible; the weather changes
-            // when the user actually taps a card.
+            // when the user actually taps a card or scrubs the clock.
             if (director != null && built.Controller != null)
                 built.Controller.SelectionChanged += OnCardSelected;
 
+            // Park the slider at noon and label it, without applying a scene — same
+            // reasoning as above.
+            RefreshTimeSliderLabels();
+
             Debug.Log(
                 $"[WeatherVR] Bilingual immersive weather carousel ready " +
-                $"with {dataset.Items.Length} cards ({dataset.SourceEnglish}).");
+                $"with {dataset.Items.Length} day cards ({dataset.SourceEnglish}), " +
+                $"clock parked at {WeatherCarouselTimeSlider.FormatHour(hour)}.");
         }
 
-        void OnCardSelected(int index)
+        /// <summary>Tapping a day card keeps the clock where it is and re-resolves the
+        /// weather for that day at the current hour.</summary>
+        void OnCardSelected(int index) => ApplyDayAndHour();
+
+        /// <summary>
+        /// The slider's callback, called on press and on every frame of a drag, so it
+        /// has to stay cheap. <paramref name="normalized"/> is 0..1 across the track.
+        /// </summary>
+        void OnHourScrubbed(float normalized)
         {
-            if (director == null || activeDataset?.Items == null || activeDataset.Items.Length == 0)
+            float scrubbed = Mathf.Round(Mathf.Clamp01(normalized) * 24f / HourStep) * HourStep;
+
+            // 24:00 is the same instant as 00:00, but showing "00:00" with the knob
+            // pinned to the far right reads as a bug. Stop just short instead.
+            if (scrubbed >= 24f)
+                scrubbed = 24f - HourStep;
+
+            // The `hasAppliedKind` half matters: the clock starts parked at noon
+            // without a scene applied, so a first press that lands exactly on 12:00
+            // would otherwise be swallowed and render nothing.
+            if (hasAppliedKind && Mathf.Approximately(scrubbed, hour))
                 return;
 
-            index = Mathf.Clamp(index, 0, activeDataset.Items.Length - 1);
-            WeatherCarouselItem item = activeDataset.Items[index];
-            // Use the card's own scene, not its icon — the icon set is smaller than the
-            // case set, so Overcast/Fog/Snow would otherwise collapse onto Cloudy.
-            director.ApplyKind((WeatherSceneKind)item.SceneKind);
+            hour = scrubbed;
+            ApplyDayAndHour();
+        }
+
+        WeatherCarouselItem SelectedItem()
+        {
+            if (activeDataset?.Items == null || activeDataset.Items.Length == 0)
+                return null;
+
+            int index = built?.Controller != null ? built.Controller.SelectedIndex : 0;
+            return activeDataset.Items[Mathf.Clamp(index, 0, activeDataset.Items.Length - 1)];
+        }
+
+        /// <summary>
+        /// Renders whatever the selected day's timeline says is happening at the current
+        /// hour.
+        ///
+        /// The two-tier update is deliberate and is the reason the slider is usable at
+        /// all: <c>SetTimeOfDay</c> is cheap (sun angle, colour, fog, sky palette) and
+        /// runs on every scrub, while <c>ApplyKind</c> rebuilds the cloud density volume
+        /// and runs only when the scrub actually crosses a timeline boundary into a
+        /// different case. Dragging across six hours of unchanging weather costs nothing
+        /// beyond the lighting update.
+        /// </summary>
+        void ApplyDayAndHour()
+        {
+            WeatherCarouselItem item = SelectedItem();
+            if (director == null || item == null)
+                return;
+
+            // Resolve from the timeline, not the card's icon — the icon set is smaller
+            // than the case set, so Overcast/Fog/Snow would collapse onto Cloudy.
+            WeatherSceneKind kind = item.KindAtHour(hour);
+
+            director.SetTimeOfDay(hour);
+
+            if (!hasAppliedKind || kind != appliedKind)
+            {
+                hasAppliedKind = true;
+                appliedKind = kind;
+                director.ApplyKind(kind);
+                UpdateFloodControls(kind);
+            }
+
+            RefreshTimeSliderLabels();
+        }
+
+        void RefreshTimeSliderLabels()
+        {
+            WeatherCarouselTimeSlider slider = built?.TimeSlider;
+            WeatherCarouselItem item = SelectedItem();
+            if (slider == null || item == null)
+                return;
+
+            WeatherSceneKind kind = item.KindAtHour(hour);
+            WeatherSceneProfile profile = WeatherScene.Default(kind);
+            SceneKindCarouselDataProvider.Describe(
+                kind, out string chinese, out _, out _, out _, out _);
+
+            slider.SetHour(hour);
+            slider.SetCondition(profile.DisplayName, chinese, item.Accent);
+        }
+
+        /// <summary>
+        /// Storm surge only makes sense while the storm is showing — hide the presets
+        /// otherwise, and drop any raised water so it does not linger into whatever the
+        /// user switches (or scrubs) to next.
+        /// </summary>
+        void UpdateFloodControls(WeatherSceneKind kind)
+        {
+            bool isStorm = kind == WeatherSceneKind.Thunderstorm;
+
+            if (built?.FloodButtons != null)
+            {
+                foreach (var button in built.FloodButtons)
+                    if (button != null) button.SetActive(isStorm);
+            }
+
+            if (!isStorm)
+                sceneController.SetSurge(0);
         }
 
         void Update()
