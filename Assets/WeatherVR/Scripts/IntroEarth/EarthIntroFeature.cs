@@ -36,7 +36,6 @@ namespace WeatherVR.IntroEarth
         Material _marker;
 
         bool _mapWasActive;
-        bool _carouselWasEnabled;
         bool _contentHidden;
         bool _revealed;
 
@@ -94,14 +93,11 @@ namespace WeatherVR.IntroEarth
             _mapWasActive = _mapRoot.gameObject.activeSelf;
             _mapRoot.gameObject.SetActive(false);
 
-            // STOP THE CAROUSEL BEFORE ITS START METHOD RUNS.
-            // IT WILL INITIALISE NORMALLY AS SOON AS LONDON IS REVEALED.
+            // Hide both a newly-loading carousel and one already built during a
+            // previous Android foreground session.
             _carousel = FindObjectOfType<WeatherCarouselFeature>(includeInactive: true);
             if (_carousel != null)
-            {
-                _carouselWasEnabled = _carousel.enabled;
-                _carousel.enabled = false;
-            }
+                _carousel.SetIntroHidden(true);
 
             _contentHidden = true;
 
@@ -295,8 +291,8 @@ namespace WeatherVR.IntroEarth
                 }
             }
 
-            if (_carousel != null && _carouselWasEnabled)
-                _carousel.enabled = true;
+            if (_carousel != null)
+                _carousel.SetIntroHidden(false);
 
             _contentHidden = false;
         }

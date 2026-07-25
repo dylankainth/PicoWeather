@@ -55,6 +55,8 @@ namespace WeatherVR.EditorTools
 
             bool changed = false;
 
+            changed |= UseLifecycleAwareActivity(application);
+
             // Declaring both means "controllers and hands", which is what the app
             // actually supports: XRPointer reads controllers, and falls back to the
             // PICO hand aim state when the runtime reports hands as active.
@@ -68,6 +70,32 @@ namespace WeatherVR.EditorTools
                 Debug.Log("[WeatherVR] Patched AndroidManifest: hand tracking declared " +
                           "so PICO OS does not gate launch on a connected controller.");
             }
+        }
+
+        static bool UseLifecycleAwareActivity(XmlElement application)
+        {
+            foreach (XmlNode node in application.SelectNodes("activity"))
+            {
+                if (node is not XmlElement activity) continue;
+                string name = activity.GetAttribute("name", AndroidNamespace);
+                if (name != "com.unity3d.player.UnityPlayerActivity" &&
+                    name != "com.weathervr.WeatherVRActivity")
+                    continue;
+
+                if (name == "com.weathervr.WeatherVRActivity")
+                    return false;
+
+                activity.SetAttribute(
+                    "name",
+                    AndroidNamespace,
+                    "com.weathervr.WeatherVRActivity");
+                return true;
+            }
+
+            Debug.LogWarning(
+                "[WeatherVR] Unity launcher activity was not found; foreground intro " +
+                "replay cannot be wired.");
+            return false;
         }
 
         /// <summary>Adds or updates an <c>&lt;meta-data&gt;</c> entry under application.</summary>

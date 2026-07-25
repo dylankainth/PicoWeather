@@ -123,21 +123,35 @@ namespace WeatherVR.Interaction
             InputDevices.GetDevicesWithCharacteristics(characteristics, DeviceBuffer);
             if (DeviceBuffer.Count == 0)
             {
-                // No device: fall back to the pose transform if the rig provides one,
-                // so the editor and the XR simulator still give a usable ray.
+                // Accept whichever controller the PICO input mode currently exposes.
+                var eitherController =
+                    InputDeviceCharacteristics.HeldInHand |
+                    InputDeviceCharacteristics.Controller;
+                InputDevices.GetDevicesWithCharacteristics(eitherController, DeviceBuffer);
+            }
+
+            if (DeviceBuffer.Count == 0)
+            {
+                // The scene anchor is a static visual fallback, not a tracked pose.
+                // Treating it as tracked on Android produced a fixed ray and prevented
+                // gaze fallback from ever activating.
+#if UNITY_EDITOR || UNITY_STANDALONE
                 return ApplyPoseSource();
+#else
+                return false;
+#endif
             }
 
             var device = DeviceBuffer[0];
+            if (device.TryGetFeatureValue(CommonUsages.isTracked, out bool deviceTracked) &&
+                !deviceTracked)
+                return false;
 
             bool trigger = false;
-            if (!device.TryGetFeatureValue(CommonUsages.triggerButton, out trigger))
-            {
-                // Some runtimes only expose the analogue axis.
-                if (device.TryGetFeatureValue(CommonUsages.trigger, out float axis))
-                    trigger = axis > 0.6f;
-            }
-            selecting = trigger;
+            device.TryGetFeatureValue(CommonUsages.triggerButton, out trigger);
+            device.TryGetFeatureValue(CommonUsages.trigger, out float triggerAxis);
+            device.TryGetFeatureValue(CommonUsages.primaryButton, out bool primaryButton);
+            selecting = trigger || triggerAxis > 0.55f || primaryButton;
 
             bool grip = false;
             if (!device.TryGetFeatureValue(CommonUsages.gripButton, out grip))
@@ -147,8 +161,6 @@ namespace WeatherVR.Interaction
             }
             device.TryGetFeatureValue(CommonUsages.secondaryButton, out bool secondaryButton);
             secondary = grip || secondaryButton;
-
-            if (PoseSource != null) return ApplyPoseSource();
 
             bool haveRotation = device.TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rotation);
             bool havePosition = device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 position);
@@ -166,6 +178,13 @@ namespace WeatherVR.Interaction
                 Origin = position;
                 Direction = (rotation * Vector3.forward).normalized;
             }
+
+            // Keep the visible scene ray attached to the live device pose. Previously
+            // PoseSource overrode this data with its static scene transform.
+            if (PoseSource != null)
+                PoseSource.SetPositionAndRotation(
+                    Origin,
+                    Quaternion.LookRotation(Direction, Vector3.up));
 
             return true;
         }

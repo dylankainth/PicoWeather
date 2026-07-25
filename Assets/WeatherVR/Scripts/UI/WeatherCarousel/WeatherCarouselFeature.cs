@@ -25,6 +25,18 @@ namespace WeatherVR.UI.Carousel
         bool sceneReady;
         bool loading;
         float targetAlpha;
+        bool introHidden;
+
+        /// <summary>
+        /// Hides an already-built carousel while the launch globe is playing. This
+        /// also works when Android resumes the existing activity and the carousel
+        /// was built during a previous foreground session.
+        /// </summary>
+        public void SetIntroHidden(bool hidden)
+        {
+            introHidden = hidden;
+            UpdateVisibility(immediate: true);
+        }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate()
@@ -146,7 +158,7 @@ namespace WeatherVR.UI.Carousel
             if (built == null)
                 return;
 
-            bool shouldShow = sceneReady;
+            bool shouldShow = sceneReady && !introHidden;
             targetAlpha = shouldShow ? 1f : 0f;
 
             if (shouldShow && !built.Root.activeSelf)
@@ -171,7 +183,7 @@ namespace WeatherVR.UI.Carousel
             if (built == null)
                 return;
 
-            bool show = sceneReady;
+            bool show = sceneReady && !introHidden;
             targetAlpha = show ? 1f : 0f;
 
             if (show)

@@ -35,6 +35,9 @@ namespace WeatherVR.UI.Carousel
         bool dragging;
         float previousCanvasX;
         float totalDrag;
+        HitTarget gazeTarget;
+        float gazeSeconds;
+        const float GazeDwellSeconds = 1.25f;
 
         public void Configure(
             RectTransform canvas,
@@ -107,6 +110,7 @@ namespace WeatherVR.UI.Carousel
 
             if (pointer != null && pointer.IsTracked)
             {
+                ResetGaze();
                 ProcessRay(
                     pointer.Ray,
                     pointer.SelectPressedThisFrame,
@@ -115,16 +119,66 @@ namespace WeatherVR.UI.Carousel
                 return;
             }
 
-            if (hasScreenPointer && Camera.main != null)
+            if (hasScreenPointer && Camera.main != null && !Application.isMobilePlatform)
             {
+                ResetGaze();
                 SetHoveredButton(
                     FindScreenTarget(buttons, screenPosition, Camera.main));
                 return;
             }
 
-            SetHoveredButton(null);
+            // Controller-free PICO gaze mode. A steady head-centre gaze works on
+            // devices and emulators even when hardware eye tracking is unavailable.
+            if (Camera.main != null)
+            {
+                UpdateGaze(Camera.main.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)));
+                return;
+            }
+
+            ResetGaze();
             if (dragging)
                 FinishDrag();
+        }
+
+        void UpdateGaze(Ray gazeRay)
+        {
+            if (!TryGetCanvasHit(gazeRay, out Vector3 worldPoint, out _))
+            {
+                ResetGaze();
+                return;
+            }
+
+            HitTarget target = FindTarget(buttons, worldPoint) ??
+                               FindTarget(cards, worldPoint);
+            SetHoveredButton(buttons.Contains(target) ? target : null);
+
+            if (target == null)
+            {
+                ResetGaze();
+                return;
+            }
+
+            if (gazeTarget != target)
+            {
+                gazeTarget = target;
+                gazeSeconds = 0f;
+                return;
+            }
+
+            gazeSeconds += Time.unscaledDeltaTime;
+            if (gazeSeconds < GazeDwellSeconds)
+                return;
+
+            target.Click?.Invoke();
+            Debug.Log("[WeatherVR] Gaze dwell selected a weather carousel target.");
+            gazeSeconds = -0.45f;
+        }
+
+        void ResetGaze()
+        {
+            gazeTarget = null;
+            gazeSeconds = 0f;
+            SetHoveredButton(null);
         }
 
         void ProcessScreenPointer(

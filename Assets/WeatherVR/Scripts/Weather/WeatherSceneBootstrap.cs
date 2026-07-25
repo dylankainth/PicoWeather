@@ -20,6 +20,11 @@ namespace WeatherVR.Weather
     [DefaultExecutionOrder(-140)]
     public sealed class WeatherSceneBootstrap : MonoBehaviour
     {
+        const float MinimumBackgroundSeconds = 0.5f;
+        bool _started;
+        bool _replayQueued;
+        float _backgroundedAt = -1f;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate()
         {
@@ -58,6 +63,69 @@ namespace WeatherVR.Weather
             for (int frame = 0; frame < 4; frame++)
                 yield return null;
             PlaceExhibitInFront(controller);
+            _started = true;
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            HandleForegroundState(!paused);
+        }
+
+        void OnApplicationFocus(bool focused)
+        {
+            HandleForegroundState(focused);
+        }
+
+        void HandleForegroundState(bool foreground)
+        {
+            if (!_started)
+                return;
+
+            if (!foreground)
+            {
+                _backgroundedAt = Time.realtimeSinceStartup;
+                return;
+            }
+
+            if (_backgroundedAt < 0f ||
+                Time.realtimeSinceStartup - _backgroundedAt < MinimumBackgroundSeconds ||
+                _replayQueued)
+                return;
+
+            _backgroundedAt = -1f;
+            QueueIntroReplay();
+        }
+
+        /// <summary>
+        /// Called by WeatherVRActivity when PICO brings an already-resumed spatial
+        /// activity to the foreground through a launcher intent.
+        /// </summary>
+        public void OnAndroidForegroundLaunch(string unused)
+        {
+            if (!_started)
+                return;
+
+            QueueIntroReplay();
+        }
+
+        void QueueIntroReplay()
+        {
+            if (_replayQueued)
+                return;
+
+            _replayQueued = true;
+            StartCoroutine(ReplayIntroAfterResume());
+        }
+
+        IEnumerator ReplayIntroAfterResume()
+        {
+            // Allow PICO to restore the tracked camera pose before parenting the
+            // globe to the head again.
+            yield return null;
+            yield return null;
+            EarthIntroFeature.EnsureInstalled();
+            _replayQueued = false;
+            Debug.Log("[WeatherVR] Foreground launch detected — replaying Earth intro.");
         }
 
         // The map is a world-locked exhibit the user walks around. A scene generated
