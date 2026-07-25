@@ -36,14 +36,24 @@ namespace WeatherVR.Core
         /// <summary>Altitude in metres that sits at the base of the rendered column.</summary>
         public readonly float AtmosphereFloorMeters;
 
+        /// <summary>Extra exaggeration applied to building height only.</summary>
+        public readonly float BuildingHeightExaggeration;
+
+        /// <param name="buildingHeightExaggeration">
+        /// Optional, defaulting to true scale, so the five-argument construction used by
+        /// <c>tools/verify_logic/Verify.cs</c> and any other out-of-runtime caller keeps
+        /// compiling and keeps meaning "no building exaggeration".
+        /// </param>
         public MapScale(float mapSizeMeters, float regionSpanMeters, float verticalExaggeration,
-                        float terrainReliefExaggeration, float atmosphereFloorMeters)
+                        float terrainReliefExaggeration, float atmosphereFloorMeters,
+                        float buildingHeightExaggeration = 1f)
         {
             MapSizeMeters = Mathf.Max(mapSizeMeters, 1e-4f);
             RegionSpanMeters = Mathf.Max(regionSpanMeters, 1f);
             VerticalExaggeration = verticalExaggeration;
             TerrainReliefExaggeration = terrainReliefExaggeration;
             AtmosphereFloorMeters = atmosphereFloorMeters;
+            BuildingHeightExaggeration = Mathf.Max(buildingHeightExaggeration, 0f);
         }
 
         /// <summary>VR metres per real-world metre, horizontally.</summary>
@@ -73,19 +83,24 @@ namespace WeatherVR.Core
         /// <summary>
         /// A building's real height in metres to map-local Y, added on top of its
         /// footprint's terrain base. Deliberately uses <see cref="Horizontal"/>, not
-        /// <see cref="Vertical"/>: buildings are already visible at true scale (a 180 m
-        /// tower on a 5 km/2 m map is 7 cm), unlike terrain relief or cloud altitude,
-        /// which exist to be exaggerated. Exaggerating buildings too would push a
-        /// skyscraper through the cloud deck.
+        /// <see cref="Vertical"/>: buildings are visible at true scale in a way terrain
+        /// relief and cloud altitude are not, so they do not need the atmosphere's
+        /// exaggeration and would be distorted by it.
+        ///
+        /// <see cref="BuildingHeightExaggeration"/> is a separate, explicit multiplier on
+        /// top: at 1 this is true scale (a 180 m tower on a 5 km/3 m map is 10.8 cm),
+        /// above 1 the skyline is deliberately overstated. The ceiling on it is the cloud
+        /// base, not taste -- exaggerate far enough and a tower punches through the deck.
         /// </summary>
         public float BuildingHeightToMapUnits(float heightMeters)
-            => MetersToMapUnits(Mathf.Max(heightMeters, 0f) * Horizontal);
+            => MetersToMapUnits(Mathf.Max(heightMeters, 0f) * Horizontal * BuildingHeightExaggeration);
 
         /// <summary>Denominator of the map's representative fraction, e.g. 25 000 for 1:25 000.</summary>
         public float RepresentativeFraction => 1f / Horizontal;
 
         public override string ToString() =>
             $"MapScale[{MapSizeMeters:F1} m map, 1:{RepresentativeFraction:N0}, " +
-            $"altitude x{VerticalExaggeration:F1}, relief x{TerrainReliefExaggeration:F1}]";
+            $"altitude x{VerticalExaggeration:F1}, relief x{TerrainReliefExaggeration:F1}, " +
+            $"buildings x{BuildingHeightExaggeration:F1}]";
     }
 }

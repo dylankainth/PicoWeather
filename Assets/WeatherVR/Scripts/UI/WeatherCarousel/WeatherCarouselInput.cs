@@ -512,8 +512,14 @@ namespace WeatherVR.UI.Carousel
         public Transform Anchor;
 
         [Tooltip("How far out from the map centre the panel sits, in map-local units. " +
-                 "Pedestal rim is ~0.57 and terrain edge 0.5, so >0.7 clears the block and floats it proud.")]
-        public float WallHalfExtent = 0.68f;
+                 "The terrain edge is at 0.5 and it is now the outermost thing to clear: " +
+                 "the plinth is held at a fixed VR size (AppConfig.PedestalMapUnitScale) " +
+                 "so on a 3 m map its crown has pulled in to ~0.38 and the map overhangs " +
+                 "it. 0.62 leaves the same 0.36 m of real clearance outside the terrain " +
+                 "edge that 0.68 gave on a 2 m map -- this is in map units, so it must be " +
+                 "retuned whenever MapSizeMeters changes or the panel walks toward the " +
+                 "user's face.")]
+        public float WallHalfExtent = 0.62f;
 
         [Tooltip("Vertical centre of the panel, in map-local units. 0 = tabletop/rim level; positive floats it higher.")]
         public float WallHeight = 0.02f;
