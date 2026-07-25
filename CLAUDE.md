@@ -1387,6 +1387,51 @@ it.
       plus comments. Scene not rebuilt, not pressed-play, not on hardware — see
       "Still to do".
 
+- **2026-07-25 (merged into `master`: t5115's locomotion + particle work, and the
+  1.5× map)** — `origin/master` had moved on three commits: Dylan's
+  `Water.shader` ShaderLab fix plus an APK rebuild, and two from Tahmid Ahmed
+  (`tahmid.ahmed5115@gmail.com`) adding PICO joystick locomotion and a
+  precipitation rewrite. `feature/london-scene-scale-fixes` was already an ancestor
+  of `origin/master`, so nothing was outstanding there. `spatial-kotlin` was
+  deliberately **not** merged: it is a parallel Kotlin/PICO-Spatial rewrite of the
+  data layer (~5 300 lines under `spatial/`), a different track from this Unity app,
+  not t5115's work, and merging it would put a second implementation of the same
+  domain in the tree.
+    - The merge of the 1.5×-map branch was textually clean — the two sides touched
+      disjoint regions of `WeatherVisuals.cs`, `SceneBuilder.cs` and
+      `WeatherSceneBootstrap.cs`. `tools/verify.py` passes and compiles all 55
+      runtime scripts (up from 54: `ControllerLocomotion.cs`).
+    - **New code reviewed rather than assumed.** `ControllerLocomotion` reads both
+      thumbsticks through `CommonUsages.primary2DAxis`, with the same
+      characteristics-then-any-device fallback ladder `XRPointer` already uses, and
+      collapses to movement-only when one device answers for both hands. Its
+      interaction with the head-following map is the load-bearing part and is
+      correct: `ComfortFollow.PreserveWorldPoseAfterRigMove` resets only
+      `_anchorYaw`/`_anchorPosition` — the *deadzone reference*, not `_targetPosition`
+      — so artificial locomotion moves the user around a map that keeps its world
+      pose, instead of dragging the map along. Called every frame the stick is held,
+      which is what stops a stick-driven yaw from crossing the 25° deadzone and
+      re-targeting.
+    - **One stale-copy bug found and fixed in the incoming test.**
+      `VisualComfortTests.PrecipitationStylesAreLargeAndCoverEverySliderWeatherCase`
+      hardcoded `0.056f` for the cloud base in map units — right only for a 900 m base
+      on a 2 m map, both of which had just moved. It could not fail loudly, because
+      `cloudBaseMap` feeds only fall speed and the test asserts sizes and emission, so
+      it would have passed forever while describing a configuration the app no longer
+      had. Now derived from `AppConfig.AltitudeToMapUnits(WeatherVisuals.CloudBaseMeters)`,
+      which required making those two constants public. Third instance of this exact
+      class in the project, after the Shanghai-era exaggerations and the `Verify.cs`
+      MapScale block.
+    - **Two interactions between the two sides worth watching on device**, neither a
+      defect: (1) Tahmid's precipitation sizes were deliberately scaled up several
+      times for legibility at headset resolution and are expressed in map units, so
+      the 1.5× map multiplies them again — snow flakes now render at roughly 6–9 cm.
+      (2) `ControllerLocomotion.MinimumZoomDistance` (0.55 m) is measured from the
+      exhibit *centre*, which is now well inside the map's 1.5 m half-extent, so
+      zooming fully in puts the user over the middle of the city rather than at its
+      edge. Both were already true in proportion on the 2 m map; both are now more
+      pronounced, and both are single-field changes if they read badly.
+
 ## Still to do
 
 - [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`** and **Press Play** to
