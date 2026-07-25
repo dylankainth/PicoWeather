@@ -136,6 +136,12 @@ namespace WeatherVR.EditorTools
             mapFollow.FollowSpeed = 3.0f;
             mapFollow.FaceHead = true;
             mapFollow.YawDeadzoneDegrees = 25f;
+
+            // PICO exposes both thumbsticks through CommonUsages.primary2DAxis.
+            // Install the lightweight locomotion component on the rig rather than
+            // bringing in an XR Interaction Toolkit locomotion prefab. The runtime
+            // bootstrap repeats this idempotently for already-generated scenes.
+            ControllerLocomotion.Ensure(rig, cameraObject.transform, mapFollow);
         }
 
         /// <summary>

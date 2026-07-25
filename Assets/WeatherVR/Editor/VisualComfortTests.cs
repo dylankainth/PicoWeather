@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using WeatherVR.Interaction;
 using WeatherVR.UI.Carousel;
 using WeatherVR.Weather;
 
@@ -62,6 +63,37 @@ namespace WeatherVR.EditorTools.Tests
                 Assert.That(profile.SunIntensity, Is.InRange(0.35f, 1.65f), kind.ToString());
                 Assert.That(profile.FogDensity, Is.InRange(0f, 0.32f), kind.ToString());
             }
+        }
+
+        [Test]
+        public void ControllerLocomotionUsesRadialDeadzoneAndHeadRelativeAxes()
+        {
+            Assert.That(
+                ControllerLocomotion.ApplyRadialDeadzone(new Vector2(0.1f, 0.1f), 0.18f),
+                Is.EqualTo(Vector2.zero));
+
+            Vector2 fullStick =
+                ControllerLocomotion.ApplyRadialDeadzone(Vector2.up, 0.18f);
+            Assert.That(Vector2.Distance(fullStick, Vector2.up), Is.LessThan(1e-5f));
+
+            Vector3 pitchedForward = new Vector3(0f, 0.8f, 0.6f);
+            Vector3 strafe =
+                ControllerLocomotion.ComputeMoveDirection(Vector2.right, pitchedForward);
+            Vector3 forward =
+                ControllerLocomotion.ComputeMoveDirection(Vector2.up, pitchedForward);
+
+            Assert.That(Vector3.Distance(strafe, Vector3.right), Is.LessThan(1e-5f));
+            Assert.That(Vector3.Distance(forward, Vector3.forward), Is.LessThan(1e-5f));
+
+            float turn = ControllerLocomotion.ComputeSmoothTurnDegrees(0.5f, 80f, 0.25f);
+            Assert.That(turn, Is.EqualTo(10f).Within(1e-5f));
+
+            Vector3 zoomIn = ControllerLocomotion.ComputeZoomDirection(
+                1f, new Vector3(2f, 1.6f, 0f), Vector3.zero, Vector3.forward);
+            Vector3 zoomOut = ControllerLocomotion.ComputeZoomDirection(
+                -1f, new Vector3(2f, 1.6f, 0f), Vector3.zero, Vector3.forward);
+            Assert.That(Vector3.Distance(zoomIn, Vector3.left), Is.LessThan(1e-5f));
+            Assert.That(Vector3.Distance(zoomOut, Vector3.right), Is.LessThan(1e-5f));
         }
     }
 }

@@ -79,6 +79,9 @@ there is nothing to set up before you can look at it.
 | Point at the panel | point | point |
 | Select a day / press a button | trigger | pinch |
 | Drag the time slider | trigger, hold and move | pinch and move |
+| Walk around the map | left joystick | unavailable |
+| Smooth turn | right joystick left/right | unavailable |
+| Zoom toward / away from the map | right joystick forward/back | unavailable |
 | Re-centre the map in front of you | secondary button | — |
 
 Tapping a day card switches the whole scene — cloud, precipitation, sky, fog,

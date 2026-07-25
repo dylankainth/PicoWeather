@@ -111,6 +111,25 @@ namespace WeatherVR.Interaction
         public void Recenter() => _initialised = false;
 
         /// <summary>
+        /// Keeps the current world-space target after the XR rig was moved by
+        /// controller locomotion. Without this, a snap turn can cross the yaw
+        /// deadzone and make the map follow the rig instead of letting the user move
+        /// around it.
+        /// </summary>
+        public void PreserveWorldPoseAfterRigMove()
+        {
+            if (!_initialised) return;
+
+            if (Head == null && Camera.main != null)
+                Head = Camera.main.transform;
+            if (Head == null) return;
+
+            _anchorYaw = Head.eulerAngles.y;
+            _anchorPosition = Head.position;
+            _anchorPosition.y = 0f;
+        }
+
+        /// <summary>
         /// The shared anchor maths. The pose sits <paramref name="distance"/> ahead of
         /// the head along its flattened forward, <paramref name="verticalOffset"/> up,
         /// facing back toward the head and kept world-upright.

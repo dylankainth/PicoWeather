@@ -49,6 +49,7 @@ namespace WeatherVR.Weather
             }
 
             ComfortFollow mapFollow = EnsureMapFollow(controller);
+            EnsureControllerLocomotion(mapFollow);
             EnsurePointerVisual();
             EnvironmentController environment = InstallEnvironment(controller);
             WeatherVisuals visuals = InstallVisuals(controller);
@@ -165,6 +166,18 @@ namespace WeatherVR.Weather
                 follow.Pointer = FindObjectOfType<XRPointer>();
 
             return follow;
+        }
+
+        // Scenes generated before controller locomotion existed have no component on
+        // XRRig. Repair them at runtime so pulling this code is enough to make an
+        // existing baked WeatherVR scene work without a manual scene rebuild.
+        void EnsureControllerLocomotion(ComfortFollow mapFollow)
+        {
+            Camera camera = Camera.main;
+            if (camera == null) return;
+
+            GameObject rig = camera.transform.root.gameObject;
+            ControllerLocomotion.Ensure(rig, camera.transform, mapFollow);
         }
 
         // A scene generated before the ray visual existed will have an XRPointer with
