@@ -7,8 +7,9 @@ namespace WeatherVR.Terrain
 {
     /// <summary>
     /// Extrudes every building footprint into one combined mesh in local map space:
-    /// X and Z span [-0.5, 0.5], Y is VR metres above the map plane -- the same
-    /// convention <see cref="TerrainMeshBuilder"/> uses. One mesh for every building
+    /// X and Z span [-0.5, 0.5] and Y uses those same normalised map units, not VR
+    /// metres -- the same convention <see cref="TerrainMeshBuilder"/> uses, and the one
+    /// <c>AppConfig.BuildingHeightToMapUnits</c> converts into. One mesh for every building
     /// rather than one GameObject each, because a 600-building cap at one draw call
     /// each would blow the performance budget before a single cloud voxel renders.
     ///
@@ -56,11 +57,31 @@ namespace WeatherVR.Terrain
                 var top = new Vector3[n];
                 Vector3 centroid = Vector3.zero;
 
+                // Footprint inflation is about the footprint's own XZ centroid, so a
+                // building grows in place rather than drifting away from its real
+                // location -- which means the centroid has to be known before any vertex
+                // is written, hence the separate pass. Winding is unaffected: a uniform
+                // positive scale about an interior point preserves orientation, so the
+                // counter-clockwise-from-above guarantee the triangle order below depends
+                // on still holds.
+                float footprintScale = Mathf.Max(config.BuildingFootprintScale, 0.01f);
+                Vector2 footprintCentre = Vector2.zero;
+                for (int i = 0; i < n; i++)
+                {
+                    Vector3 p = mapBounds.ToLocal(record.LatitudeAt(i), record.LongitudeAt(i));
+                    footprintCentre += new Vector2(p.x, p.z);
+                }
+                footprintCentre /= n;
+
                 for (int i = 0; i < n; i++)
                 {
                     double lat = record.LatitudeAt(i);
                     double lon = record.LongitudeAt(i);
 
+                    // Terrain is sampled at the *true* geographic point, not the inflated
+                    // one: the base should sit on the ground actually under the building.
+                    // Over the tens of metres inflation displaces an edge by, London's
+                    // relief moves by centimetres, so the two never visibly disagree.
                     float elevation = 0f;
                     if (terrainField != null)
                     {
@@ -71,8 +92,11 @@ namespace WeatherVR.Terrain
                     float topY = baseY + config.BuildingHeightToMapUnits(heightMeters);
 
                     Vector3 local = mapBounds.ToLocal(lat, lon);
-                    bottom[i] = new Vector3(local.x, baseY, local.z);
-                    top[i] = new Vector3(local.x, topY, local.z);
+                    float x = footprintCentre.x + (local.x - footprintCentre.x) * footprintScale;
+                    float z = footprintCentre.y + (local.z - footprintCentre.y) * footprintScale;
+
+                    bottom[i] = new Vector3(x, baseY, z);
+                    top[i] = new Vector3(x, topY, z);
                     centroid += top[i];
                 }
                 centroid /= n;

@@ -16,8 +16,12 @@ namespace WeatherVR.Terrain
         void Awake()
         {
             var filter = GetComponent<MeshFilter>();
+            // PedestalMapUnitScale, not 1: the plinth is held at a fixed size in VR
+            // metres while the map root's scale grows, so a bigger tabletop does not
+            // also mean a bigger monument. See AppConfig.PedestalReferenceMapSizeMeters
+            // for the trade this makes at the map's overhanging edge.
             if (filter.sharedMesh == null)
-                filter.sharedMesh = PedestalMeshBuilder.Build();
+                filter.sharedMesh = PedestalMeshBuilder.Build(Core.AppConfig.Instance.PedestalMapUnitScale);
 
             var meshRenderer = GetComponent<MeshRenderer>();
             EnsureMaterial(meshRenderer);

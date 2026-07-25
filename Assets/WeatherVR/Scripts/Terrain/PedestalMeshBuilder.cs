@@ -25,6 +25,15 @@ namespace WeatherVR.Terrain
     /// corners, and each ring's chamfer is sized so the flat run still exceeds the
     /// terrain's own half-extent (see the per-ring comments below) -- the corners
     /// stay covered.
+    ///
+    /// That last guarantee holds only at <c>unitScale == 1</c>, i.e. while the map is at
+    /// <see cref="WeatherVR.Core.AppConfig.PedestalReferenceMapSizeMeters"/>. The plinth
+    /// is deliberately held at a fixed size in VR metres as the map grows (see that
+    /// field), so on a 3 m map the crown sits at 0.570 * 2/3 = 0.380 map units while the
+    /// terrain still reaches 0.500 -- the map overhangs its plinth, and the heightfield's
+    /// underside is no longer covered by the shader's Cull Front depth pass. Intended,
+    /// and the reason the ring radii below are not simply re-authored: they stay the
+    /// numbers that were tuned against a 2 m map, and one scalar records the departure.
     /// </summary>
     public static class PedestalMeshBuilder
     {
@@ -64,18 +73,30 @@ namespace WeatherVR.Terrain
         ///         coordinate motif between the Y-axis ladder (sides) and the XZ
         ///         graticule (caps) with a single lerp instead of a normal test.
         /// </summary>
-        public static Mesh Build()
+        /// <param name="unitScale">
+        /// Uniform multiplier on every ring radius, chamfer and height, in map units.
+        /// Pass <see cref="WeatherVR.Core.AppConfig.PedestalMapUnitScale"/> to hold the
+        /// plinth at a constant size in VR metres while the map root's scale changes; 1
+        /// lets it scale with the map like every other mesh under the root.
+        /// </param>
+        public static Mesh Build(float unitScale = 1f)
         {
             var vertices = new List<Vector3>(192);
             var normals = new List<Vector3>(192);
             var colors = new List<Color32>(192);
             var triangles = new List<int>(576);
 
-            var r0 = new RingSpec(0.520f, 0.090f, -0.004f); // table
-            var r1 = new RingSpec(0.570f, 0.100f, -0.049f); // crown
-            var r2 = new RingSpec(0.552f, 0.130f, -0.120f); // girdle
-            var r3 = new RingSpec(0.500f, 0.160f, -0.235f); // pavilion
-            var r4 = new RingSpec(0.440f, 0.120f, -0.340f); // base
+            float s = Mathf.Max(unitScale, 1e-3f);
+
+            // Radii/heights as authored against a 2 m map, uniformly scaled. Scaling all
+            // three components by the same factor is what keeps every facet slope -- and
+            // so all 32 flat normals the shader relies on -- identical to the authored
+            // shape rather than squashing it.
+            var r0 = new RingSpec(0.520f * s, 0.090f * s, -0.004f * s); // table
+            var r1 = new RingSpec(0.570f * s, 0.100f * s, -0.049f * s); // crown
+            var r2 = new RingSpec(0.552f * s, 0.130f * s, -0.120f * s); // girdle
+            var r3 = new RingSpec(0.500f * s, 0.160f * s, -0.235f * s); // pavilion
+            var r4 = new RingSpec(0.440f * s, 0.120f * s, -0.340f * s); // base
 
             var ring0 = Ring(r0);
             var ring1 = Ring(r1);

@@ -138,8 +138,9 @@ namespace WeatherVR.Weather
         // world-locked scene from before 2026-07-25, may have no ComfortFollow on the
         // map root at all -- self-install one, idempotent, so Press Play is correct
         // without a scene rebuild. Values mirror SceneBuilder.Populate's; see its
-        // comment for why 2.45 / -0.55 rather than this component's original 0.95 /
-        // -0.40 (the latter puts the carousel panel behind the user's head).
+        // comment for why 2.95 / -0.55 rather than this component's original 0.95 /
+        // -0.40 (the latter puts the carousel panel behind the user's head) and why the
+        // 2.95 tracks MapSizeMeters.
         ComfortFollow EnsureMapFollow(WeatherSceneController controller)
         {
             Transform mapRoot = controller.MapRoot;
@@ -149,7 +150,7 @@ namespace WeatherVR.Weather
             if (follow == null)
             {
                 follow = mapRoot.gameObject.AddComponent<ComfortFollow>();
-                follow.Distance = 2.45f;
+                follow.Distance = 2.95f;
                 follow.VerticalOffset = -0.55f;
                 follow.FollowSpeed = 3.0f;
                 follow.FaceHead = true;

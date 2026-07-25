@@ -118,11 +118,17 @@ namespace WeatherVR.EditorTools
             //
             // Distance/VerticalOffset are NOT the values this component originally
             // shipped with (0.95 / -0.40): the carousel panel sits
-            // WallHalfExtent(0.68) * MapSizeMeters(2.0) = 1.36 m toward the user from
+            // WallHalfExtent(0.62) * MapSizeMeters(3.0) = 1.86 m toward the user from
             // the map centre, so a 0.95 m follow distance would put the panel *behind*
-            // the user's head. These match what WeatherSceneBootstrap has been using
-            // for its (now-removed) one-shot placement, which is the framing that has
-            // actually been tested.
+            // the user's head.
+            //
+            // 2.95, not the 2.45 that was tested against a 2 m map: the map grew to 3 m,
+            // which pushes both its near edge and the wall-mounted panel half a metre
+            // closer to the user for free. Adding that half metre back to the follow
+            // distance keeps the framing that was actually tested -- panel ~1.09 m from
+            // the head, near table edge ~1.45 m -- rather than a panel at 0.41 m, which
+            // is inside comfortable reading distance and behind the map's own overhang.
+            // If MapSizeMeters changes again, this and WallHalfExtent move together.
             // Added here, in Populate, and nowhere inside BuildWeatherContent itself --
             // both phone build variants (BuildPhoneTouch.BuildSceneSilent, and
             // ArSceneBuilder for phone AR) call BuildWeatherContent directly and must
@@ -131,7 +137,7 @@ namespace WeatherVR.EditorTools
             var mapFollow = content.MapRoot.gameObject.AddComponent<ComfortFollow>();
             mapFollow.Head = cameraObject.transform;
             mapFollow.Pointer = pointer;
-            mapFollow.Distance = 2.45f;
+            mapFollow.Distance = 2.95f;
             mapFollow.VerticalOffset = -0.55f;
             mapFollow.FollowSpeed = 3.0f;
             mapFollow.FaceHead = true;

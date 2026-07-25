@@ -17,7 +17,20 @@ namespace WeatherVR.Weather
     /// </summary>
     public sealed class WeatherVisuals : MonoBehaviour
     {
-        const float CloudBaseMeters = 900f;
+        // Real altitudes in metres, converted through AppConfig.AltitudeToMapUnits, so
+        // they track the map's scale on their own. The base was 900 m; it was raised to
+        // open up the clear-air gap between the deck and the city -- 1250 m puts the base
+        // 25 cm above the tabletop on a 3 m map, half again the ~17 cm the map's own
+        // growth already gave. The deck's thickness is unchanged, so the ceiling moves up
+        // with the base and still sits well inside AtmosphereCeilingMeters (3500 m).
+        //
+        // The constraint on raising buildings, not on raising this: with
+        // BuildingHeightExaggeration at 1.5 the region's tallest tower (310 m in the
+        // current bake) reaches ~28 cm and so pokes ~3 cm into the deck's underside. That
+        // is pre-existing and roughly proportional -- at the previous 2 m map and true
+        // building scale it poked in by ~1 cm -- but it is the number to watch if either
+        // knob moves again.
+        const float CloudBaseMeters = 1250f;
         const float CloudThicknessMeters = 700f;
 
         AppConfig _config;

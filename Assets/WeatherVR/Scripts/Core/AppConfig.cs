@@ -38,12 +38,46 @@ namespace WeatherVR.Core
                  "hand-edited buildings.json cannot blow the triangle budget silently.")]
         [Range(50, 2000)] public int MaxBuildings = 600;
 
+        [Tooltip("Extra horizontal inflation of every building footprint about its own " +
+                 "centroid, on top of the map's scale. 1 = true geographic footprint. " +
+                 "Above 1 makes the city read as a model of a city rather than a scatter " +
+                 "of chips: at 1:1667 a 40 m-wide block is only 2.4 cm across. Note that " +
+                 "the City of London is genuinely dense, so inflating footprints will " +
+                 "make neighbouring buildings intersect -- that is the trade being made.")]
+        [Range(1f, 3f)] public float BuildingFootprintScale = 1.5f;
+
+        [Tooltip("Extra vertical exaggeration for building height only, on top of the " +
+                 "true-scale conversion in MapScale.BuildingHeightToMapUnits. Kept as a " +
+                 "separate knob from BuildingFootprintScale so towers can be made to " +
+                 "read without widening them, and separate from TerrainReliefExaggeration " +
+                 "because buildings start life visible and terrain relief does not. " +
+                 "Watch this against the cloud base (WeatherVisuals.CloudBaseMeters): " +
+                 "push it far enough and a skyscraper punches through the deck.")]
+        [Range(1f, 4f)] public float BuildingHeightExaggeration = 1.5f;
+
         // ----------------------------------------------------------------- scale
 
         [Header("Tabletop scale")]
-        [Tooltip("Edge length of the map in VR metres. 2 m across a 50 km region " +
-                 "means 1 VR metre = 25 km.")]
-        public float MapSizeMeters = 2.0f;
+        [Tooltip("Edge length of the map in VR metres. 3 m across a 5 km region means " +
+                 "1 VR metre = 1.67 km. Everything under the map root is authored in the " +
+                 "normalised [-0.5, 0.5] square and scaled by this, so changing it scales " +
+                 "terrain, buildings, clouds, lightning and the plinth together -- see " +
+                 "PedestalReferenceMapSizeMeters for the one thing deliberately held back " +
+                 "from that, and WeatherCarouselFollower.WallHalfExtent / " +
+                 "SceneBuilder.Populate's ComfortFollow distance for the two values that " +
+                 "have to be retuned alongside it.")]
+        public float MapSizeMeters = 3.0f;
+
+        [Tooltip("The map size the pedestal mesh's ring radii were authored against. " +
+                 "PedestalMeshBuilder works in map units, so the plinth would otherwise " +
+                 "grow with MapSizeMeters; dividing by that ratio holds it at a fixed " +
+                 "size in VR metres instead, which is what keeps it reading as a table " +
+                 "you stand at rather than a monument. Consequence, deliberate: once " +
+                 "MapSizeMeters exceeds this the terrain's 0.5-unit edge overhangs the " +
+                 "plinth's crown, so the heightfield's underside is no longer hidden by " +
+                 "the pedestal shader's Cull Front depth pass. Set equal to " +
+                 "MapSizeMeters to go back to a plinth that scales with the map.")]
+        public float PedestalReferenceMapSizeMeters = 2.0f;
 
         [Tooltip("Vertical exaggeration relative to true scale. 1.0 renders altitude " +
                  "at exactly the same scale as horizontal distance. Values above 1 make " +
@@ -163,7 +197,23 @@ namespace WeatherVR.Core
             (float)(RegionSpanKm * 1000.0),
             VerticalExaggeration,
             TerrainReliefExaggeration,
-            AtmosphereFloorMeters);
+            AtmosphereFloorMeters,
+            BuildingHeightExaggeration);
+
+        /// <summary>
+        /// Multiplier applied to the pedestal mesh's map-unit radii so the plinth keeps
+        /// a constant size in VR metres as the map grows. 1 when the map is at the
+        /// pedestal's reference size.
+        ///
+        /// Clamped at 1, so this can only ever hold the plinth back, never inflate it:
+        /// a map <em>smaller</em> than the reference should keep the plinth proportional
+        /// (which is what the phone AR/touch builds want — they override the map root's
+        /// scale to <c>PhoneMapSizeMeters</c> at runtime, and a plinth pinned to a 2 m
+        /// reference under a 0.6 m map would be a 2.3 m slab around a phone-sized model).
+        /// </summary>
+        public float PedestalMapUnitScale => Mathf.Min(
+            1f,
+            Mathf.Max(PedestalReferenceMapSizeMeters, 1e-4f) / Mathf.Max(MapSizeMeters, 1e-4f));
 
         /// <summary>VR metres per real-world metre, horizontally.</summary>
         public float HorizontalScale => Scale.Horizontal;

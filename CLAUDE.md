@@ -557,13 +557,16 @@ My project (2)/
 - **Region:** City of London skyscraper cluster, centre `51.5136°N, -0.0832°E`,
   5 km × 5 km footprint (`AppConfig.RegionSpanKm`). Originally Shanghai at
   50 km × 50 km — see "Deliberate deviations" §2 above for why it shrank.
-- **Map size in VR:** 2.0 m across (X/Z). So **1 VR metre = 2.5 km real**
-  (`Horizontal = MapSizeMeters / RegionSpanMeters`, i.e. 1:2 500).
+- **Map size in VR:** 3.0 m across (X/Z). So **1 VR metre = 1.67 km real**
+  (`Horizontal = MapSizeMeters / RegionSpanMeters`, i.e. 1:1 667). Was 2.0 m
+  until 2026-07-25; see that day's "map at 1.5×" progress entry for the three
+  map-unit values that had to be held back or retuned when it grew, because
+  everything under the map root is multiplied by this.
 - **Vertical exaggeration is two knobs, both scaled to `RegionSpanKm`, not
   absolute constants:**
   - `AppConfig.VerticalExaggeration` (0.4) sets cloud/atmosphere altitude
     scale: `Vertical = Horizontal × VerticalExaggeration`. A 2 km cloud sits
-    `(2000 − AtmosphereFloorMeters) × Vertical` ≈ **29 cm** above the table.
+    `(2000 − AtmosphereFloorMeters) × Vertical` ≈ **43 cm** above the table.
   - `AppConfig.TerrainReliefExaggeration` (1.2) is an *extra* boost applied to
     terrain relief only, on top of `Vertical`. London's real relief (a few
     tens of metres over 5 km) is close to invisible at true scale, hence the
@@ -579,8 +582,32 @@ My project (2)/
     ("MapScale (AppConfig defaults)") checks these against the real baked
     `terrain.bin` peak — keep it in sync with `WeatherVRConfig.asset` or it
     stops being a guard.
-- Local map space is `[-0.5, 0.5]` on X/Z with Y in VR metres above the map
-  plane; `GeoBounds` converts lat/lon ⇄ local.
+- **Buildings have their own two knobs**, separate from the terrain/atmosphere
+  pair above because buildings are the region's visual subject and are already
+  legible at true scale:
+  - `AppConfig.BuildingFootprintScale` (1.5) inflates each footprint about its
+    own XZ centroid, in `BuildingMeshBuilder`. The City of London is genuinely
+    dense, so above 1 neighbouring buildings intersect — that is the accepted
+    trade for the city reading as a model rather than a scatter of chips.
+  - `AppConfig.BuildingHeightExaggeration` (1.5) multiplies inside
+    `MapScale.BuildingHeightToMapUnits`, which still uses `Horizontal` (not
+    `Vertical`) as its base. **The ceiling on this is `WeatherVisuals.CloudBaseMeters`,
+    not taste:** at 1.5 the bake's tallest tower (310 m) reaches 27.9 cm against
+    a 25.2 cm cloud base, so its tip is already ~3 cm inside the deck. That
+    overlap is pre-existing and roughly proportional (~1 cm on the old 2 m map at
+    true building scale), but it is the number to check before either knob moves.
+- **The plinth is deliberately *not* scaled with the map.**
+  `AppConfig.PedestalReferenceMapSizeMeters` (2.0) records the map size
+  `PedestalMeshBuilder`'s ring radii were authored against, and
+  `PedestalMapUnitScale` divides them back down so the plinth holds a constant
+  2.28 m × 0.68 m in VR — a table you stand at, not a monument. Consequence,
+  accepted: past that reference size the terrain's 0.5-unit edge overhangs the
+  crown (36 cm per side at 3 m), so the heightfield's underside is no longer
+  covered by `Pedestal.shader`'s `Cull Front` depth pass. Set it equal to
+  `MapSizeMeters` to go back to a plinth that grows with the map.
+- Local map space is `[-0.5, 0.5]` on X/Z with Y in those *same* normalised units
+  (not VR metres — see "The unit convention" below); `GeoBounds` converts
+  lat/lon ⇄ local.
 
 ## Runtime data contract
 
@@ -1301,6 +1328,65 @@ it.
   compiled, scene not rebuilt, not pressed-play, and none of it has touched real
   hardware yet** — see "Still to do".
 
+- **2026-07-25 (map at 1.5×, branch `bigger-map-1.5x`)** — `MapSizeMeters` 2.0 → 3.0,
+  so the scale went 1:2 500 → 1:1 667 and everything authored in the normalised map
+  square grew with it for free. The work was almost entirely in deciding what must
+  *not* be multiplied by that 1.5, since map units are the project's standing
+  silent-failure mode (see the unit-convention section and known issue #4 — same class
+  of bug, third occurrence).
+    - **Plinth held at a fixed VR size.** `PedestalMeshBuilder.Build` gained a
+      `unitScale` parameter (default 1, so nothing else changes) applied uniformly to
+      every ring radius, chamfer *and* height — uniform on purpose: scaling the three
+      together is what preserves all 32 facet slopes the shader's flat normals depend
+      on, where scaling radii alone would have squashed them. `PedestalRenderer` passes
+      the new `AppConfig.PedestalMapUnitScale`
+      (`PedestalReferenceMapSizeMeters / MapSizeMeters` = 2/3), so the plinth still
+      measures 2.28 m × 0.68 m. The authored radii were left alone rather than
+      re-tuned, so one scalar records the departure instead of the numbers drifting.
+      **Accepted consequence:** the crown pulls in to 0.380 map units while the terrain
+      still reaches 0.500, i.e. the map overhangs its plinth by 36 cm per side and the
+      heightfield's underside is no longer hidden by `Pedestal.shader`'s `Cull Front`
+      depth pass. This was raised before the change and chosen deliberately; it is
+      asserted in `Verify.cs` rather than left to be discovered on device.
+    - **Buildings given an extra 1.5× on top**, via two new `AppConfig` knobs:
+      `BuildingFootprintScale` (inflation about each footprint's own XZ centroid, in
+      `BuildingMeshBuilder` — needs a pre-pass for the centroid, and is winding-safe
+      because a uniform positive scale about an interior point preserves orientation)
+      and `BuildingHeightExaggeration` (a new optional 6th `MapScale` ctor argument,
+      defaulting to 1 so `Verify.cs`'s five-argument construction still compiles and
+      still means true scale). Terrain elevation is still sampled at the *true*
+      geographic point, not the inflated one, so a base sits on the ground actually
+      under the building. Net: 2.25× the previous VR size. Two real costs, both
+      documented at the knobs rather than smoothed over — inflated footprints
+      **intersect** in the genuinely dense City core, and the bake's tallest tower
+      (310 m) now reaches 27.9 cm against a 25.2 cm cloud base, so its tip sits ~3 cm
+      inside the deck (pre-existing and roughly proportional: ~1 cm on the 2 m map at
+      true scale, but it is now the binding constraint on both knobs).
+    - **Cloud gap 1.5× again on top of the map's own 1.5×.**
+      `WeatherVisuals.CloudBaseMeters` 900 → 1250 m, deck thickness unchanged, so the
+      clear-air gap goes 11.2 cm → 25.2 cm (2.25× total) and the deck top at 1950 m
+      still sits well inside `AtmosphereCeilingMeters`.
+    - **Two values retuned so the carousel did not move.** Both are the map-unit trap
+      again: `WeatherCarouselFollower.WallHalfExtent` 0.68 → 0.62 (the terrain edge at
+      0.5 is now the outermost thing to clear, since the plinth pulled in — 0.62 keeps
+      the same 36 cm of real clearance proud of the map edge), and the map's
+      `ComfortFollow.Distance` 2.45 → 2.95 in both `SceneBuilder.Populate` and
+      `WeatherSceneBootstrap.EnsureMapFollow`. Left alone, the panel would have ridden
+      1.86 m out from a map centre 2.45 m away, i.e. 0.41 m from the user's face and
+      behind the map's own overhang. At 2.95 the tested framing is preserved exactly:
+      panel 1.09 m from the head, near table edge 1.45 m.
+    - **Verified, not merely written:** `python tools/verify.py` compiled all 54
+      runtime scripts from source and passed every check, including a new
+      "Map at 1.5×: what had to be held back" block that asserts the plinth's VR
+      dimensions are unchanged, that the overhang is the expected 36 cm, that the
+      carousel keeps both its edge clearance and its head distance, that the building
+      exaggeration is exactly the configured factor, and that the cloud gap is 2.25×
+      what it was. The `MapScale` block's own constants were updated to the live
+      config, per that block's own standing warning. Editor-only code
+      (`SceneBuilder.cs`) is outside what `verify.py` compiles — that edit is one float
+      plus comments. Scene not rebuilt, not pressed-play, not on hardware — see
+      "Still to do".
+
 ## Still to do
 
 - [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`** and **Press Play** to
@@ -1354,7 +1440,10 @@ it.
       darker interior with coordinate ticks visible *through* the glass, and the
       terrain's corners are fully covered by it (the specific geometry regression
       the chamfer-vs-terrain-radius check in `PedestalMeshBuilder.cs` guards
-      against); (3) a floor grid is visible under the table, fading toward its
+      against) — **superseded 2026-07-25 by the map-at-1.5× change: the corners are
+      now deliberately *not* covered, since the plinth is held at a fixed VR size
+      while the map grew past it. Check the overhang looks intentional instead**;
+      (3) a floor grid is visible under the table, fading toward its
       edge, with no hard disc boundary; (4) tapping through all 9 carousel cards
       shifts sky, fog, floor tint and pedestal rim together (the palette-unification
       payoff — the fastest way to spot a value that was left hardcoded); (5) the
@@ -1457,3 +1546,41 @@ it.
       (7) frame time near 72 FPS with the two new `LineRenderer`s (ray + reticle) and
       a `+10m` flood surge raised during Thunderstorm. If the loader or defines needed
       correcting, `Configure()` throws by design — re-run once more after that.
+- [ ] **Map at 1.5× (2026-07-25, branch `bigger-map-1.5x`):** `tools/verify.py` passes
+      and compiles the runtime scripts, but nothing here has been through Play mode.
+      **`Tools ▸ WeatherVR ▸ Build Scene` is required this round**, not optional: the
+      map's `ComfortFollow.Distance` is baked into the scene by `SceneBuilder`, and
+      `WeatherSceneBootstrap.EnsureMapFollow` only sets it when adding a *missing*
+      component — a scene built before this change keeps 2.45 and will put the carousel
+      0.41 m from the user's face. Then Press Play and confirm:
+      (1) the table is visibly half again as wide, and the plinth under it is *not* —
+      it should still read as the same 0.68 m-tall table, with the map now overhanging
+      it by ~36 cm per side (deliberate; the judgement call is whether that overhang
+      reads as a cantilevered glass slab or as a mistake, which no amount of maths
+      settles — if it reads as a mistake, set `PedestalReferenceMapSizeMeters` equal to
+      `MapSizeMeters` and the plinth grows with the map again);
+      (2) look at the map's edge from *below* eye level — the terrain's underside is no
+      longer covered by the pedestal's interior depth pass, so check whether the
+      heightfield reads as see-through/hollow there;
+      (3) buildings are noticeably chunkier and taller, and check the dense core around
+      the Gherkin/Leadenhall for footprints visibly interpenetrating (expected at
+      `BuildingFootprintScale = 1.5`, but it is the first thing to dial back if the
+      cluster reads as a solid mass rather than individual towers);
+      (4) the tallest tower's tip against the cloud deck — `Verify.cs` reports it ~3 cm
+      *inside* the base. Decide on sight whether that reads as "scraping the clouds"
+      (fine, arguably good) or as clipping (drop `BuildingHeightExaggeration` toward
+      1.25, or raise `WeatherVisuals.CloudBaseMeters` further);
+      (5) the carousel is at the same distance and size as before, mounts flush on the
+      wall facing you, and the controller ray still hits every card, both arrows, the
+      four flood presets and a *drag* of the time slider — the wall mount moved in map
+      units this round, and carousel input has broken silently twice in this project;
+      (6) walk around the table: the wall-selection hysteresis (`WallSwitchMargin`, in
+      map units, so its real threshold grew 1.5× too) should still hop cleanly rather
+      than lag a full quarter-turn behind you;
+      (7) lightning bolts still land on the terrain rather than stopping short or
+      punching through — the bolt channel is built in map units from `_cloudBaseMap`,
+      which moved this round;
+      (8) on device: frame time near 72 FPS. The larger map means more of the view is
+      filled by terrain/buildings/water and the cloud billboards subtend a bigger solid
+      angle, so this is a genuine fill-rate increase, not a neutral change — worst case
+      is a Thunderstorm with a `+10m` surge raised, viewed from a table edge.

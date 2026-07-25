@@ -153,14 +153,22 @@ static class Verify
         // 43 m hill rendered as an 84 cm spike. This block is what should have caught
         // that -- keep it in sync with the live config or it is decoration, not a guard.
         Console.WriteLine("\n== MapScale (AppConfig defaults) ==");
-        const float mapSizeMeters = 2.0f;
+        const float mapSizeMeters = 3.0f;
+        // The map size the pedestal mesh's radii were authored against. The plinth is
+        // held at this size in VR metres while the map grows past it.
+        const float pedestalReferenceMapSize = 2.0f;
+        const float buildingFootprintScale = 1.5f;
+        const float buildingHeightExaggeration = 1.5f;
         // 3.5 km, not the full-atmosphere 12 km: the box is meant to read as a
         // compact tabletop cloud deck (low/mid layers only), not a tower spanning
         // the map's own width. See CLAUDE.md 'tall and weird clouds'.
         const float atmosphereCeiling = 3_500f;
-        var scale = new MapScale(mapSizeMeters, 5_000f, 0.4f, 1.2f, 200f);
+        // WeatherVisuals.CloudBaseMeters / CloudThicknessMeters.
+        const float cloudBaseMeters = 1_250f;
+        var scale = new MapScale(mapSizeMeters, 5_000f, 0.4f, 1.2f, 200f,
+                                 buildingHeightExaggeration);
 
-        Check("1 VR metre is 2.5 km", Math.Abs(scale.RepresentativeFraction - 2500) < 1,
+        Check("1 VR metre is 1.67 km", Math.Abs(scale.RepresentativeFraction - 1667) < 2,
               $"1:{scale.RepresentativeFraction:N0}");
 
         float cloudAt2km = scale.AltitudeToVr(2000f);
@@ -198,6 +206,82 @@ static class Verify
               $"channel top {boltTopMapUnits:F3} vs column {scale.MetersToMapUnits(columnHeight):F3}");
         Check("sea level flattens to the map plane",
               scale.TerrainElevationToMapUnits(-40f) == 0f, "bathymetry does not dent the surface");
+
+        // The 3 m map (was 2 m). Three things had to be held or retuned by hand when
+        // MapSizeMeters moved, because each is expressed in map units and would otherwise
+        // have been multiplied straight through by the same 1.5 -- the identical failure
+        // mode as the Shanghai-era exaggeration constants above.
+        Console.WriteLine("\n== Map at 1.5x: what had to be held back ==");
+
+        // 1. The plinth. PedestalMeshBuilder's radii are authored in map units against a
+        //    2 m map and scaled by PedestalMapUnitScale, so the plinth keeps a fixed size
+        //    in VR metres. Crown half-extent 0.570 and total depth 0.340 are the authored
+        //    numbers; both must come out at the VR size they had on the 2 m map.
+        float pedestalUnitScale = pedestalReferenceMapSize / mapSizeMeters;
+        float crownHalfVr = 0.570f * pedestalUnitScale * mapSizeMeters;
+        float plinthDepthVr = 0.340f * pedestalUnitScale * mapSizeMeters;
+        Check("plinth keeps its VR width as the map grows",
+              Math.Abs(crownHalfVr - 0.570f * pedestalReferenceMapSize) < 1e-4f,
+              $"crown {crownHalfVr * 2f:F2} m across");
+        Check("plinth keeps its VR height as the map grows",
+              Math.Abs(plinthDepthVr - 0.340f * pedestalReferenceMapSize) < 1e-4f,
+              $"{plinthDepthVr:F2} m tall");
+        // The accepted consequence, asserted rather than left as a surprise: the terrain's
+        // 0.5-unit edge now reaches past the plinth's crown, so the heightfield's
+        // underside is no longer hidden by the pedestal shader's Cull Front depth pass.
+        float crownHalfMapUnits = 0.570f * pedestalUnitScale;
+        Check("map overhangs its plinth (accepted, see AppConfig.PedestalReferenceMapSizeMeters)",
+              crownHalfMapUnits < 0.5f,
+              $"terrain edge 0.500 vs crown {crownHalfMapUnits:F3} map units " +
+              $"({(0.5f - crownHalfMapUnits) * mapSizeMeters * 100f:F0} cm of overhang per side)");
+
+        // 2. The carousel's wall mount, in map units, and the map's follow distance, in VR
+        //    metres. The panel must stay outside the terrain edge by the clearance it had
+        //    on the 2 m map, and stay the same distance from the head.
+        const float wallHalfExtent = 0.62f;      // WeatherCarouselFollower.WallHalfExtent
+        const float followDistance = 2.95f;      // SceneBuilder.Populate's ComfortFollow
+        float panelClearanceVr = (wallHalfExtent - 0.5f) * mapSizeMeters;
+        Check("carousel keeps its clearance outside the terrain edge",
+              Math.Abs(panelClearanceVr - (0.68f - 0.5f) * pedestalReferenceMapSize) < 0.02f,
+              $"{panelClearanceVr * 100f:F0} cm proud of the map edge");
+        float panelToHead = followDistance - wallHalfExtent * mapSizeMeters;
+        Check("carousel stays at a readable distance from the head",
+              panelToHead > 0.8f && panelToHead < 1.4f, $"{panelToHead:F2} m from the head");
+
+        // 3. Buildings, the one thing deliberately given the extra 1.5x rather than held.
+        Console.WriteLine("\n== Buildings at 1.5x on top of the map ==");
+        var trueScale = new MapScale(mapSizeMeters, 5_000f, 0.4f, 1.2f, 200f); // exaggeration 1
+        const float tallestBakedBuilding = 310f; // real height in the current buildings.json
+        float towerVr = scale.BuildingHeightToMapUnits(tallestBakedBuilding) * mapSizeMeters;
+        float towerTrueVr = trueScale.BuildingHeightToMapUnits(tallestBakedBuilding) * mapSizeMeters;
+        Check("building height exaggeration is exactly the configured factor",
+              Math.Abs(towerVr / towerTrueVr - buildingHeightExaggeration) < 1e-3f,
+              $"{tallestBakedBuilding:F0} m tower renders {towerVr * 100f:F1} cm tall");
+        Check("footprint inflation is a real widening, not a no-op",
+              buildingFootprintScale > 1.001f, $"x{buildingFootprintScale:F2} about the centroid");
+        Check("towers still clearly out-scale the terrain relief they stand on",
+              towerVr > terrainTopMeters * 4f,
+              $"tower {towerVr * 100f:F1} cm vs {terrainTopMeters * 100f:F2} cm of relief");
+
+        // The clear-air gap between the city and the cloud deck. Grew 1.5x for free with
+        // the map, then 1.5x again by raising CloudBaseMeters from 900 m.
+        Console.WriteLine("\n== Cloud deck clearance ==");
+        float gapVr = scale.AltitudeToVr(cloudBaseMeters);
+        var oldScale = new MapScale(pedestalReferenceMapSize, 5_000f, 0.4f, 1.2f, 200f);
+        float gapBeforeVr = oldScale.AltitudeToVr(900f);
+        Check("gap between terrain and cloud base is 2.25x what it was",
+              Math.Abs(gapVr / gapBeforeVr - 2.25f) < 0.05f,
+              $"{gapVr * 100f:F1} cm, was {gapBeforeVr * 100f:F1} cm");
+        Check("cloud deck still fits under the atmosphere ceiling",
+              cloudBaseMeters + 700f < atmosphereCeiling,
+              $"deck top {cloudBaseMeters + 700f:F0} m vs ceiling {atmosphereCeiling:F0} m");
+        // Not a pass/fail: the region's tallest tower pokes into the deck's underside at
+        // these settings. It did on the 2 m map at true building scale too (~1 cm), so
+        // this is pre-existing and roughly proportional -- but it is the number that
+        // decides whether either knob can move further.
+        Console.WriteLine(
+            $"   note  tallest tower reaches {towerVr * 100f:F1} cm, cloud base is at " +
+            $"{gapVr * 100f:F1} cm ({(towerVr - gapVr) * 100f:+0.0;-0.0} cm into the deck)");
 
         Console.WriteLine($"\n{(failures == 0 ? "ALL CHECKS PASSED" : failures + " CHECK(S) FAILED")}\n");
         Environment.Exit(failures == 0 ? 0 : 1);

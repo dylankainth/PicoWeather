@@ -16,7 +16,10 @@ MonoBehaviour:
   CenterLongitude: -0.0832
   RegionSpanKm: 5
   MaxBuildings: 600
-  MapSizeMeters: 2
+  BuildingFootprintScale: 1.5
+  BuildingHeightExaggeration: 1.5
+  MapSizeMeters: 3
+  PedestalReferenceMapSizeMeters: 2
   VerticalExaggeration: 0.4
   TerrainReliefExaggeration: 1.2
   AtmosphereFloorMeters: 200
