@@ -79,21 +79,23 @@ namespace WeatherVR.Desktop
             var driver = _camera.GetComponent<TrackedPoseDriver>();
             if (driver != null) driver.enabled = false;
 
-            // Place the map for the user at the origin.
             var controller = FindObjectOfType<WeatherSceneController>();
             Transform mapRoot = controller != null ? controller.MapRoot : null;
 
+            // The head-follow would glue the map (and anything else that follows) to the
+            // orbit camera, defeating the orbit. Removed -- not merely disabled -- and
+            // *before* the position reset just below: Destroy() only takes effect at
+            // the end of the frame, so ComfortFollow.LateUpdate would otherwise still
+            // run once more and overwrite the position we are about to set.
+            foreach (var follow in FindObjectsOfType<ComfortFollow>())
+                Destroy(follow);
+
+            // Place the map for the user at the origin.
             if (mapRoot != null)
             {
                 mapRoot.position = Vector3.zero;
                 mapRoot.rotation = Quaternion.identity;
             }
-
-            // The head-follow would glue the map (and anything else that follows) to the
-            // orbit camera, defeating the orbit. Disable it so the flat preview can look
-            // around a map parked at the origin.
-            foreach (var follow in FindObjectsOfType<ComfortFollow>())
-                follow.enabled = false;
 
             if (mapRoot != null) _pivot = mapRoot.position + Vector3.up * 0.28f;
 

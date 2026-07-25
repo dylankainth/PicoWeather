@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using WeatherVR.Core;
 using WeatherVR.Data;
+using WeatherVR.Flood;
 using WeatherVR.Interaction;
 using WeatherVR.Weather;
 
@@ -38,6 +39,14 @@ namespace WeatherVR.UI.Carousel
         float hour = DefaultHour;
         bool hasAppliedKind;
         WeatherSceneKind appliedKind;
+
+        // Storm-surge impact readout. Prepared once per snapshot (same lifetime as the
+        // terrain/buildings it reads); re-evaluated only on a preset press, never per
+        // frame — see FloodImpact's own header comment.
+        readonly FloodImpact floodImpact = new FloodImpact();
+        int surgeIndex;
+        bool floodVisible;
+        bool floodInitialized;
 
         /// <summary>
         /// Hides an already-built carousel while the launch globe is playing. This
@@ -124,9 +133,11 @@ namespace WeatherVR.UI.Carousel
                 yield break;
             }
 
+            floodImpact.Prepare(snapshot);
+
             built = new WeatherCarouselBuilder().Build(
                 dataset, head, pointer,
-                presetIndex => sceneController.SetSurge(presetIndex),
+                OnFloodPresetSelected,
                 OnHourScrubbed);
             built.Root.transform.SetParent(transform, true);
             activeDataset = dataset;
@@ -152,8 +163,11 @@ namespace WeatherVR.UI.Carousel
                 built.Controller.SelectionChanged += OnCardSelected;
 
             // Park the slider at noon and label it, without applying a scene — same
-            // reasoning as above.
+            // reasoning as above. The flood row still needs an explicit first pass so
+            // it starts hidden by decision rather than by coincidence of the builder's
+            // default-inactive buttons.
             RefreshTimeSliderLabels();
+            UpdateFloodControls(SelectedItem());
 
             Debug.Log(
                 $"[WeatherVR] Bilingual immersive weather carousel ready " +
@@ -225,8 +239,14 @@ namespace WeatherVR.UI.Carousel
                 hasAppliedKind = true;
                 appliedKind = kind;
                 director.ApplyKind(kind);
-                UpdateFloodControls(kind);
             }
+
+            // Reachability is keyed to the selected DAY, not the resolved hour — a
+            // Thunderstorm day exposes storm-surge controls at any hour on that day,
+            // not only inside its actual storm window. Called every time (not just on
+            // a kind change) since it depends on `item`, not `kind`; UpdateFloodControls
+            // itself no-ops unless the day's storm status actually flips.
+            UpdateFloodControls(item);
 
             RefreshTimeSliderLabels();
         }
@@ -248,22 +268,89 @@ namespace WeatherVR.UI.Carousel
         }
 
         /// <summary>
-        /// Storm surge only makes sense while the storm is showing — hide the presets
-        /// otherwise, and drop any raised water so it does not linger into whatever the
-        /// user switches (or scrubs) to next.
+        /// Storm surge only makes sense for a day whose timeline actually includes a
+        /// storm somewhere in it — hide the row otherwise. Deliberately keyed to the
+        /// whole day (<see cref="WeatherCarouselItem.HasKind"/>), not the hour currently
+        /// resolved: gating on the resolved hour left the controls reachable only
+        /// inside the storm's own multi-hour window, which is a blind target with
+        /// nothing on screen inviting the user to land there. Guarded by
+        /// <see cref="floodInitialized"/>/<see cref="floodVisible"/> so a scrub that
+        /// does not change storm-day status does not re-toggle or re-zero the level on
+        /// every frame of a drag.
         /// </summary>
-        void UpdateFloodControls(WeatherSceneKind kind)
+        void UpdateFloodControls(WeatherCarouselItem item)
         {
-            bool isStorm = kind == WeatherSceneKind.Thunderstorm;
+            // Either a literal Thunderstorm segment (the authored demo week) or the
+            // real forecast's designated peak-storm day (ForecastCarouselDataProvider) —
+            // a real London forecast usually has no literal storm at all, so relying on
+            // HasKind alone would leave the controls unreachable on every real day.
+            bool hasStorm = item != null &&
+                (item.HasKind(WeatherSceneKind.Thunderstorm) || item.IsPeakStormDay);
+
+            if (floodInitialized && hasStorm == floodVisible)
+                return;
+
+            floodInitialized = true;
+            floodVisible = hasStorm;
 
             if (built?.FloodButtons != null)
             {
                 foreach (var button in built.FloodButtons)
-                    if (button != null) button.SetActive(isStorm);
+                    if (button != null) button.SetActive(hasStorm);
             }
 
-            if (!isStorm)
-                sceneController.SetSurge(0);
+            if (built?.FloodTitle != null)
+                built.FloodTitle.SetActive(hasStorm);
+
+            if (built?.FloodReadout != null)
+                built.FloodReadout.gameObject.SetActive(hasStorm);
+
+            // Always start (or leave) at +0m: entering a storm day should not silently
+            // resurrect whatever level a previous storm day was left at, and leaving
+            // one must not let raised water linger into the next selection.
+            surgeIndex = 0;
+            sceneController.SetSurge(0);
+
+            if (hasStorm)
+                RefreshFloodReadout();
+        }
+
+        /// <summary>The flood row's button callback — also keeps the impact readout
+        /// in step with whichever preset is currently selected.</summary>
+        void OnFloodPresetSelected(int presetIndex)
+        {
+            surgeIndex = presetIndex;
+            sceneController.SetSurge(presetIndex);
+            RefreshFloodReadout();
+        }
+
+        /// <summary>
+        /// Recomputes and displays the submerged-area/buildings-affected numbers for
+        /// the currently selected surge preset. Evaluated against the *target* level
+        /// (<see cref="FloodRenderer.LevelMeters"/>), not the mid-animation displayed
+        /// one, so the readout reflects the preset the user just pressed immediately
+        /// rather than crawling up together with the rise animation.
+        /// </summary>
+        void RefreshFloodReadout()
+        {
+            FloodRenderer flood = sceneController != null ? sceneController.Flood : null;
+            if (built?.FloodReadout == null || flood == null)
+                return;
+
+            float[] presets = flood.SurgePresetsMeters;
+            float presetMeters = presets != null && surgeIndex >= 0 && surgeIndex < presets.Length
+                ? presets[surgeIndex]
+                : 0f;
+
+            // +0m has no target level (FloodRenderer.SetSurge treats it as "off"), so
+            // fall back to the terrain's own floor — the correct baseline reading of
+            // 0% flooded rather than showing nothing.
+            float levelMeters = flood.LevelMeters ?? flood.MinElevationMeters;
+            floodImpact.Evaluate(levelMeters, out float submergedFraction, out int buildingsAffected);
+
+            built.FloodReadout.text = string.Format(
+                "+{0:0}m · {1:0}% FLOODED 淹没 · {2}/{3} BUILDINGS 建筑",
+                presetMeters, submergedFraction * 100f, buildingsAffected, floodImpact.BuildingCount);
         }
 
         void Update()

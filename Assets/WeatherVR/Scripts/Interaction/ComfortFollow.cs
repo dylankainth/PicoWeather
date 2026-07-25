@@ -37,7 +37,19 @@ namespace WeatherVR.Interaction
         [Tooltip("If true the object yaws to face the user. The map wants this so its front edge faces you.")]
         public bool FaceHead = true;
 
+        [Tooltip("Head yaw change, in degrees, before the object re-anchors. 0 = follow " +
+                 "continuously (the original, always-recomputing behaviour).")]
+        public float YawDeadzoneDegrees = 0f;
+
+        [Tooltip("Head translation, in metres, before the object re-anchors. 0 = follow " +
+                 "continuously (the original, always-recomputing behaviour).")]
+        public float PositionDeadzone = 0f;
+
         bool _initialised;
+        Vector3 _anchorPosition;
+        float _anchorYaw;
+        Vector3 _targetPosition;
+        Quaternion _targetRotation;
 
         void LateUpdate()
         {
@@ -50,20 +62,49 @@ namespace WeatherVR.Interaction
             if (Pointer != null && Pointer.SecondaryPressedThisFrame)
                 Recenter();
 
-            ComputeAnchor(Head, Distance, VerticalOffset, out Vector3 targetPos, out Quaternion targetRot);
+            // Both deadzones at 0 (the field default) means "recompute every frame",
+            // which is bit-identical to this component's original behaviour before
+            // deadzones existed -- every other consumer of ComputeAnchor (the
+            // carousel's own head-relative fallback) leaves both at 0 and is
+            // unaffected. A non-zero deadzone holds the last committed anchor until
+            // the head departs by more than it, then re-targets and eases there over
+            // the usual exponential blend below. Without this, a follow distance long
+            // enough to clear the carousel panel (see SceneBuilder) slides the whole
+            // world sideways every time the user so much as glances around.
+            bool continuous = YawDeadzoneDegrees <= 0f && PositionDeadzone <= 0f;
+            bool recompute = !_initialised || continuous;
+
+            if (!recompute)
+            {
+                float yawDelta = Mathf.Abs(Mathf.DeltaAngle(_anchorYaw, Head.eulerAngles.y));
+                Vector3 flatHeadPos = Head.position;
+                flatHeadPos.y = 0f;
+                float posDelta = Vector3.Distance(flatHeadPos, _anchorPosition);
+
+                recompute = (YawDeadzoneDegrees > 0f && yawDelta > YawDeadzoneDegrees) ||
+                            (PositionDeadzone > 0f && posDelta > PositionDeadzone);
+            }
+
+            if (recompute)
+            {
+                _anchorYaw = Head.eulerAngles.y;
+                _anchorPosition = Head.position;
+                _anchorPosition.y = 0f;
+                ComputeAnchor(Head, Distance, VerticalOffset, out _targetPosition, out _targetRotation);
+            }
 
             if (!_initialised)
             {
-                transform.position = targetPos;
-                if (FaceHead) transform.rotation = targetRot;
+                transform.position = _targetPosition;
+                if (FaceHead) transform.rotation = _targetRotation;
                 _initialised = true;
                 return;
             }
 
             float blend = 1f - Mathf.Exp(-FollowSpeed * Time.unscaledDeltaTime);
-            transform.position = Vector3.Lerp(transform.position, targetPos, blend);
+            transform.position = Vector3.Lerp(transform.position, _targetPosition, blend);
             if (FaceHead)
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, blend);
+                transform.rotation = Quaternion.Slerp(transform.rotation, _targetRotation, blend);
         }
 
         /// <summary>Snaps the object in front of the head on the next frame.</summary>

@@ -30,6 +30,10 @@ STEPS = [
     ("satellite", "fetch_satellite.py", "satellite.jpg"),
     ("buildings", "fetch_buildings.py", "buildings.json"),
     ("weather", "fetch_weather.py", "weather.json"),
+    # Depends on terrain.bin already being on disk -- it computes connectivity
+    # over that exact grid, so it must run after the terrain step.
+    ("flood", "fetch_flood.py", "flood.bin"),
+    ("forecast", "fetch_forecast.py", "forecast.json"),
 ]
 
 
@@ -62,8 +66,18 @@ def write_manifest(results: dict) -> str:
             "Community.",
             "Buildings: (c) OpenStreetMap contributors, ODbL 1.0.",
             "Weather: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
+            "Forecast: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
+            "Flood defences: (c) Environment Agency copyright and/or database "
+            "right 2026. Open Government Licence v3.0.",
+            "Flood connectivity: computed by this project from the above terrain, "
+            "OpenStreetMap water features, and Environment Agency defences -- "
+            "not an official flood risk product. See flood.json for method and "
+            "limitations.",
             "Lightning is not observed: it is derived from CAPE and precipitation "
             "rate. See Atmosphere.LightningPotential.",
+            "Storm-likelihood ranking is derived from CAPE, precipitation and "
+            "gust speed, not an official forecast product. See "
+            "fetch_forecast.py::storm_score.",
         ],
     }
 
@@ -85,6 +99,8 @@ def main() -> int:
     parser.add_argument("--weather-grid", type=int, default=12)
     parser.add_argument("--weather-source", choices=["open-meteo", "era5"],
                         default="open-meteo")
+    parser.add_argument("--no-flood-defences", action="store_true",
+                        help="bake the flood field without EA defence data")
     args = parser.parse_args()
 
     geo.ensure_dirs()
@@ -96,6 +112,8 @@ def main() -> int:
         "buildings": ["--max-buildings", str(args.max_buildings)],
         "weather": ["--grid", str(args.weather_grid),
                     "--source", args.weather_source],
+        "flood": ["--no-defences"] if args.no_flood_defences else [],
+        "forecast": [],
     }
 
     results = {}

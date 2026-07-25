@@ -92,9 +92,10 @@ namespace WeatherVR.Weather
 
         void LateUpdate()
         {
-            // Cheap and idempotent: keeps the floor aligned under the table even if
-            // the map root moves (it does not, today -- see WorldLockMap -- but this
-            // costs nothing and removes a future footgun if that ever changes).
+            // Cheap and idempotent: keeps the floor aligned under the table as the map
+            // root moves. The map now follows the head (see ComfortFollow, added by
+            // SceneBuilder.Populate / WeatherSceneBootstrap.EnsureMapFollow), so this
+            // is load-bearing, not just a hedge against a hypothetical future change.
             if (MapRoot != null && _floorRenderer != null)
             {
                 Vector3 p = MapRoot.position;

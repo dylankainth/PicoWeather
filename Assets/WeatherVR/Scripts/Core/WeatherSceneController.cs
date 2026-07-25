@@ -79,7 +79,7 @@ namespace WeatherVR.Core
                 // Re-asserted here so a scene generated before head tracking existed,
                 // or one edited by hand, still follows the headset. Silent failure
                 // otherwise: stereo renders fine, the view just never moves.
-                HeadTracking.Ensure(camera.gameObject);
+                HeadTracking.Ensure(camera.gameObject, camera.transform.parent);
             }
 
             ApplyMapScale(config);

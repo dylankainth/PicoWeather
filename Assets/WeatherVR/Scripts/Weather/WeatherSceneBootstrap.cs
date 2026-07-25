@@ -48,7 +48,8 @@ namespace WeatherVR.Weather
                 yield break;
             }
 
-            WorldLockMap(controller);
+            ComfortFollow mapFollow = EnsureMapFollow(controller);
+            EnsurePointerVisual();
             EnvironmentController environment = InstallEnvironment(controller);
             WeatherVisuals visuals = InstallVisuals(controller);
             InstallFlood(controller);
@@ -60,11 +61,12 @@ namespace WeatherVR.Weather
                 controller.Ready += _ => Begin(director);
 
             // XR runtimes report the persisted scene camera pose for the first few
-            // frames. Wait for tracking to settle, then place the world-locked
-            // exhibit in front of the user instead of leaving the user at its centre.
+            // frames. Wait for tracking to settle before snapping the head-follow map
+            // in front of the user -- ComfortFollow._initialised snapping on frame 1
+            // would latch onto that stale pose instead.
             for (int frame = 0; frame < 4; frame++)
                 yield return null;
-            PlaceExhibitInFront(controller);
+            if (mapFollow != null) mapFollow.Recenter();
             _started = true;
         }
 
@@ -130,36 +132,53 @@ namespace WeatherVR.Weather
             Debug.Log("[WeatherVR] Foreground launch detected — replaying Earth intro.");
         }
 
-        // The map is a world-locked exhibit the user walks around. A scene generated
-        // before this change may still carry a head-follow on the map root, so strip
-        // any ComfortFollow off it — idempotent, and makes Press Play correct without a
-        // scene rebuild.
-        void WorldLockMap(WeatherSceneController controller)
+        // The map follows the head instead of being world-locked (see ComfortFollow,
+        // added by SceneBuilder.Populate). A scene generated before this existed, or a
+        // world-locked scene from before 2026-07-25, may have no ComfortFollow on the
+        // map root at all -- self-install one, idempotent, so Press Play is correct
+        // without a scene rebuild. Values mirror SceneBuilder.Populate's; see its
+        // comment for why 2.45 / -0.55 rather than this component's original 0.95 /
+        // -0.40 (the latter puts the carousel panel behind the user's head).
+        ComfortFollow EnsureMapFollow(WeatherSceneController controller)
         {
             Transform mapRoot = controller.MapRoot;
-            if (mapRoot == null) return;
+            if (mapRoot == null) return null;
 
-            foreach (var follow in mapRoot.GetComponents<ComfortFollow>())
-                Destroy(follow);
+            var follow = mapRoot.GetComponent<ComfortFollow>();
+            if (follow == null)
+            {
+                follow = mapRoot.gameObject.AddComponent<ComfortFollow>();
+                follow.Distance = 2.45f;
+                follow.VerticalOffset = -0.55f;
+                follow.FollowSpeed = 3.0f;
+                follow.FaceHead = true;
+                follow.YawDeadzoneDegrees = 25f;
+                Debug.LogWarning(
+                    "[WeatherVR] The map had no ComfortFollow, so the exhibit would " +
+                    "have stayed world-locked. Added one at runtime — rebuild the " +
+                    "scene with Tools > WeatherVR > Build Scene to bake it in properly.");
+            }
+
+            if (follow.Head == null && Camera.main != null)
+                follow.Head = Camera.main.transform;
+            if (follow.Pointer == null)
+                follow.Pointer = FindObjectOfType<XRPointer>();
+
+            return follow;
         }
 
-        static void PlaceExhibitInFront(WeatherSceneController controller)
+        // A scene generated before the ray visual existed will have an XRPointer with
+        // no XRPointerVisual alongside it -- self-install one on the same GameObject,
+        // idempotent, so the ray is visible without a scene rebuild. See
+        // XRPointerVisual's own header for why this was needed at all: the baked
+        // LineRenderer had a configured material and gradient but nothing ever moved
+        // its two points, so it sat at the world origin instead of at the controller.
+        void EnsurePointerVisual()
         {
-            Transform mapRoot = controller.MapRoot;
-            Transform head = Camera.main != null ? Camera.main.transform : null;
-            if (mapRoot == null || head == null)
-                return;
+            var pointer = FindObjectOfType<XRPointer>();
+            if (pointer == null) return;
 
-            Vector3 forward = Vector3.ProjectOnPlane(head.forward, Vector3.up);
-            if (forward.sqrMagnitude < 0.01f)
-                forward = Vector3.forward;
-            forward.Normalize();
-
-            mapRoot.SetPositionAndRotation(
-                head.position + forward * 2.45f + Vector3.down * 0.55f,
-                Quaternion.LookRotation(forward, Vector3.up));
-
-            Debug.Log("[WeatherVR] Table exhibit placed in front of the starting view.");
+            XRPointerVisual.Ensure(pointer.gameObject, pointer);
         }
 
         EnvironmentController InstallEnvironment(WeatherSceneController controller)

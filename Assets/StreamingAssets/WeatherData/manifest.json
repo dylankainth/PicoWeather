@@ -1,5 +1,5 @@
 {
-  "generatedUtc": "2026-07-24T12:43:00Z",
+  "generatedUtc": "2026-07-25T05:51:02Z",
   "region": {
     "name": "City of London",
     "centerLatitude": 51.5136,
@@ -12,24 +12,30 @@
   },
   "layers": {
     "terrain": {
-      "status": "ok",
-      "file": "terrain.bin",
-      "bytes": 524344
+      "status": "skipped",
+      "file": "terrain.bin"
     },
     "satellite": {
-      "status": "ok",
-      "file": "satellite.jpg",
-      "bytes": 1742183
+      "status": "skipped",
+      "file": "satellite.jpg"
     },
     "buildings": {
-      "status": "ok",
-      "file": "buildings.json",
-      "bytes": 398435
+      "status": "skipped",
+      "file": "buildings.json"
     },
     "weather": {
+      "status": "skipped",
+      "file": "weather.json"
+    },
+    "flood": {
       "status": "ok",
-      "file": "weather.json",
-      "bytes": 26853
+      "file": "flood.bin",
+      "bytes": 524344
+    },
+    "forecast": {
+      "status": "ok",
+      "file": "forecast.json",
+      "bytes": 2258
     }
   },
   "attribution": [
@@ -37,6 +43,10 @@
     "Imagery: (c) Esri -- Maxar, Earthstar Geographics, and the GIS User Community.",
     "Buildings: (c) OpenStreetMap contributors, ODbL 1.0.",
     "Weather: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
-    "Lightning is not observed: it is derived from CAPE and precipitation rate. See Atmosphere.LightningPotential."
+    "Forecast: Open-Meteo.com (CC BY 4.0), ECMWF/DWD/NOAA source models.",
+    "Flood defences: (c) Environment Agency copyright and/or database right 2026. Open Government Licence v3.0.",
+    "Flood connectivity: computed by this project from the above terrain, OpenStreetMap water features, and Environment Agency defences -- not an official flood risk product. See flood.json for method and limitations.",
+    "Lightning is not observed: it is derived from CAPE and precipitation rate. See Atmosphere.LightningPotential.",
+    "Storm-likelihood ranking is derived from CAPE, precipitation and gust speed, not an official forecast product. See fetch_forecast.py::storm_score."
   ]
 }

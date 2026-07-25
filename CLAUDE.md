@@ -591,6 +591,8 @@ My project (2)/
 | `terrain.bin` | custom binary: magic `PWTR`, ver, w, h, minLat/maxLat/minLon/maxLon, minEle/maxEle (float32), then `w*h` uint16 normalised heights | Little-endian. 512×512 default. |
 | `satellite.jpg` | JPEG, 2048² | North-up, exactly covers the same bounds. |
 | `weather.json` | see `WeatherDataset` | Grid of cells + layer metadata + provenance. |
+| `flood.bin` | custom binary: magic `PWFL`, ver, w, h, bounds, baseMeters/capMeters (float32), then `w*h` uint16 normalised connection levels | Same grid as `terrain.bin` (must be baked after it). 65535 = "never floods within the baked window". Sidecar `flood.json` carries the bake's provenance/method/limitations in full prose. |
+| `forecast.json` | see `ForecastDataset` | Real 5-day hourly forecast + `peakStormDayIndex`, the day judged relatively most storm-prone. |
 | `manifest.json` | JSON | Which files exist, when baked, source attribution. |
 
 If a file is missing the corresponding `*Provider` falls back to procedural
@@ -683,6 +685,22 @@ python tools/build_all.py
 Batch mode, for a machine with nothing set up:
 
 ```powershell
+& "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe" `
+    -batchmode -quit -projectPath "." `
+    -executeMethod WeatherVR.EditorTools.BuildAPK.BuildEverythingFromCommandLine
+```
+
+If the Android scripting defines are wrong (e.g. a stray `WEATHERVR_AR` left by a phone
+AR build), `ProjectConfigurator.Configure()` — called at the top of every build entry
+point — corrects them and then deliberately aborts, because removing a define forces a
+recompile the same editor invocation cannot see. Run the fix in its own invocation
+first, then build in a second, fresh one:
+
+```powershell
+& "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe" `
+    -batchmode -quit -projectPath "." `
+    -executeMethod WeatherVR.EditorTools.BuildAPK.PrepareFromCommandLine
+
 & "C:\Program Files\Unity\Hub\Editor\2022.3.62f3\Editor\Unity.exe" `
     -batchmode -quit -projectPath "." `
     -executeMethod WeatherVR.EditorTools.BuildAPK.BuildEverythingFromCommandLine
@@ -961,6 +979,328 @@ it.
   Written to compile against the existing APIs but **not yet compiled in Unity, scene
   not rebuilt, not pressed-play** — see "Still to do".
 
+- **2026-07-25 (flood layer: reachability + realism)** — the user reported not being
+  able to find the flood simulator at all. It had **not** been removed — `git log`
+  shows `FloodRenderer.cs`/`Water.shader` were added, not deleted, in the previous
+  commit, and every piece of wiring (`WeatherSceneController.Flood`/`SetSurge`, the
+  `WaterSurface` scene object, `WeatherSceneBootstrap.InstallFlood`, the always-
+  included shader entry in `GraphicsSettings.asset`, `WeatherCarouselBuilder.
+  CreateFloodRow`) was intact. The actual bug: the previous round's day/hour carousel
+  rewrite left the flood buttons gated on the *resolved* `KindAtHour`, not the
+  selected day, so a Thunderstorm-headline card only exposed them inside its own
+  narrow storm window (Monday, 12:00–17:00) — the user's own test landed at 09:30,
+  resolved to `Rain`, and correctly showed nothing. On top of restoring reachability,
+  two gaps against the app's actual purpose (city flood/storm-surge emergency
+  planning) were closed: the water previously snapped to a level in one frame with a
+  flat, uniform-alpha quad, which reads as coloured glass, not rising water over real
+  ground.
+    - **Reachability**: `WeatherCarouselItem` gained `HasKind`, alongside the existing
+      `KindAtHour`, scanning the day's `Timeline` for any occurrence of a case rather
+      than resolving one at an hour. `WeatherCarouselFeature.UpdateFloodControls` now
+      takes the selected `WeatherCarouselItem` and gates on `HasKind(Thunderstorm)`,
+      called every `ApplyDayAndHour` (card tap *and* hour scrub) rather than only
+      inside the kind-changed guard, since day-level storm status doesn't track hour-
+      level kind changes. A cached `floodVisible`/`floodInitialized` pair keeps a
+      scrub that doesn't cross a storm-day boundary from re-toggling or re-zeroing the
+      surge level every frame.
+    - **Animated rise**: `FloodRenderer` now separates a target level (`LevelMeters`,
+      unchanged API) from a `DisplayedLevelMeters` eased toward it over `RiseSeconds`
+      (2.5s default) with the same smoothstep `EarthIntroFeature.Animate` uses,
+      driven from `Update()` on `Time.unscaledDeltaTime` like the rest of the
+      project's UI/camera motion. Receding runs the same animation down to the
+      terrain's `MinElevation` before disabling the renderer, so leaving a storm day
+      reads as water draining away rather than vanishing.
+    - **Depth-aware shading**: `FloodRenderer` bakes the terrain heightfield into a
+      single-channel `_HeightTex` (same sampling idiom as `ProceduralSatellite.
+      Generate`, since `TerrainHeightfield` exposes no raw array) in the mesh's own
+      normalised (u,v) — no vertex-shader plumbing needed, `Water.shader` already
+      passed `uv` through unchanged. The fragment shader now computes real depth
+      (`_LevelMeters` minus the sampled ground elevation), `clip()`s anything above
+      water for a shoreline that follows actual valleys and ridges instead of the
+      quad's flat rectangular edge, and grades `_ShallowColor` → `_DeepColor` by
+      depth with a foam band near the shoreline. `_Color` (the old flat tint) is kept
+      declared and still set by `FloodRenderer.WaterColor`, but is no longer sampled
+      by the frag — documented in-shader as legacy rather than silently dropped.
+    - **Impact readout**: new `FloodImpact` (rendering-agnostic, no GameObject/mesh/
+      material) samples each building's footprint centroid against the terrain via
+      the same `GeoBounds.ToNormalized` → `TerrainHeightfield.SampleElevation` path
+      `BuildingMeshBuilder` uses per vertex, so the readout and the rendered buildings
+      always agree on where a building's base sits. `Evaluate` sweeps the full
+      heightfield (sub-millisecond even at 512², and only ever called from a button
+      press) for submerged-area fraction, plus a building-affected count.
+      `WeatherCarouselFeature.RefreshFloodReadout` formats both into a one-line label
+      (e.g. `+5m · 23% FLOODED 淹没 · 412/1860 BUILDINGS 建筑`) shown above the
+      pagination dots, in the panel's one genuinely free strip of space (dots only
+      span x∈[-105,105] of the row).
+    - **Labelled controls**: `WeatherCarouselBuilder` adds a `STORM SURGE 风暴潮`
+      title in the header-gap's left margin (x∈[-205,-98], left of the four preset
+      buttons which occupy x∈[-98,292] of the same gap) — the buttons previously had
+      no label identifying what they were at all.
+  Written to compile against the existing APIs but **not yet compiled in Unity, scene
+  not rebuilt, not pressed-play** — see "Still to do".
+
+- **2026-07-25 (real hydraulic connectivity + real forecast + storm-day selection)** —
+  the flood layer's shoreline was real terrain but a fake flood: it was still a pure
+  bathtub, and the storm day was still authored fiction (`DayTimelineCarouselDataProvider`'s
+  hand-written week). Both replaced with real data this round, plus a live check of
+  whether London is actually due a storm (it is not — see below).
+    - **New bake step, `tools/fetch_flood.py`**: computes, per terrain cell, the
+      *minimum water level at which that cell is hydraulically connected to the
+      river* — a priority-flood (Dijkstra with `max` instead of `+`, i.e. a minimax/
+      bottleneck shortest path) seeded from real Thames geometry (OpenStreetMap
+      `waterway=river`/`riverbank`, fetched the same way `fetch_buildings.py` already
+      hits Overpass) through a barrier grid raised to real EA flood-defence crest
+      heights wherever one exists (`SpatialFloodDefencesIncStandardisedAttributes`,
+      the EA's ArcGIS FeatureServer — confirmed live and key-less this round;
+      `MapServer` on the same host 500s, `FeatureServer` works). Output is
+      `flood.bin` (`PWFL`), same grid as `terrain.bin`, read by the new
+      `FloodConnectivityField` (mirrors `TerrainHeightfield`'s binary layout and
+      bilinear sampler exactly). A cell only floods once the water level reaches its
+      connection level, not merely once the level exceeds its ground elevation — the
+      old bathtub's actual error. First live bake found 370 defence features
+      intersecting the tile, crest heights 5.17–8.75 m AOD; seeding from *all* mapped
+      water (rivers, canals, docks) barely changed anything (0.1–0.6pp vs bathtub)
+      because impounded water — St Katharine Docks, canal basins — sits inland of the
+      tidal defences and a flood seeded there starts on the dry side of the wall;
+      restricting seeds to `waterway=river`/`riverbank` only fixed this (see
+      `fetch_flood.py::classify_way`), producing a real, defensible result: defences
+      hold back 19 percentage points of the tile at 3.5 m AOD (a high tide within
+      their crest range) but the advantage narrows toward nothing above ~4.5 m,
+      because EA's own asset coverage for this specific 5 km tile is 370 discrete
+      records, not a continuous wall along every metre of bank, and 90 m-class SRTM
+      terrain cannot resolve an engineered embankment where no EA record exists —
+      documented as a real, stated limitation in the bake's own provenance
+      (`flood.json`) rather than smoothed over. Presets in the UI stayed
+      relative-to-terrain-minimum (`+0/+2/+5/+10 m`) rather than switching to
+      absolute AOD, since that is what the existing carousel chips and
+      `FloodRenderer.SurgePresetsMeters` already mean; `fetch_flood.py`'s own CLI
+      summary reports both relative presets during the bake and absolute AOD levels
+      (`REPORT_LEVELS_AOD`, chosen against this tile's real numbers) so the two
+      framings can be cross-checked by eye.
+    - **Runtime plumbing**: `FloodRenderer` gained `EnsureConnectivityTexture`, a
+      second baked lookup texture (same resolution/uv convention as the existing
+      terrain-height texture) alongside three new shader uniforms (`_ConnectTex`,
+      `_ConnectMin`, `_ConnectRange`); `Water.shader`'s fragment now clips on
+      `min(depth, connected)` instead of `depth` alone — connectivity is provably
+      always the tighter gate (a connect level is, by construction, `max(terrain,
+      defence-crest)` along some path, so it can never be below the cell's own
+      ground), kept as a second explicit `clip()` term rather than folded together
+      for defence-in-depth against any float/format mismatch between the two
+      independently-baked textures. `FloodImpact`'s submerged-area sweep and
+      per-building check now read `FloodConnectivityField.ConnectLevelAt`/
+      `SampleConnectLevel` instead of raw terrain elevation, so the readout and the
+      rendered water can never disagree. `WeatherSnapshot` gained `Flood`
+      (`FloodConnectivityField`) alongside `Terrain`/`Weather`/`Buildings`, loaded by
+      a new `WeatherDataService.LoadFlood` following the exact same
+      baked-then-procedural pattern as every other layer — the procedural fallback
+      (`FloodConnectivityField.Procedural`) is the old bathtub verbatim (connect
+      level = terrain elevation), so a network-down demo degrades to exactly the
+      prior behaviour rather than to nothing.
+    - **New bake step, `tools/fetch_forecast.py`**: a real 5-day hourly forecast from
+      Open-Meteo (same key-less endpoint `fetch_weather.py` already uses, requested
+      with `timezone=Europe/London` so calendar days line up with local wall-clock
+      hours) — WMO weathercode mapped to `WeatherSceneKind`
+      (`WEATHERCODE_TO_KIND`), collapsed to the same start-hour/kind segment shape
+      the carousel's timeline already uses. Each day also gets a **storm-likelihood
+      score** (`storm_score`: literal thunderstorm hours dominate outright, then CAPE
+      and gust speed, precipitation weighted lightly on its own) purely to *rank the
+      five real days against each other* — `peakStormDayIndex` names the day the
+      flood simulator's storm-surge controls key off. This is the direct answer to
+      "point the flood demo at whichever real day is most likely to storm": the
+      first live bake (25–29 Jul 2026) found **zero literal thunderstorm hours in
+      the entire window** — Tuesday 28 Jul (CAPE 360 J/kg, otherwise unremarkable)
+      ranked highest and is the designated day, correctly labelled by its own real
+      condition (`PartlyCloudy`), not forced to say "storm" it isn't having.
+    - **Runtime plumbing**: new `ForecastDataset`/`ForecastDay` (`Data/ForecastDataset.cs`,
+      flat parallel arrays for the timeline, same reason `BuildingRecord` flattens its
+      footprint — `JsonUtility` cannot deserialise a jagged array). `WeatherSnapshot`
+      gained `Forecast`, loaded by `WeatherDataService.LoadForecast` — baked-only, no
+      live-fetch path (a 5-day hourly request is heavier than the tiny live snapshot
+      `LoadWeather` already makes at startup elsewhere in this project), falling back
+      to `null` so the carousel's own fallback below is what actually degrades
+      gracefully. New `ForecastCarouselDataProvider` builds real day cards from it —
+      same shape as `DayTimelineCarouselDataProvider` (headline/icon/accent/tint all
+      still come from the shared `SceneKindCarouselDataProvider.Describe`/
+      `WeatherScene.Default` tables, only the numbers and timeline are real) — and
+      `WeatherCarouselItem` gained `IsPeakStormDay`, since a real forecast usually
+      has no literal Thunderstorm segment at all and `HasKind` alone would leave the
+      storm-surge controls permanently unreachable; `WeatherCarouselFeature`'s gate is
+      now `HasKind(Thunderstorm) || IsPeakStormDay`. `WeatherCarouselDataProvider.
+      CreateDefault()` now returns a new `FallbackCarouselDataProvider` wrapping
+      `ForecastCarouselDataProvider` then `DayTimelineCarouselDataProvider` — real
+      data first, procedural fallback always succeeds, the same policy
+      `WeatherDataService` already applies to every other layer, applied here to the
+      carousel's own data source for the first time.
+    - **Verified, not merely written this time**: every bake step above was actually
+      run against the live APIs (`python tools/fetch_flood.py`, `fetch_forecast.py`,
+      and both through `build_all.py`) and produced the real numbers quoted above,
+      not just designed. All nine touched/added C# files were also compile-checked
+      for real — Unity's own bundled Roslyn (`Data/DotNetSdkRoslyn/csc.dll`, run
+      through its bundled `NetCoreRuntime/dotnet.exe` host, referencing the actual
+      installed Editor's `Managed/UnityEngine/*.dll` plus this project's own
+      `Library/ScriptAssemblies/*.dll`) compiled the full runtime script set clean —
+      zero errors, only pre-existing warnings unrelated to this change — in both the
+      default defines and with `ENABLE_PICO_XR_SDK` added, since the Unity Editor
+      itself was open in another session and could not be closed to run a batch-mode
+      compile. This is a real step up from every prior round's "written to compile,
+      not yet compiled" caveat, but it is still not the same as Unity's own
+      compile — it does not catch anything the Editor's own AssetDatabase/importer
+      pipeline would (a missing `.meta`, a shader compiled by ShaderLab rather than
+      plain Roslyn — `Water.shader`'s new properties/clip were checked by eye only).
+      Scene not rebuilt, not pressed-play — see "Still to do".
+
+- **2026-07-25 (real hardware: no ray, no controls at all)** — first test on an actual
+  PICO headset (not the emulator, not the editor): fully immersive, head tracking
+  worked, but no pointer ray was ever drawn and no card/button press did anything.
+  Investigation found four separate faults, only one of which explains the reported
+  symptom — the other three are real but were masked or hadn't bitten yet.
+    - **The pointer ray has never rendered, on any platform, ever.**
+      `SceneBuilder.ConfigureRayVisual` configures the `LineRenderer` (material,
+      gradient, width) but nothing anywhere ever called `SetPosition` on it, so the
+      baked scene kept Unity's brand-new-component default of `(0,0,0) -> (0,0,1)` in
+      world space — a static line lying on the floor through the origin, not a ray
+      from the hand. `XRPointer` never held a `LineRenderer` reference at all; it only
+      wrote `PoseSource.SetPositionAndRotation`, which moves the anchor transform, not
+      a world-space line's baked points. This alone explains "no ray at all", and made
+      aiming blind, which explains "no button did anything" as a direct consequence —
+      not a separate bug. Fixed with new `Scripts/Interaction/XRPointerVisual.cs`
+      (`[DefaultExecutionOrder(200)]`, idempotent `Ensure(GameObject, XRPointer)`
+      called from both `SceneBuilder.Populate` and a new
+      `WeatherSceneBootstrap.EnsurePointerVisual`, same bake-plus-runtime-repair
+      pattern `HeadTracking.Ensure` already established): hides the line entirely
+      when untracked rather than collapsing it to zero length (a degenerate line with
+      capped vertices still submits a draw call — the same failure in miniature), and
+      terminates the ray at `WeatherCarouselInput`'s own canvas-hit distance (new
+      `RayHitDistance` property, set in `ProcessRay` only when the hit lands inside
+      the panel's rect, reset every frame including on the screen-pointer/gaze
+      branches) rather than a fixed length that would visibly punch through the
+      glass. Also draws a small view-facing reticle (a second `LineRenderer` using
+      `LineAlignment.View` and the ray's own already-always-included `Sprites/Default`
+      material, no new shader) that brightens on-target, and — since
+      `WeatherCarouselInput`'s 1.25 s gaze-dwell fallback had zero visual feedback of
+      its own, indistinguishable from a dead app — shows that same reticle swelling
+      with dwell progress (new `GazeProgress01`/`GazeWorldPoint` on
+      `WeatherCarouselInput`) whenever the controller isn't tracked at all.
+    - **`XRPointer` only ever tried one detection strategy for a controller,** and a
+      real PICO controller reporting characteristics slightly differently than
+      `HeldInHand|Controller|Right/Left` (or its existing no-handedness fallback)
+      would have silently gone untracked forever with no diagnostic anywhere. Widened
+      into six ordered tiers (`XRPointer.PoseTier`, logged once on change): the
+      original two, then a legacy any-non-headset-device search, a generic
+      `UnityEngine.InputSystem.XR.XRController` walk (independent of the legacy
+      `InputDevices` bridge — `activeInputHandler` is already `Both`, so this second
+      bridge is live for free; compiled only under `UNITY_INPUT_SYSTEM_ENABLE_XR` so
+      its absence is a no-op tier, not a compile error), PICO's own native
+      `PXR_Input.GetControllerPredict{Position,Rotation}` pose (latched unavailable on
+      `DllNotFoundException`, mirroring the existing hand-tracking latch, since it is
+      the same arm64-only native library), and the original static-anchor fallback
+      last. Also fixed a real discard bug in the process: the legacy device read
+      computed `selecting`/`secondary` from buttons *before* checking `isTracked`,
+      except the earliest `isTracked`-false return happened before any button was
+      read at all — so a momentary tracking dropout silently ate a genuine trigger or
+      secondary-button press. Reordered so buttons are always read first; only the
+      returned pose validity is gated on tracking. Which of these tiers is actually
+      load-bearing on real PICO hardware is unknown — that is what the diagnostics
+      below are for.
+    - **No Android XR loader is assigned in the committed project.**
+      `Assets/XR/XRGeneralSettingsPerBuildTarget.asset` had Android
+      `m_InitManagerOnStart: 0` and `m_Loaders: []` — git-clean, i.e. this is the
+      state anyone else checks out. Traced to `BuildPhoneTouch.DisableXr`'s output
+      (correct for the phone-touch build) having been committed onto the PICO
+      mainline in an earlier round, with nothing putting the PICO loader back
+      afterwards. This is *not* what caused this test's symptom (the app ran fully
+      immersive, so whatever local build was actually installed had a loader) but it
+      is a live landmine: the PICO SDK's own manifest post-process step
+      (`Packages/com.bytedance.pico.xr/Editor/PXR_BuildProcessor.cs`) skips writing
+      `pvr.app.type=vr` when it finds no loader assigned, so the *next* clean build
+      would launch as a flat 2D panel with no error anywhere. Fixed on three levels:
+      (1) the committed asset restored to the last known-good state (PXR_Loader
+      assigned, `InitManagerOnStart: 1`); (2) new
+      `ProjectConfigurator.EnsureAndroidXrLoader`, called from `Configure()` (which
+      every build entry point calls) — purges any non-PICO loader, assigns PICO, and
+      falls back to adding the loader asset directly by GUID if
+      `XRPackageMetadataStore.AssignLoader` silently no-ops against a cold metadata
+      cache (a real failure mode in batch mode, not hypothetical: the cache is
+      populated by the interactive XR Plug-in Management window, which a batch run
+      never opens); both phone build variants call `Configure()` and then immediately
+      swap the loader to their own choice, so this cannot break them; (3) new
+      `PicoBuildGuard` (`IPreprocessBuildWithReport`, order 2000, after XR
+      Management's own preprocessor has already decided what to bake into the
+      player) throws a `BuildFailedException` if the loader is still missing at that
+      point regardless — belt and braces, since by then it is too late to fix,
+      only to refuse. `BuildPhoneAR.SwitchToPico` (menu item) previously
+      reimplemented this same swap by hand and forgot to re-enable
+      `InitManagerOnStart`; it now just calls the one shared implementation. Also
+      found and removed a second leftover: `WEATHERVR_AR` was still in the Android
+      scripting defines (from a prior phone-AR build). `EnsureAndroidDefines` now
+      strips forbidden symbols as well as adding required ones, and `Configure()`
+      deliberately throws when it does — removing a define forces a recompile the
+      same editor invocation cannot see (the same hazard
+      `BuildPhoneAR.EnableArDefineFromCommandLine` already documented for adding one)
+      — so a new `BuildAPK.PrepareFromCommandLine` batch entry point exists to run
+      that correction in its own invocation before the real build.
+    - **`XrBootDiagnostics`** (new, `Scripts/Core/`) logs one block tagged `XRBOOT`
+      8 frames after scene load: active loader, `XRSettings.isDeviceActive`,
+      tracking-origin mode, an on-screen banner plus `Debug.LogError` if no loader
+      ever activated on a mobile build, and — the part this investigation actually
+      needed and didn't have — the complete unfiltered `InputDevices.GetDevices()`
+      dump (name, full characteristics mask, tracked, has-position, has-rotation) for
+      every device the runtime reports. This is what should decide which of the
+      pose-detection tiers above are load-bearing on the actual hardware, rather than
+      guessing from documentation.
+    - **`PXR_ProjectSetting.stageMode` was `0`** (eye-level-relative poses) while
+      `SceneBuilder.Populate`'s `CameraOffset` math has a comment asserting the
+      opposite and zeros the offset on that basis. The map's own placement is masked
+      by `ComfortFollow` being head-relative regardless, but
+      `EnvironmentController`'s glass floor is not — it sits at world Y=0 under the
+      assumption that means "the floor", which with an eye-level origin means
+      "through the user's head". Fixed both halves, since neither alone is
+      sufficient: `stageMode` set to `1`, *and* `HeadTracking.Ensure` (now taking an
+      optional `cameraOffset` parameter) probes the actual `XRInputSubsystem` tracking
+      origin mode at runtime, tries to force `Floor`, and if it still reports
+      `Device`, lifts the camera offset by a 1.6 m standing eye height instead — so
+      world Y keeps meaning "metres above the floor" either way, rather than trusting
+      a comment to stay in sync with a project setting a second time.
+    - **Head-follow, requested this round, restored via the existing machinery.**
+      `ComfortFollow` was never deleted (`309b9c2` only stopped attaching it to the
+      map root and had `WeatherSceneBootstrap.WorldLockMap` actively destroy any
+      found on it) — CLAUDE.md's own prior entries describing head-follow as shipped
+      were stale. Re-attached in `SceneBuilder.Populate`, and
+      `WeatherSceneBootstrap.WorldLockMap` replaced with its exact inverse,
+      `EnsureMapFollow` (idempotent: adds one if missing, backfills `Head`/`Pointer`
+      if unset, warns to rebuild the scene). Discovered in the process that the
+      carousel already mounts in **map-local** space
+      (`WeatherCarouselFeature`'s `follower.Anchor = sceneController.MapRoot`), so
+      making the map follow the head makes the carousel follow for free — zero
+      changes needed to `WeatherCarouselFollower` itself. Two things this round got
+      right that `309b9c2`'s original values would have gotten wrong: (1) the
+      carousel panel sits `WallHalfExtent(0.68) × MapSizeMeters(2.0) = 1.36 m` toward
+      the user from the map centre, so restoring the deleted component's original
+      `Distance = 0.95f` would put the panel *behind* the user's head — used `2.45f` /
+      `-0.55f` instead, the values `WeatherSceneBootstrap`'s one-shot placement had
+      already been using and which are the framing actually tested; (2) a continuous
+      head-relative follow at that 2.45 m lever arm would slide the entire world
+      sideways by roughly a metre for every 25° glance, which is not "the table comes
+      with me", it's vection — so `ComfortFollow` gained `YawDeadzoneDegrees`/
+      `PositionDeadzone` fields (both defaulting to `0`, bit-identical to the old
+      always-recompute behaviour for every other consumer, including the carousel's
+      own head-relative fallback branch) and the map's instance sets a 25° yaw
+      deadzone: it holds its anchor until the user turns meaningfully, then re-targets
+      and eases there, rather than tracking every frame. `DesktopPreview` changed from
+      disabling `ComfortFollow` to destroying it outright, and reordered *before* the
+      flat-preview's own position reset — `Destroy()` only takes effect at the end of
+      the frame, so leaving the reset first would have let one more `LateUpdate` run
+      and silently overwrite it.
+  All of the above is written to compile against the existing APIs — the file-level
+  reasoning (namespace-qualifying every new Input System / XR Management type instead
+  of adding `using` directives, since `UnityEngine.XR.CommonUsages` and
+  `UnityEngine.InputSystem.CommonUsages` are two different types with the same short
+  name and the file already has the former in scope unqualified) was checked by hand
+  against the installed package sources in `Library/PackageCache`, not run through
+  Unity's own compiler — no Unity Editor session was available this round. **Not yet
+  compiled, scene not rebuilt, not pressed-play, and none of it has touched real
+  hardware yet** — see "Still to do".
+
 ## Still to do
 
 - [ ] **Re-run `Tools ▸ WeatherVR ▸ Build Scene`** and **Press Play** to
@@ -986,17 +1326,27 @@ it.
 - [ ] Re-check the cloud/rain/lightning `Apply` cost on a card tap (it rebuilds the
       density `Texture3D`). Fine as an occasional switch; if a rapid card-swipe
       stutters, debounce `ApplyKind` behind the carousel's settle.
-- [ ] **Flood layer (2026-07-25):** run `Tools ▸ WeatherVR ▸ Add Shaders to Always-Included`
-      (registers `WeatherVR/Water`), then `Tools ▸ WeatherVR ▸ Build Scene`, then Press Play.
-      Confirm: (1) no compiler/shader errors; (2) the four surge buttons are invisible/inert on
-      every card except Thunderstorm, and appear in the header's free gap (next to the location
-      text, left of the source pill) only when Thunderstorm is selected; (3) pressing one with
-      the controller ray actually raises water this time — this is the specific thing that
-      failed last round; (4) +0 shows no water, +2/+5/+10 raise a translucent surface with the
-      ~43.7 m peak and taller buildings visibly poking through, low ground submerging first;
-      (5) switching away from Thunderstorm hides the buttons and drops the water; (6) on device,
-      water renders to **both eyes** (the new stereo macros are this repo's first use of them,
-      unverified) and the 72 FPS budget still holds.
+- [ ] **Flood layer, reachability + realism fix (2026-07-25):** the shader is already
+      registered in `GraphicsSettings.asset` (confirmed by reading the asset directly),
+      so only `Tools ▸ WeatherVR ▸ Build Scene` (not required — WeatherSceneBootstrap
+      self-installs `WaterSurface` idempotently) and Press Play remain. Confirm: (1) no
+      compiler/shader errors; (2) selecting the Thunderstorm day (Monday, day index 2)
+      shows the `STORM SURGE 风暴潮` label and all four preset buttons **immediately**,
+      at any hour of that day — not only inside its 12:00–17:00 Thunderstorm window,
+      which is the bug this round fixed (buttons were gated on the resolved hour's
+      kind, so the user's own test landed at 09:30/Rain and saw nothing); (3) pressing
+      a preset raises water smoothly over ~2.5 s instead of popping in; (4) the
+      waterline follows real terrain — valleys flood, ridges stay dry, a foam band
+      sits at the true shoreline, shallow water reads pale, deep water dark — instead
+      of a flat translucent rectangle; (5) the readout below the pagination dots
+      tracks each press (e.g. `+5m · 23% FLOODED 淹没 · 412/1860 BUILDINGS 建筑`) and
+      both numbers rise monotonically with the level; (6) scrubbing the clock across
+      12:00/17:00 within the storm day changes the weather but leaves the buttons
+      visible and any raised water in place; (7) selecting a different day hides the
+      row, animates the water back down, and returns it to +0m; (8) on device, water
+      renders to **both eyes** (the stereo macros were unverified until now) and frame
+      time holds near 72 FPS with `+10m` raised during Thunderstorm — the densest
+      frame the app can produce.
 - [ ] **Pedestal + scenery redesign (2026-07-25):** run
       `Tools ▸ WeatherVR ▸ Add Shaders to Always-Included`, then
       `Tools ▸ WeatherVR ▸ Build Scene`, then Press Play. Confirm: (1) no
@@ -1043,8 +1393,67 @@ it.
       cheap/expensive split in `WeatherSceneDirector` is not holding; (5) 03:00 is
       night with a dim blue sky and a moonlit floor, 06:00/18:00 warm and low,
       12:00 full daylight, and the sun visibly tracks east→west across the drag;
-      (6) selecting the storm day and scrubbing into its 12:00–17:00 Thunderstorm
-      window makes the flood buttons appear, and scrubbing out hides them and drops
-      the water; (7) all 9 cases are reachable across the five days
+      (6) selecting the storm day shows the flood buttons at every hour of that day
+      (not only inside its 12:00–17:00 Thunderstorm window — see the flood-layer
+      entry below, which corrects this item), and selecting a different day hides
+      them and drops the water; (7) all 9 cases are reachable across the five days
       (Fog/Clear/PartlyCloudy day 1, Cloudy/Overcast/Drizzle/Rain day 2,
       Thunderstorm day 3, Snow day 5).
+- [ ] **Real hydraulic connectivity + real forecast (2026-07-25):** re-run
+      `python tools/build_all.py` (or at minimum `fetch_terrain.py` then `fetch_flood.py`
+      then `fetch_forecast.py`) to refresh the baked payload, then in Unity: no scene
+      rebuild is required (`WaterSurface`/the carousel are both runtime self-installing),
+      but this has not been through Play mode at all this round — everything below is
+      unconfirmed beyond the standalone Roslyn compile-check. Confirm: (1) no console
+      errors on load, especially `[WeatherVR] flood.bin unusable` / `forecast.json
+      unusable` (either would mean a silent fall back to the old bathtub / authored week
+      rather than a crash, but should not fire against a fresh bake); (2) the carousel
+      shows five real day cards with real temperatures/wind/humidity/rain-chance
+      (compare against the numbers `fetch_forecast.py` printed at bake time) instead of
+      the authored TODAY/TOMORROW/... week; (3) the storm-surge controls appear on
+      whichever day the bake printed as "highest storm likelihood" (Tuesday 28 Jul in
+      the first live bake — re-check, since a forecast this many days out will have
+      changed by the time this is tested) at every hour of that day, even though its
+      condition may read as something ordinary like "Partly Cloudy" rather than a
+      literal storm — that mismatch is intentional (see the progress-log entry) but is
+      worth a second look in case it reads as confusing rather than honest in practice;
+      (4) the shoreline now visibly respects real defences — at low surge presets water
+      should stay behind the Thames frontage rather than filling every low-lying hollow
+      in the tile the way the old bathtub did, most visible at `+2m`; (5) the impact
+      readout's numbers still rise monotonically with the surge level; (6) with
+      `flood.bin` deliberately deleted or renamed, the app still runs and the flood
+      layer falls back to the old flat-bathtub behaviour rather than showing nothing or
+      erroring; same check with `forecast.json` deleted, falling back to the authored
+      week. Not yet checked: whether the `STORM SURGE 风暴潮` title reads oddly on a day
+      whose real condition has nothing to do with storms — a small follow-up would be a
+      second label (e.g. "PEAK STORM LIKELIHOOD") shown only when `IsPeakStormDay` is
+      true but the resolved hour's kind isn't literally Thunderstorm; deliberately not
+      built this round to avoid a second UI change on top of an already large one.
+- [ ] **Real-hardware controls fix (2026-07-25):** `Tools ▸ WeatherVR ▸ Configure Player
+      Settings` first (expect log lines for the loader assignment; a second run should
+      report nothing changed), then `Tools ▸ WeatherVR ▸ Build Scene`, then
+      `Tools ▸ WeatherVR ▸ Build APK`, install, and check **on the real PICO headset
+      this time, not the emulator** — none of this round's fixes touch anything the
+      emulator can exercise (no controllers, no PXR native library, no real stage-mode
+      behaviour). In order:
+      (1) `adb logcat -c && adb shell monkey -p com.weathervr.immersive -c
+      android.intent.category.LAUNCHER 1 && adb logcat -v time -s Unity`, grep
+      `XRBOOT` — must show `activeLoader=ByteDance.PICO.XR.PXR_Loader` and
+      `deviceActive=True` before looking at anything else;
+      (2) read the `XRBOOT devices=` dump and note which `chars=` mask and which
+      `XRPointer` pose tier actually won (logged separately as
+      `XRPointer (RightController) pose source: ...`) — this is the evidence the six
+      detection tiers were guessing at;
+      (3) the ray is visible, tracks the controller, disappears when it's set down,
+      and terminates at the carousel glass rather than through it or short of it;
+      (4) every card, both nav arrows, all four flood-surge presets, and a *drag* of
+      the time slider all respond to the trigger;
+      (5) the table and carousel move together, hold still on a glance, come along
+      when you walk, and the secondary/menu button re-centres them — watch
+      specifically for the carousel's wall-selection hysteresis hopping between walls
+      while the map eases into a new position;
+      (6) the glass floor sits at the actual floor, not through your head, across a
+      cold launch, a recenter, and (if testable) a room change;
+      (7) frame time near 72 FPS with the two new `LineRenderer`s (ray + reticle) and
+      a `+10m` flood surge raised during Thunderstorm. If the loader or defines needed
+      correcting, `Configure()` throws by design — re-run once more after that.

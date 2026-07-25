@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.XR.Management;
+using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -21,6 +23,21 @@ namespace WeatherVR.EditorTools
     {
         public const string PicoDefine = "ENABLE_PICO_XR_SDK";
         public const string SpatializerDefine = "PICO_SPATIALIZER";
+
+        /// <summary>
+        /// The only Android XR loader the headset build should ever carry. Shared with
+        /// <see cref="BuildPhoneAR"/>/<see cref="BuildPhoneTouch"/>, which deliberately
+        /// swap it out for their own variant and back again.
+        /// </summary>
+        public const string PicoLoaderTypeName = "ByteDance.PICO.XR.PXR_Loader";
+        static readonly string PicoLoaderGuid = "4d777b5b4090b414d98a02b43502d09c";
+
+        /// <summary>
+        /// Defines that must never reach an Android build of the headset app. Unlike
+        /// <see cref="EnsureAndroidDefines"/>, which only ever adds symbols, this list is
+        /// actively stripped.
+        /// </summary>
+        static readonly string[] ForbiddenAndroidDefines = { "WEATHERVR_AR" };
 
         const string DefaultBundleId = "com.weathervr.immersive";
         const string DefaultProductName = "Immersive Weather";
@@ -46,19 +63,35 @@ namespace WeatherVR.EditorTools
         {
             var changes = new List<string>();
 
-            EnsureAndroidDefines(changes);
+            EnsureAndroidDefines(changes, out bool removedForbiddenDefine);
+            EnsureAndroidXrLoader(changes);
             EnsureIdentity(changes);
             EnsureAndroidPlayerSettings(changes);
             EnsureGraphics(changes);
 
             AssetDatabase.SaveAssets();
             foreach (string change in changes) Debug.Log($"[WeatherVR] {change}");
+
+            if (removedForbiddenDefine)
+            {
+                // Removing a scripting define forces a script recompile that this very
+                // invocation cannot see -- BuildPhoneAR.EnableArDefineFromCommandLine
+                // documents the same hazard for adding one. Configure() runs immediately
+                // before BuildPipeline.BuildPlayer in every build entry point, squarely
+                // inside that window, so abort rather than silently build against stale
+                // compiled code.
+                throw new UnityEditor.Build.BuildFailedException(
+                    "[WeatherVR] Android scripting defines were wrong and have been " +
+                    "corrected (see the log above). Re-run the build/configure step so " +
+                    "the recompile actually happens.");
+            }
+
             return changes;
         }
 
         // --------------------------------------------------------------- defines
 
-        static void EnsureAndroidDefines(List<string> changes)
+        static void EnsureAndroidDefines(List<string> changes, out bool removedForbiddenDefine)
         {
             var target = NamedBuildTarget.Android;
             string existing = PlayerSettings.GetScriptingDefineSymbols(target);
@@ -68,17 +101,115 @@ namespace WeatherVR.EditorTools
                 .Where(s => s.Length > 0)
                 .ToList();
 
-            bool added = false;
+            bool changed = false;
             foreach (string required in new[] { PicoDefine, SpatializerDefine })
             {
                 if (symbols.Contains(required)) continue;
                 symbols.Add(required);
-                added = true;
+                changed = true;
                 changes.Add($"Added {required} to the Android scripting defines — " +
                             "without it the entire PICO SDK compiles out of the APK.");
             }
 
-            if (added) PlayerSettings.SetScriptingDefineSymbols(target, string.Join(";", symbols));
+            removedForbiddenDefine = false;
+            foreach (string forbidden in ForbiddenAndroidDefines)
+            {
+                if (!symbols.Remove(forbidden)) continue;
+                changed = true;
+                removedForbiddenDefine = true;
+                changes.Add($"Removed {forbidden} from the Android scripting defines — " +
+                            "leftover from the phone AR build; it drags AR/ARCore code " +
+                            "paths into the headset APK.");
+            }
+
+            if (changed) PlayerSettings.SetScriptingDefineSymbols(target, string.Join(";", symbols));
+        }
+
+        // ------------------------------------------------------------ xr loader
+
+        /// <summary>
+        /// Makes the PICO loader the only Android XR loader, and turns the XR manager
+        /// on. Both phone build variants (<see cref="BuildPhoneAR"/>,
+        /// <see cref="BuildPhoneTouch"/>) call <see cref="Configure"/> and then
+        /// immediately swap the loader to their own choice, so asserting PICO here
+        /// cannot break them.
+        ///
+        /// This exists because of a real regression: an empty Android loader list
+        /// with the XR manager disabled was committed onto the PICO mainline (see
+        /// CLAUDE.md's progress log). With no loader assigned, the PICO SDK's own
+        /// manifest post-process step never writes <c>pvr.app.type=vr</c>
+        /// (<c>Packages/com.bytedance.pico.xr/Editor/PXR_BuildProcessor.cs</c>), so
+        /// PICO OS launches the APK as a flat 2D panel instead of an immersive app —
+        /// no stereo, no head tracking, no controllers, and no build error anywhere
+        /// to say so.
+        /// </summary>
+        public static void EnsureAndroidXrLoader(List<string> changes)
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[WeatherVR] Skipped the Android XR loader check while in Play mode.");
+                return;
+            }
+
+            var settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android);
+            if (settings?.Manager == null)
+            {
+                Debug.LogError("[WeatherVR] No XR General Settings found for Android; " +
+                                "cannot assert the PICO loader.");
+                return;
+            }
+
+            var manager = settings.Manager;
+
+            // Purge anything that is not PICO. Snapshot first: activeLoaders is the live
+            // backing list and RemoveLoader mutates it, so enumerating it directly throws.
+            foreach (var loader in manager.activeLoaders.ToArray())
+            {
+                string typeName = loader.GetType().FullName;
+                if (typeName == PicoLoaderTypeName) continue;
+
+                XRPackageMetadataStore.RemoveLoader(manager, typeName, BuildTargetGroup.Android);
+                changes.Add($"Removed the {typeName} XR loader from Android — PICO must be the only one.");
+            }
+
+            if (!XRPackageMetadataStore.IsLoaderAssigned(PicoLoaderTypeName, BuildTargetGroup.Android))
+            {
+                XRPackageMetadataStore.AssignLoader(manager, PicoLoaderTypeName, BuildTargetGroup.Android);
+
+                if (XRPackageMetadataStore.IsLoaderAssigned(PicoLoaderTypeName, BuildTargetGroup.Android))
+                {
+                    changes.Add("Assigned the PICO XR loader for Android.");
+                }
+                else
+                {
+                    // AssignLoader rebuilds its ordered list from a metadata cache that
+                    // can come back empty on a cold batch-mode run (nothing has ever
+                    // opened the interactive XR Plug-in Management window to populate
+                    // it) -- in which case it silently "succeeds" having assigned
+                    // nothing. Fall back to adding the known loader asset directly.
+                    var path = AssetDatabase.GUIDToAssetPath(PicoLoaderGuid);
+                    var loader = AssetDatabase.LoadAssetAtPath<UnityEngine.XR.Management.XRLoader>(path);
+                    if (loader == null || !manager.TryAddLoader(loader))
+                    {
+                        Debug.LogError("[WeatherVR] Could not assign the PICO XR loader for " +
+                                       "Android. The headset build will launch as a flat 2D panel.");
+                    }
+                    else
+                    {
+                        EditorUtility.SetDirty(manager);
+                        changes.Add("Assigned the PICO XR loader for Android by direct asset " +
+                                    "reference (the XR loader metadata cache was empty).");
+                    }
+                }
+            }
+
+            if (!settings.InitManagerOnStart)
+            {
+                settings.InitManagerOnStart = true;
+                changes.Add("Enabled \"Initialize XR on Startup\" for Android.");
+            }
+
+            EditorUtility.SetDirty(settings);
         }
 
         // -------------------------------------------------------------- identity

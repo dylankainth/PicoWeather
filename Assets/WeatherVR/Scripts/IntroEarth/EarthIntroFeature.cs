@@ -282,12 +282,16 @@ namespace WeatherVR.IntroEarth
                 _mapRoot.gameObject.SetActive(true);
 
                 // DesktopPreview could not see a follow component while the map was
-                // hidden. Match its normal behaviour when testing without a headset.
+                // hidden (FindObjectsOfType skips inactive objects). Match its normal
+                // behaviour when testing without a headset -- destroy, not disable,
+                // for the same reason DesktopPreview itself does: a merely-disabled
+                // component is inconsistent with the convention that "no follow on
+                // desktop" means the component is gone, not just switched off.
                 if (!Application.isMobilePlatform)
                 {
                     var follow = _mapRoot.GetComponent<ComfortFollow>();
                     if (follow != null)
-                        follow.enabled = false;
+                        Destroy(follow);
                 }
             }
 

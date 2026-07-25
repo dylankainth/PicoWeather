@@ -48,6 +48,29 @@ namespace WeatherVR.Interaction
         [Tooltip("Pinch strength above which a hand counts as selecting.")]
         [Range(0.1f, 1f)] public float PinchThreshold = 0.7f;
 
+        [Tooltip("When only one controller is present (the common case), accept its " +
+                 "trigger for select regardless of handedness rather than reporting " +
+                 "untracked. Also widens the fallback device searches below to a " +
+                 "device with no resolvable handedness at all.")]
+        public bool AcceptEitherHandInput = true;
+
+        /// <summary>Which strategy most recently produced a controller pose. Logged
+        /// (once, on change) by <c>XrBootDiagnostics</c> and readable at runtime --
+        /// knowing which tier actually won on real hardware is what turns "guessed"
+        /// detection breadth into verified detection breadth.</summary>
+        public enum PoseTier
+        {
+            None,
+            Legacy,
+            LegacyLoose,
+            LegacyAny,
+            InputSystem,
+            Native,
+            PoseSource
+        }
+
+        public PoseTier Tier { get; private set; } = PoseTier.None;
+
         static readonly List<InputDevice> DeviceBuffer = new List<InputDevice>();
 
         /// <summary>Origin of the pointing ray, in world space.</summary>
@@ -112,7 +135,39 @@ namespace WeatherVR.Interaction
 
         // -------------------------------------------------------- controllers
 
+        /// <summary>
+        /// Tries each detection strategy in order, first pose wins. The tiers below
+        /// were widened after a real-hardware test came back with no ray and no
+        /// button presses at all -- <c>XrBootDiagnostics</c>'s unfiltered
+        /// <c>InputDevices.GetDevices</c> dump is what should decide which of these
+        /// tiers is actually load-bearing on the device in hand; the rest are cheap
+        /// insurance against a controller reporting characteristics slightly
+        /// differently than expected.
+        /// </summary>
         bool TryReadController(ref bool selecting, ref bool secondary)
+        {
+            bool ok =
+                TryReadLegacy(ref selecting, ref secondary, out PoseTier tier) ||
+                TryReadLegacyAny(ref selecting, ref secondary, out tier) ||
+                TryReadInputSystemController(ref selecting, ref secondary, out tier) ||
+                TryReadNativeController(ref selecting, ref secondary, out tier) ||
+                TryReadPoseSourceFallback(ref selecting, ref secondary, out tier);
+
+            PoseTier resolved = ok ? tier : PoseTier.None;
+            if (resolved != Tier)
+            {
+                Tier = resolved;
+                Debug.Log($"[WeatherVR] XRPointer ({Hand}) pose source: {Tier}.");
+            }
+
+            return ok;
+        }
+
+        /// <summary>Tiers 1/2, unchanged from the original implementation: a device
+        /// matching HeldInHand|Controller|Right-or-Left, falling back (when
+        /// <see cref="AcceptEitherHandInput"/>) to HeldInHand|Controller with no
+        /// handedness bit at all. Most PICO controllers are found here.</summary>
+        bool TryReadLegacy(ref bool selecting, ref bool secondary, out PoseTier tier)
         {
             var characteristics = InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
             characteristics |= Hand == Source.RightController
@@ -121,40 +176,97 @@ namespace WeatherVR.Interaction
 
             DeviceBuffer.Clear();
             InputDevices.GetDevicesWithCharacteristics(characteristics, DeviceBuffer);
-            if (DeviceBuffer.Count == 0)
+            if (DeviceBuffer.Count > 0)
             {
-                // Accept whichever controller the PICO input mode currently exposes.
+                tier = PoseTier.Legacy;
+                return TryReadLegacyDevice(DeviceBuffer[0], ref selecting, ref secondary);
+            }
+
+            if (AcceptEitherHandInput)
+            {
                 var eitherController =
-                    InputDeviceCharacteristics.HeldInHand |
-                    InputDeviceCharacteristics.Controller;
+                    InputDeviceCharacteristics.HeldInHand | InputDeviceCharacteristics.Controller;
                 InputDevices.GetDevicesWithCharacteristics(eitherController, DeviceBuffer);
+                if (DeviceBuffer.Count > 0)
+                {
+                    tier = PoseTier.LegacyLoose;
+                    return TryReadLegacyDevice(DeviceBuffer[0], ref selecting, ref secondary);
+                }
             }
 
-            if (DeviceBuffer.Count == 0)
+            tier = PoseTier.None;
+            return false;
+        }
+
+        /// <summary>Tier 3: any non-headset legacy device that resolves a position and
+        /// rotation, even with no HeldInHand/Controller characteristic bit set --
+        /// covers a controller the runtime reports under an unexpected characteristics
+        /// mask, or none at all.</summary>
+        bool TryReadLegacyAny(ref bool selecting, ref bool secondary, out PoseTier tier)
+        {
+            tier = PoseTier.None;
+
+            DeviceBuffer.Clear();
+            InputDevices.GetDevices(DeviceBuffer);
+
+            InputDevice best = default;
+            bool haveBest = false;
+            bool bestMatchesHand = false;
+
+            foreach (var device in DeviceBuffer)
             {
-                // The scene anchor is a static visual fallback, not a tracked pose.
-                // Treating it as tracked on Android produced a fixed ray and prevented
-                // gaze fallback from ever activating.
-#if UNITY_EDITOR || UNITY_STANDALONE
-                return ApplyPoseSource();
-#else
-                return false;
-#endif
+                if ((device.characteristics & InputDeviceCharacteristics.HeadMounted) != 0)
+                    continue;
+                if (!device.TryGetFeatureValue(CommonUsages.devicePosition, out _) ||
+                    !device.TryGetFeatureValue(CommonUsages.deviceRotation, out _))
+                    continue;
+
+                bool matchesHand =
+                    (Hand == Source.RightController &&
+                     (device.characteristics & InputDeviceCharacteristics.Right) != 0) ||
+                    (Hand == Source.LeftController &&
+                     (device.characteristics & InputDeviceCharacteristics.Left) != 0) ||
+                    NameMatchesHand(device.name);
+
+                if (!matchesHand && !AcceptEitherHandInput) continue;
+
+                if (!haveBest || (matchesHand && !bestMatchesHand))
+                {
+                    best = device;
+                    haveBest = true;
+                    bestMatchesHand = matchesHand;
+                }
             }
 
-            var device = DeviceBuffer[0];
-            if (device.TryGetFeatureValue(CommonUsages.isTracked, out bool deviceTracked) &&
-                !deviceTracked)
-                return false;
+            if (!haveBest) return false;
 
-            bool trigger = false;
-            device.TryGetFeatureValue(CommonUsages.triggerButton, out trigger);
+            tier = PoseTier.LegacyAny;
+            return TryReadLegacyDevice(best, ref selecting, ref secondary);
+        }
+
+        bool NameMatchesHand(string deviceName)
+        {
+            if (string.IsNullOrEmpty(deviceName)) return false;
+            return Hand == Source.RightController
+                ? deviceName.IndexOf("Right", System.StringComparison.OrdinalIgnoreCase) >= 0
+                : deviceName.IndexOf("Left", System.StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>
+        /// Shared button + pose read for a legacy <see cref="InputDevice"/>. Buttons
+        /// are read into the caller's ref params *before* the pose/tracked check, so a
+        /// momentary tracking dropout -- isTracked reporting false for one frame --
+        /// cannot also discard a genuine trigger or secondary press. Only the return
+        /// value (pose obtained or not) is gated on tracking.
+        /// </summary>
+        bool TryReadLegacyDevice(InputDevice device, ref bool selecting, ref bool secondary)
+        {
+            device.TryGetFeatureValue(CommonUsages.triggerButton, out bool trigger);
             device.TryGetFeatureValue(CommonUsages.trigger, out float triggerAxis);
             device.TryGetFeatureValue(CommonUsages.primaryButton, out bool primaryButton);
             selecting = trigger || triggerAxis > 0.55f || primaryButton;
 
-            bool grip = false;
-            if (!device.TryGetFeatureValue(CommonUsages.gripButton, out grip))
+            if (!device.TryGetFeatureValue(CommonUsages.gripButton, out bool grip))
             {
                 if (device.TryGetFeatureValue(CommonUsages.grip, out float gripAxis))
                     grip = gripAxis > 0.6f;
@@ -162,12 +274,186 @@ namespace WeatherVR.Interaction
             device.TryGetFeatureValue(CommonUsages.secondaryButton, out bool secondaryButton);
             secondary = grip || secondaryButton;
 
+            if (device.TryGetFeatureValue(CommonUsages.isTracked, out bool deviceTracked) &&
+                !deviceTracked)
+                return false;
+
             bool haveRotation = device.TryGetFeatureValue(CommonUsages.deviceRotation, out Quaternion rotation);
             bool havePosition = device.TryGetFeatureValue(CommonUsages.devicePosition, out Vector3 position);
             if (!haveRotation || !havePosition) return false;
 
-            // Device poses are in tracking-origin space, so they have to be pushed
-            // through the rig transform to land in world space.
+            ApplyPose(position, rotation);
+            return true;
+        }
+
+        /// <summary>
+        /// Tier 4: walks the new Input System's own device list for a generic XR
+        /// controller, independent of the legacy <see cref="UnityEngine.XR.InputDevices"/>
+        /// bridge above. ProjectSettings has <c>activeInputHandler: Both</c>, so this
+        /// second bridge is live for free; it is the tier most likely to catch a
+        /// controller the legacy bridge cannot see for whatever reason, since PICO's
+        /// own SDK registers a matching device layout
+        /// (<c>Packages/com.bytedance.pico.xr/Runtime/InputSystem/DeviceLayouts.cs</c>)
+        /// independently of the legacy bridge working at all.
+        ///
+        /// Compiled only when the Input System package itself compiles XR device
+        /// support (<c>UNITY_INPUT_SYSTEM_ENABLE_XR</c>); when it does not, this tier
+        /// is simply unavailable rather than a compile error.
+        /// </summary>
+        bool TryReadInputSystemController(ref bool selecting, ref bool secondary, out PoseTier tier)
+        {
+            tier = PoseTier.None;
+#if UNITY_INPUT_SYSTEM_ENABLE_XR
+            var wantedUsage = Hand == Source.RightController
+                ? UnityEngine.InputSystem.CommonUsages.RightHand
+                : UnityEngine.InputSystem.CommonUsages.LeftHand;
+
+            UnityEngine.InputSystem.XR.XRController best = null;
+            bool bestMatchesHand = false;
+
+            foreach (var device in UnityEngine.InputSystem.InputSystem.devices)
+            {
+                if (device is not UnityEngine.InputSystem.XR.XRController controller) continue;
+
+                bool matchesHand = false;
+                foreach (var usage in controller.usages)
+                {
+                    if (usage == wantedUsage) { matchesHand = true; break; }
+                }
+                if (!matchesHand && !AcceptEitherHandInput) continue;
+
+                if (best == null || (matchesHand && !bestMatchesHand))
+                {
+                    best = controller;
+                    bestMatchesHand = matchesHand;
+                }
+            }
+
+            if (best == null) return false;
+
+            try
+            {
+                var posControl = best.TryGetChildControl<UnityEngine.InputSystem.Controls.Vector3Control>("devicePosition");
+                var rotControl = best.TryGetChildControl<UnityEngine.InputSystem.Controls.QuaternionControl>("deviceRotation");
+                if (posControl == null || rotControl == null) return false;
+
+                var triggerAxis = best.TryGetChildControl<UnityEngine.InputSystem.Controls.AxisControl>("trigger");
+                var triggerPressed = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("triggerPressed");
+                var primaryButton = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("primaryButton");
+                var gripAxis = best.TryGetChildControl<UnityEngine.InputSystem.Controls.AxisControl>("grip");
+                var gripPressed = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("gripPressed");
+                var secondaryButton = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("secondaryButton");
+                // Unread anywhere else in the app, and a natural PICO 4 recenter gesture.
+                var menuButton = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("menu");
+                var trackedControl = best.TryGetChildControl<UnityEngine.InputSystem.Controls.ButtonControl>("isTracked");
+
+                selecting = (triggerPressed != null && triggerPressed.isPressed) ||
+                            (triggerAxis != null && triggerAxis.ReadValue() > 0.55f) ||
+                            (primaryButton != null && primaryButton.isPressed);
+
+                secondary = (gripPressed != null && gripPressed.isPressed) ||
+                            (gripAxis != null && gripAxis.ReadValue() > 0.6f) ||
+                            (secondaryButton != null && secondaryButton.isPressed) ||
+                            (menuButton != null && menuButton.isPressed);
+
+                if (trackedControl != null && !trackedControl.isPressed) return false;
+
+                ApplyPose(posControl.ReadValue(), rotControl.ReadValue());
+                tier = PoseTier.InputSystem;
+                return true;
+            }
+            catch (System.InvalidOperationException)
+            {
+                // A control existed under one of these names but with an incompatible
+                // type -- treat as "this tier can't read this device", not a crash.
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>
+        /// Latched once PICO's native controller pose API turns out to be
+        /// unavailable, mirroring <see cref="_handTrackingUnavailable"/> below for the
+        /// same reason: this P/Invoke throws on the x86_64 PICO Emulator exactly like
+        /// hand tracking does, since both live in the same arm64-only native library.
+        /// </summary>
+        static bool _nativeControllerUnavailable;
+
+        /// <summary>
+        /// Tier 5: PICO's own native controller pose API. Pose only -- button state
+        /// comes from tier 4 above, which reads the same controller layout PICO's own
+        /// Input System integration registers independently of this native path.
+        /// </summary>
+        bool TryReadNativeController(ref bool selecting, ref bool secondary, out PoseTier tier)
+        {
+            tier = PoseTier.None;
+#if ENABLE_PICO_XR_SDK && UNITY_ANDROID && !UNITY_EDITOR
+            if (_nativeControllerUnavailable) return false;
+
+            try
+            {
+                var controller = Hand == Source.RightController
+                    ? PXR_Input.Controller.RightController
+                    : PXR_Input.Controller.LeftController;
+
+                if (!PXR_Input.IsControllerConnected(controller)) return false;
+
+                Vector3 position = PXR_Input.GetControllerPredictPosition(controller, 0d);
+                Quaternion rotation = PXR_Input.GetControllerPredictRotation(controller, 0d);
+
+                ApplyPose(position, rotation);
+                tier = PoseTier.Native;
+                return true;
+            }
+            catch (System.Exception e) when (e is System.DllNotFoundException ||
+                                             e is System.EntryPointNotFoundException)
+            {
+                _nativeControllerUnavailable = true;
+                Debug.LogWarning(
+                    "[WeatherVR] PICO native controller pose is unavailable on this " +
+                    $"platform ({e.GetType().Name}); relying on the Input System / " +
+                    "legacy XR bridges for the rest of the session.");
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>Tier 6: the static scene anchor, editor/desktop only. Treating it
+        /// as tracked on Android produced a fixed ray and prevented gaze fallback from
+        /// ever activating -- kept exactly as it was.</summary>
+        bool TryReadPoseSourceFallback(ref bool selecting, ref bool secondary, out PoseTier tier)
+        {
+            tier = PoseTier.None;
+#if UNITY_EDITOR || UNITY_STANDALONE
+            if (!ApplyPoseSource()) return false;
+            tier = PoseTier.PoseSource;
+            return true;
+#else
+            return false;
+#endif
+        }
+
+        bool ApplyPoseSource()
+        {
+            if (PoseSource == null) return false;
+            Origin = PoseSource.position;
+            Direction = PoseSource.forward;
+            return true;
+        }
+
+        /// <summary>
+        /// Applies a raw device-space pose to <see cref="Origin"/>/<see cref="Direction"/>,
+        /// pushing it through <see cref="TrackingOrigin"/> into world space, and syncs
+        /// <see cref="PoseSource"/> so the visible scene ray (see
+        /// <c>XRPointerVisual</c>) tracks the live pose rather than a static scene
+        /// transform.
+        /// </summary>
+        void ApplyPose(Vector3 position, Quaternion rotation)
+        {
             if (TrackingOrigin != null)
             {
                 Origin = TrackingOrigin.TransformPoint(position);
@@ -179,22 +465,10 @@ namespace WeatherVR.Interaction
                 Direction = (rotation * Vector3.forward).normalized;
             }
 
-            // Keep the visible scene ray attached to the live device pose. Previously
-            // PoseSource overrode this data with its static scene transform.
             if (PoseSource != null)
                 PoseSource.SetPositionAndRotation(
                     Origin,
                     Quaternion.LookRotation(Direction, Vector3.up));
-
-            return true;
-        }
-
-        bool ApplyPoseSource()
-        {
-            if (PoseSource == null) return false;
-            Origin = PoseSource.position;
-            Direction = PoseSource.forward;
-            return true;
         }
 
         // ------------------------------------------------------ hand tracking

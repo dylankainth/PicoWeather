@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using WeatherVR.Core;
+using WeatherVR.Flood;
 
 namespace WeatherVR.Data
 {
@@ -15,18 +16,23 @@ namespace WeatherVR.Data
         public Texture2D Satellite;
         public WeatherDataset Weather;
         public BuildingDataset Buildings;
+        public FloodConnectivityField Flood;
+        public ForecastDataset Forecast;
 
         /// <summary>Per-source provenance strings, for the in-app label and the logs.</summary>
         public string TerrainSource = "procedural";
         public string SatelliteSource = "procedural";
         public string WeatherSource = "procedural";
         public string BuildingsSource = "procedural";
+        public string FloodSource = "procedural";
+        public string ForecastSource = "unavailable";
 
         public bool IsComplete => Terrain != null && Weather != null && Weather.IsValid;
 
         public string Describe() =>
             $"terrain: {TerrainSource} · imagery: {SatelliteSource} · " +
-            $"buildings: {BuildingsSource} · weather: {WeatherSource}";
+            $"buildings: {BuildingsSource} · weather: {WeatherSource} · " +
+            $"flood: {FloodSource} · forecast: {ForecastSource}";
     }
 
     /// <summary>
@@ -47,6 +53,8 @@ namespace WeatherVR.Data
         public const string SatelliteFile = "satellite.jpg";
         public const string BuildingsFile = "buildings.json";
         public const string WeatherFile = "weather.json";
+        public const string FloodFile = "flood.bin";
+        public const string ForecastFile = "forecast.json";
 
         /// <summary>Grid resolution requested from the live API.</summary>
         const int LiveGridSize = 8;
@@ -80,6 +88,8 @@ namespace WeatherVR.Data
             yield return LoadSatellite(snapshot);
             yield return LoadBuildings(snapshot, bounds, config);
             yield return LoadWeather(snapshot, bounds, config);
+            yield return LoadFlood(snapshot);
+            yield return LoadForecast(snapshot);
 
             Snapshot = snapshot;
             Debug.Log($"[WeatherVR] Data ready — {snapshot.Describe()}");
@@ -256,6 +266,81 @@ namespace WeatherVR.Data
             snapshot.Weather = ProceduralWeather.Generate(
                 snapshot.Bounds, ProceduralGridSize, config.ProceduralSeed);
             snapshot.WeatherSource = "procedural";
+        }
+
+        // --------------------------------------------------------------- flood
+
+        IEnumerator LoadFlood(WeatherSnapshot snapshot)
+        {
+            var read = new StreamingDataReader.Result();
+            yield return StreamingDataReader.Read(FloodFile, read);
+
+            if (read.Success)
+            {
+                try
+                {
+                    var baked = FloodConnectivityField.FromBytes(read.Bytes);
+                    if (baked.IsValid)
+                    {
+                        snapshot.Flood = baked;
+                        snapshot.FloodSource = "priority-flood connectivity, EA defences (baked)";
+                        yield break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[WeatherVR] {FloodFile} unusable ({e.Message}); using bathtub fallback.");
+                }
+            }
+            else
+            {
+                Debug.Log($"[WeatherVR] No baked flood connectivity ({read.Error}); using bathtub fallback.");
+            }
+
+            // The bathtub fallback needs the terrain heightfield, so this must run
+            // after LoadTerrain has populated snapshot.Terrain.
+            snapshot.Flood = FloodConnectivityField.Procedural(snapshot.Terrain);
+            snapshot.FloodSource = "procedural (bathtub, no connectivity data)";
+        }
+
+        // ------------------------------------------------------------ forecast
+
+        IEnumerator LoadForecast(WeatherSnapshot snapshot)
+        {
+            var read = new StreamingDataReader.Result();
+            yield return StreamingDataReader.Read(ForecastFile, read);
+
+            if (read.Success)
+            {
+                ForecastDataset baked = null;
+                try
+                {
+                    baked = JsonUtility.FromJson<ForecastDataset>(read.Text);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[WeatherVR] {ForecastFile} unusable ({e.Message}).");
+                }
+
+                if (baked != null && baked.IsValid)
+                {
+                    snapshot.Forecast = baked;
+                    snapshot.ForecastSource = $"{baked.source} (baked)";
+                    yield break;
+                }
+            }
+            else
+            {
+                Debug.Log($"[WeatherVR] No baked forecast ({read.Error}); "
+                         + "the carousel will use its authored demo week.");
+            }
+
+            // No live fetch here, unlike LoadWeather's single-instant snapshot: a
+            // 5-day hourly forecast is a heavier request than this app makes at
+            // startup elsewhere. Null means the carousel falls back to its
+            // authored week, which is always available.
+            snapshot.Forecast = null;
+            snapshot.ForecastSource = "unavailable (authored week fallback)";
         }
     }
 }

@@ -64,8 +64,13 @@ namespace WeatherVR.EditorTools
             var rig = new GameObject("XRRig");
             var cameraOffset = new GameObject("CameraOffset");
             cameraOffset.transform.SetParent(rig.transform, false);
-            // Standing-scale content: the PICO runtime reports floor-relative poses,
-            // so the offset stays at zero and the headset supplies the height.
+            // Standing-scale content: the PICO runtime is expected to report
+            // floor-relative poses, so the offset stays at zero and the headset
+            // supplies the height. HeadTracking.Ensure (below) asserts this against
+            // PXR_ProjectSetting.stageMode at runtime and compensates the offset if it
+            // turns out false, rather than trusting this comment to stay true -- see
+            // its own header for why: this exact assumption drifted out of sync with
+            // the project setting once already, silently.
             cameraOffset.transform.localPosition = Vector3.zero;
 
             var cameraObject = new GameObject("MainCamera");
@@ -86,7 +91,7 @@ namespace WeatherVR.EditorTools
             cameraObject.AddComponent<AudioListener>();
 
             // Same implementation the runtime re-asserts, so the two cannot drift.
-            HeadTracking.Ensure(cameraObject);
+            HeadTracking.Ensure(cameraObject, cameraOffset.transform);
 
             // Controller anchors. XRPointer prefers raw device poses, but a transform
             // gives the editor and the XR device simulator something to work with.
@@ -101,12 +106,36 @@ namespace WeatherVR.EditorTools
 
             var rayVisual = rightAnchor.AddComponent<LineRenderer>();
             ConfigureRayVisual(rayVisual);
+            XRPointerVisual.Ensure(rightAnchor, pointer);
 
             var content = BuildWeatherContent(config);
 
-            // The headset exhibit is world-locked and ready immediately. Phone AR
-            // supplies its own tap-to-place controller in ArSceneBuilder.
-            content.MapRoot.position = new Vector3(0f, 0.85f, 1.1f);
+            // The table rides the head instead of being world-locked: it eases in
+            // front of the user, stays world-upright, and the secondary/menu button
+            // re-centres it. WeatherCarouselFeature mounts the carousel on this same
+            // map root's pedestal wall (see WeatherCarouselFollower), so it comes
+            // along for free -- no separate wiring needed.
+            //
+            // Distance/VerticalOffset are NOT the values this component originally
+            // shipped with (0.95 / -0.40): the carousel panel sits
+            // WallHalfExtent(0.68) * MapSizeMeters(2.0) = 1.36 m toward the user from
+            // the map centre, so a 0.95 m follow distance would put the panel *behind*
+            // the user's head. These match what WeatherSceneBootstrap has been using
+            // for its (now-removed) one-shot placement, which is the framing that has
+            // actually been tested.
+            // Added here, in Populate, and nowhere inside BuildWeatherContent itself --
+            // both phone build variants (BuildPhoneTouch.BuildSceneSilent, and
+            // ArSceneBuilder for phone AR) call BuildWeatherContent directly and must
+            // NOT pick up a head-follow map; keep this component's construction out of
+            // that shared method.
+            var mapFollow = content.MapRoot.gameObject.AddComponent<ComfortFollow>();
+            mapFollow.Head = cameraObject.transform;
+            mapFollow.Pointer = pointer;
+            mapFollow.Distance = 2.45f;
+            mapFollow.VerticalOffset = -0.55f;
+            mapFollow.FollowSpeed = 3.0f;
+            mapFollow.FaceHead = true;
+            mapFollow.YawDeadzoneDegrees = 25f;
         }
 
         /// <summary>
@@ -169,10 +198,10 @@ namespace WeatherVR.EditorTools
             var mapRoot = new GameObject("WeatherMap");
             mapRoot.transform.localScale = Vector3.one * config.MapSizeMeters;
 
-            // The map is world-locked: it stands still in the room like a museum
-            // exhibit, and the user physically walks around it. The carousel mounts on
+            // The map follows the head (ComfortFollow is added in Populate, once the
+            // XR rig's camera exists) -- it is not world-locked. The carousel mounts on
             // whichever pedestal wall the user is facing (see WeatherCarouselFollower),
-            // so it rides the table but does not follow the head. No ComfortFollow here.
+            // riding this same map root, so it comes along for the same reason.
 
             var pedestalObject = new GameObject("Pedestal");
             pedestalObject.transform.SetParent(mapRoot.transform, false);

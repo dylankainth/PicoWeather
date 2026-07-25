@@ -54,6 +54,7 @@ namespace WeatherVR.EditorTools
         public static string Build(out BuildReport report)
         {
             report = null;
+            PicoBuildTarget.IsPico = true;
 
             ProjectConfigurator.Configure();
             ProjectConfigurator.EnsureAlwaysIncludedShaders();
@@ -127,6 +128,43 @@ namespace WeatherVR.EditorTools
             catch (Exception e)
             {
                 Debug.LogError($"[WeatherVR] Build threw: {e}");
+                if (Application.isBatchMode) EditorApplication.Exit(1);
+            }
+        }
+
+        /// <summary>
+        /// Batch-mode entry point that only asserts player settings (defines, XR
+        /// loader, identity, graphics) and exits — no scene build, no player build.
+        ///
+        /// Exists because <see cref="ProjectConfigurator.Configure"/> can remove a
+        /// scripting define (currently a stray <c>WEATHERVR_AR</c> left by the phone AR
+        /// build) and, when it does, throws rather than continue: removing a define
+        /// forces a script recompile that the *same* editor invocation cannot see, so
+        /// building the player in that invocation would compile against stale code.
+        /// Run this once first on a machine whose defines might be wrong, then run
+        /// <see cref="BuildEverythingFromCommandLine"/> or
+        /// <see cref="BuildFromCommandLine"/> in a fresh invocation.
+        /// </summary>
+        public static void PrepareFromCommandLine()
+        {
+            try
+            {
+                PicoBuildTarget.IsPico = true;
+                ProjectConfigurator.Configure();
+                Debug.Log("[WeatherVR] Player settings already correct; nothing to recompile.");
+                if (Application.isBatchMode) EditorApplication.Exit(0);
+            }
+            catch (UnityEditor.Build.BuildFailedException e)
+            {
+                // Configure() throwing this specific exception is the *expected*,
+                // successful outcome when it just corrected a define -- it means "run
+                // the next step in a new invocation", not "something is broken".
+                Debug.Log($"[WeatherVR] {e.Message}");
+                if (Application.isBatchMode) EditorApplication.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[WeatherVR] Prepare threw: {e}");
                 if (Application.isBatchMode) EditorApplication.Exit(1);
             }
         }

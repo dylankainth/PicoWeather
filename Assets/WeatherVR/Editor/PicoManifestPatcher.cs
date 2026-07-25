@@ -24,6 +24,18 @@ namespace WeatherVR.EditorTools
     ///
     /// Runs with a high callback order so it lands after the PICO SDK's own manifest
     /// pass; otherwise the SDK's "disabled" branch would strip these again.
+    ///
+    /// Also writes <c>pvr.app.type=vr</c> directly (headset builds only — see
+    /// <see cref="PicoBuildTarget"/>), for the same reason: the PICO SDK's own manifest
+    /// pass (<c>Packages/com.bytedance.pico.xr/Editor/PXR_BuildProcessor.cs</c>) only
+    /// writes that key when it finds its own loader assigned to Android, and an empty
+    /// Android XR loader list has already been committed onto this project's PICO
+    /// mainline once (see CLAUDE.md's progress log) — when that happens the SDK skips
+    /// the key silently, and PICO OS launches the resulting APK as a flat 2D panel: no
+    /// stereo, no head tracking, no controllers, and no build error anywhere to say so.
+    /// Writing it here means that regression now fails loudly instead (PICO OS logs an
+    /// AppStartInterceptManager rejection, and <c>XrBootDiagnostics</c> at runtime logs
+    /// "XRBOOT FATAL") rather than silently.
     /// </summary>
     public class PicoManifestPatcher : IPostGenerateGradleAndroidProject
     {
@@ -63,6 +75,15 @@ namespace WeatherVR.EditorTools
             changed |= SetMetaData(document, application, "handtracking", "1");
             changed |= SetMetaData(document, application, "controller", "1");
             changed |= AddPermission(document, manifest, "com.picovr.permission.HAND_TRACKING");
+
+            if (PicoBuildTarget.IsPico)
+            {
+                // See the class doc above: written directly rather than trusted to the
+                // PICO SDK's own pass, because that pass silently skips this key when
+                // it does not find its loader assigned to Android.
+                changed |= SetMetaData(document, application, "pvr.app.type", "vr");
+                changed |= SetMetaData(document, application, "pxr.sdk.generation", "4");
+            }
 
             if (changed)
             {

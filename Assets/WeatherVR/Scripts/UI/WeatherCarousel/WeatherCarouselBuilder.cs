@@ -15,10 +15,19 @@ namespace WeatherVR.UI.Carousel
 
         /// <summary>
         /// The four storm-surge preset buttons (+0/+2/+5/+10 m), hidden by default.
-        /// Only shown while the selected card is Thunderstorm — see
+        /// Only shown while the selected day's timeline includes Thunderstorm — see
         /// <see cref="WeatherCarouselFeature"/>.
         /// </summary>
         public List<GameObject> FloodButtons;
+
+        /// <summary>"STORM SURGE 风暴潮" label above the preset buttons, hidden/shown
+        /// together with <see cref="FloodButtons"/> so the row is identifiable rather
+        /// than four unlabeled chips.</summary>
+        public GameObject FloodTitle;
+
+        /// <summary>One-line impact readout ("+5m · 23% FLOODED · 412/1860 BUILDINGS"),
+        /// hidden/shown together with <see cref="FloodButtons"/>.</summary>
+        public Text FloodReadout;
 
         /// <summary>The time-of-day scrubber under the metrics strip.</summary>
         public WeatherCarouselTimeSlider TimeSlider;
@@ -199,10 +208,12 @@ namespace WeatherVR.UI.Carousel
             }
 
             // Sits in the header's free gap between the location text and the source
-            // pill, hidden until the selected card is Thunderstorm — see
-            // WeatherCarouselFeature.OnCardSelected. On the same canvas and xrInput as
-            // the cards/arrows above, so it needs no second XR ray-hit setup.
+            // pill, hidden until the selected day's timeline includes Thunderstorm —
+            // see WeatherCarouselFeature.UpdateFloodControls. On the same canvas and
+            // xrInput as the cards/arrows above, so it needs no second XR ray-hit setup.
+            GameObject floodTitle = CreateFloodTitle(canvasRect);
             List<GameObject> floodButtons = CreateFloodRow(canvasRect, xrInput, onFloodPresetSelected);
+            Text floodReadout = CreateFloodReadout(canvasRect);
 
             WeatherCarouselTimeSlider timeSlider =
                 CreateTimeRow(canvasRect, xrInput, onHourNormalized);
@@ -225,6 +236,8 @@ namespace WeatherVR.UI.Carousel
                 Visibility = visibility,
                 Controller = controller,
                 FloodButtons = floodButtons,
+                FloodTitle = floodTitle,
+                FloodReadout = floodReadout,
                 TimeSlider = timeSlider
             };
         }
@@ -782,8 +795,57 @@ namespace WeatherVR.UI.Carousel
         }
 
         // Free header gap is x in [-205, 399] (location text ends ~-205, source pill
-        // starts ~399), same y row as both (157). Four 90-wide buttons spaced 100
-        // apart, centred in that gap, fit with margin either side.
+        // starts ~399), same y row as both (157). The four 90-wide buttons, spaced 100
+        // apart and centred in the gap (see CreateFloodRow), span [-98, 292] — that
+        // leaves [-205, -98], 107 units, for the title on the left and [292, 399], 107
+        // units, unused on the right.
+        GameObject CreateFloodTitle(RectTransform parent)
+        {
+            RectTransform group = CreateRect("Flood Title", parent);
+            SetRect(group, new Vector2(100f, 40f), new Vector2(-151f, 157f));
+
+            Text english = CreateText(
+                "Storm Surge English",
+                group,
+                "STORM SURGE",
+                10,
+                FontStyle.Bold,
+                new Color(0.80f, 0.87f, 0.95f, 0.92f));
+            SetRect(english.rectTransform, new Vector2(100f, 16f), new Vector2(0f, 8f));
+            english.alignment = TextAnchor.MiddleCenter;
+
+            Text chinese = CreateText(
+                "Storm Surge Chinese",
+                group,
+                "风暴潮",
+                9,
+                FontStyle.Normal,
+                new Color(0.74f, 0.83f, 0.90f, 0.82f));
+            SetRect(chinese.rectTransform, new Vector2(100f, 14f), new Vector2(0f, -8f));
+            chinese.alignment = TextAnchor.MiddleCenter;
+
+            group.gameObject.SetActive(false);
+            return group.gameObject;
+        }
+
+        // Pagination row: the dots only span x in [-105, 105] of the 210-wide group
+        // centred at (0, -110), leaving the panel's right side free right up to its
+        // edge (~579). One line, no Chinese — this is a number readout, not a label.
+        Text CreateFloodReadout(RectTransform parent)
+        {
+            Text readout = CreateText(
+                "Flood Readout",
+                parent,
+                "",
+                11,
+                FontStyle.Bold,
+                new Color(0.82f, 0.90f, 0.96f, 0.92f));
+            SetRect(readout.rectTransform, new Vector2(400f, 16f), new Vector2(320f, -110f));
+            readout.alignment = TextAnchor.MiddleLeft;
+            readout.gameObject.SetActive(false);
+            return readout;
+        }
+
         List<GameObject> CreateFloodRow(
             RectTransform parent,
             WeatherCarouselInput xrInput,

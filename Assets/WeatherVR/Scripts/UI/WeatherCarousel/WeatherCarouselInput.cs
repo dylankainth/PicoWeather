@@ -43,6 +43,29 @@ namespace WeatherVR.UI.Carousel
         float gazeSeconds;
         const float GazeDwellSeconds = 1.25f;
 
+        /// <summary>
+        /// Distance along the XR ray to the point it hit the carousel panel this
+        /// frame, or -1 when the ray is not on the panel at all. Read by
+        /// <see cref="WeatherVR.Interaction.XRPointerVisual"/> so the drawn ray
+        /// terminates at the glass instead of punching a fixed length through it, or
+        /// hanging short of it in empty air. Reset every frame, including on the
+        /// screen-pointer and gaze branches below, so neither can leave a stale value
+        /// for the XR visual to pick up.
+        /// </summary>
+        public float RayHitDistance { get; private set; } = -1f;
+
+        /// <summary>
+        /// 0..1 progress of the controller-free gaze dwell (see <see cref="UpdateGaze"/>),
+        /// 0 when nothing is currently being gazed at. The dwell has no other feedback
+        /// of its own, so without this a working gaze selection is indistinguishable
+        /// from a dead app.
+        /// </summary>
+        public float GazeProgress01 { get; private set; }
+
+        /// <summary>World point the gaze ray is currently resting on, valid only while
+        /// <see cref="GazeProgress01"/> is greater than zero.</summary>
+        public Vector3 GazeWorldPoint { get; private set; }
+
         public void Configure(
             RectTransform canvas,
             RectTransform carouselViewport,
@@ -95,6 +118,11 @@ namespace WeatherVR.UI.Carousel
 
         void Update()
         {
+            // Reset every frame regardless of which branch below runs, so a stale hit
+            // from a previous XR-ray frame can never survive into a screen-pointer or
+            // gaze frame.
+            RayHitDistance = -1f;
+
             if (canvasRect == null || controller == null)
                 return;
 
@@ -182,22 +210,28 @@ namespace WeatherVR.UI.Carousel
             {
                 gazeTarget = target;
                 gazeSeconds = 0f;
+                GazeWorldPoint = worldPoint;
+                GazeProgress01 = 0f;
                 return;
             }
 
             gazeSeconds += Time.unscaledDeltaTime;
+            GazeWorldPoint = worldPoint;
+            GazeProgress01 = Mathf.Clamp01(gazeSeconds / GazeDwellSeconds);
             if (gazeSeconds < GazeDwellSeconds)
                 return;
 
             target.Click?.Invoke();
             Debug.Log("[WeatherVR] Gaze dwell selected a weather carousel target.");
             gazeSeconds = -0.45f;
+            GazeProgress01 = 0f;
         }
 
         void ResetGaze()
         {
             gazeTarget = null;
             gazeSeconds = 0f;
+            GazeProgress01 = 0f;
             SetHoveredButton(null);
         }
 
@@ -262,6 +296,12 @@ namespace WeatherVR.UI.Carousel
                     draggingSlider = false;
                 return;
             }
+
+            // Only when the ray is actually on the panel, not merely on the infinite
+            // plane TryGetCanvasHit tests against -- otherwise the drawn ray would
+            // terminate at the panel's plane even while aimed well off its edges.
+            if (Contains(canvasRect, worldPoint))
+                RayHitDistance = Vector3.Distance(ray.origin, worldPoint);
 
             HitTarget button = FindTarget(buttons, worldPoint);
             SetHoveredButton(button);

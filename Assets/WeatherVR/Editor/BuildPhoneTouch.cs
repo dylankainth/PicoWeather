@@ -106,6 +106,16 @@ namespace WeatherVR.EditorTools
         /// Turns XR off entirely for Android. Without this the PICO loader would try
         /// to bring up a headset runtime on a phone, and ARCore would ask for a
         /// camera it does not need.
+        ///
+        /// This method's output — an empty Android loader list with the XR manager
+        /// disabled — was once committed onto the PICO mainline (the touch build ran,
+        /// its config change got checked in, and nothing put PICO's loader back). The
+        /// headset APK then silently built and launched as a flat 2D panel with no
+        /// stereo, no head tracking and no controllers. It is safe to keep calling this
+        /// for the touch build specifically because
+        /// <see cref="ProjectConfigurator.EnsureAndroidXrLoader"/> now re-asserts the
+        /// PICO loader at the top of every <c>Configure()</c> call, so a headset build
+        /// run after this one repairs itself automatically.
         /// </summary>
         static void DisableXr()
         {
@@ -129,6 +139,8 @@ namespace WeatherVR.EditorTools
 
         public static string Build(out BuildReport report)
         {
+            PicoBuildTarget.IsPico = false;
+
             ProjectConfigurator.Configure();
             ProjectConfigurator.EnsureAlwaysIncludedShaders();
             DisableXr();

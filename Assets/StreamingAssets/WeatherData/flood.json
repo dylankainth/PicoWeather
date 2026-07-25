@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "generatedUtc": "2026-07-25T05:50:58Z",
+  "method": "priority-flood minimax connectivity from water seeds, with EA defence crest levels as barriers",
+  "defended": true,
+  "defences": {
+    "featuresTotal": 370,
+    "featuresWithCrest": 370,
+    "featuresWithoutCrest": 0,
+    "cellsRaised": 2402,
+    "gapsClosed": 311,
+    "crestMin": 5.17,
+    "crestMax": 8.75
+  },
+  "defenceError": null,
+  "seedSource": "openstreetmap:river",
+  "seedKinds": [
+    "river"
+  ],
+  "seedCells": 805,
+  "seedError": null,
+  "waterWayCounts": {
+    "canal": 28,
+    "water": 75,
+    "river": 22
+  },
+  "attribution": [
+    "Flood defences: (c) Environment Agency copyright and/or database right 2026. All rights reserved. Open Government Licence v3.0.",
+    "Water features: (c) OpenStreetMap contributors, ODbL 1.0.",
+    "Terrain: AWS Terrain Tiles (elevation-tiles-prod), SRTM-derived."
+  ],
+  "datumNote": "EA crest levels are metres above Ordnance Datum Newlyn; the terrain is EGM96 orthometric. The two agree to well under a metre over the UK, which is within this bake's resolution.",
+  "limitations": "Static water level, not a hydrodynamic simulation: no flow routing, no surge duration or timing, no drainage or sewer capacity, no defence breach or failure modelling. Answers 'where can water reach at this level', not 'how a flood would unfold'.",
+  "field": {
+    "cells": 262144,
+    "reachableCells": 262144,
+    "connectMin": -2.713,
+    "connectMax": 43.707,
+    "baseMeters": -5.211,
+    "capMeters": 34.789
+  }
+}

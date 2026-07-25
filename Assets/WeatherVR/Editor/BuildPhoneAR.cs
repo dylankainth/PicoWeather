@@ -69,6 +69,7 @@ namespace WeatherVR.EditorTools
         public static string Build(out BuildReport report)
         {
             report = null;
+            PicoBuildTarget.IsPico = false;
 
             ProjectConfigurator.Configure();
             ProjectConfigurator.EnsureAlwaysIncludedShaders();
@@ -148,18 +149,20 @@ namespace WeatherVR.EditorTools
             AssetDatabase.SaveAssets();
         }
 
-        /// <summary>Puts the PICO loader back, for returning to headset builds.</summary>
+        /// <summary>
+        /// Puts the PICO loader back, for returning to headset builds. Delegates the
+        /// loader swap itself to <see cref="ProjectConfigurator.EnsureAndroidXrLoader"/>
+        /// — this used to reimplement the swap here and forgot to re-enable
+        /// <c>InitManagerOnStart</c>, so running it by hand left the XR manager
+        /// disabled even with the right loader assigned. One implementation now,
+        /// same one <see cref="ProjectConfigurator.Configure"/> asserts on every
+        /// headset build.
+        /// </summary>
         [MenuItem("Tools/WeatherVR/Switch XR back to PICO", priority = 43)]
         public static void SwitchToPico()
         {
-            var settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android);
-            if (settings?.Manager == null) return;
-
-            if (XRPackageMetadataStore.IsLoaderAssigned(ArCoreLoader, BuildTargetGroup.Android))
-                XRPackageMetadataStore.RemoveLoader(settings.Manager, ArCoreLoader, BuildTargetGroup.Android);
-
-            if (!XRPackageMetadataStore.IsLoaderAssigned(PicoLoader, BuildTargetGroup.Android))
-                XRPackageMetadataStore.AssignLoader(settings.Manager, PicoLoader, BuildTargetGroup.Android);
+            var changes = new System.Collections.Generic.List<string>();
+            ProjectConfigurator.EnsureAndroidXrLoader(changes);
 
             // Restore Vulkan for the headset build; the AR build forces GLES3-only.
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[]
@@ -168,8 +171,8 @@ namespace WeatherVR.EditorTools
                 UnityEngine.Rendering.GraphicsDeviceType.OpenGLES3
             });
 
-            EditorUtility.SetDirty(settings);
             AssetDatabase.SaveAssets();
+            foreach (string change in changes) Debug.Log($"[WeatherVR] {change}");
             Debug.Log("[WeatherVR] XR loader switched back to PICO, Vulkan restored.");
         }
 

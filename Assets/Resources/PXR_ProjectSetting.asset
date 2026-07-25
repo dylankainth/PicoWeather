@@ -28,7 +28,7 @@ MonoBehaviour:
   enableSubsampled: 0
   bodyTracking: 0
   adaptiveResolution: 0
-  stageMode: 0
+  stageMode: 1
   videoSeeThrough: 0
   spatialAnchor: 0
   sceneCapture: 0
