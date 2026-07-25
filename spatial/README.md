@@ -3,11 +3,11 @@
 A rewrite of the app for PICO's Spatial runtime, in Kotlin, because PICO have said
 the Unity SDK does not support spatial mode.
 
-**Status: the data layer is ported and passing. Nothing renders yet.**
+**Status: the whole engine-independent layer is ported and passing. Nothing renders yet.**
 
 ```
 spatial/
-  core/     pure Kotlin/JVM. No Android, no PICO SDK. 29 tests, all green.
+  core/     pure Kotlin/JVM. No Android, no PICO SDK. 81 tests, all green.
   app/      not written yet — the Android + Spatial SDK surface.
 ```
 
@@ -35,31 +35,62 @@ cd spatial
 | `Data/GeoBounds.cs` | `GeoBounds.kt` | `Vector2`/`Vector3` replaced with `MapPoint`/`MapUv`/`GeoPoint` — depending on engine types is what made the C# non-portable |
 | `Data/Atmosphere.cs` | `Atmosphere.kt` | Layer pressures folded into the enum instead of parallel `when` blocks |
 | `Core/MapScale.cs` | `MapScale.kt` | The unit convention. Read its header before positioning anything |
+| `Core/SolarPosition.cs` | `SolarPosition.kt` | `DateTime` → `Instant`, which removes the `DateTimeKind` ambiguity entirely |
 | `Data/TerrainHeightfield.cs` | `TerrainHeightfield.kt` | Same `PWTR` binary format, byte-for-byte |
 | `Data/WeatherDataset.cs` | `WeatherDataset.kt` | Immutable data classes; wire format unchanged |
-| — | `MathUtil.kt` | The four `Mathf` helpers the above needed |
+| `Data/BuildingDataset.cs` | `BuildingDataset.kt` | Flat footprint array kept — it is the file format, not a `JsonUtility` workaround any more |
+| `Data/Noise.cs` | `Noise.kt` | Line-for-line; `uint` → `UInt` preserves the wrapping hash exactly |
+| `Data/ProceduralTerrain.cs` | `ProceduralTerrain.kt` | |
+| `Data/ProceduralWeather.cs` | `ProceduralWeather.kt` | Clock injected instead of `DateTime.UtcNow` inline, so output is testable |
+| `Data/ProceduralBuildings.cs` | `ProceduralBuildings.kt` | |
+| `Data/ProceduralSatellite.cs` | `ProceduralSatellite.kt` | Returns raw RGB bytes, not a `Texture2D` — that return type was the only thing making it unportable |
+| `Data/OpenMeteoClient.cs` | `OpenMeteo.kt` | **URL building and parsing only.** Networking is the caller's job; it was `UnityWebRequest` coupling that made this untestable before |
+| `Data/WeatherDataService.cs` | `WeatherJson.kt` | Decode/encode; the coroutine orchestration is engine-shaped and belongs in `app` |
+| — | `MathUtil.kt` | The `Mathf` helpers the above needed |
 
 The Python pipeline in `tools/` is **unchanged and still authoritative**. Both the Unity
 build and this one read the same baked `terrain.bin`, `satellite.jpg`, `weather.json`
 and `buildings.json`. That is the main reason this port is worth attempting rather than
 starting over.
 
-### The real-data test
+### The real-data tests
 
-`TerrainHeightfieldTest.decodes the real baked London terrain` reads the actual
-`Assets/StreamingAssets/WeatherData/terrain.bin` and asserts the decode is sane. It
-currently produces:
+Three tests read the **actual baked payload** out of the Unity project next door rather
+than a fixture written to match the parser. A schema test against your own fixture only
+proves you are self-consistent. These currently produce:
 
 ```
 TerrainHeightfield[512x512, -5..44 m, GeoBounds[51.4911..51.5361 N, -0.1193..-0.0471 E]]
+openstreetmap-overpass · 600 building(s)
+open-meteo · 12×12 grid · 2026-07-24T12:30Z
 ```
 
-which is character-for-character what the Unity app logs on device. That is the
-strongest evidence available that the binary reader is a faithful port — a big-endian
-mistake here would not throw, it would yield plausible-looking noise.
+The first line is character-for-character what the Unity app logs on device. That is the
+strongest evidence available that the readers are faithful — a big-endian mistake in the
+terrain parser would not throw, it would yield plausible-looking noise.
 
-The test skips rather than fails when the baked file is absent, since the data payload
-is optional by design.
+They skip rather than fail when the baked files are absent, since the data payload is
+optional by design.
+
+### Things the tests pinned down
+
+Not bugs found in the C#, but behaviours worth stating before a rewrite quietly changes
+them:
+
+- **`VerticalExaggeration` is named backwards.** At its shipping 0.4 it *compresses*
+  altitude to 40% of true scale. Pinned by a test asserting altitude renders shorter
+  than an equal building height.
+- **A 1×1 weather grid parses but is not valid.** `isValid` needs width and height > 1
+  because a single point cannot be bilinearly sampled — so a successful parse of a
+  single-coordinate Open-Meteo response still yields nothing renderable. A caller that
+  only checks for an exception would draw an empty map.
+- **`parse` must not clamp the grid size the way `buildUrl` does.** The clamp exists to
+  keep the request URL sane; applying it to the response makes a legitimate
+  single-coordinate reply fail as "expected 4, got 1". I introduced exactly this bug in
+  the port and the tests caught it.
+- **Locale.** Open-Meteo takes comma-separated coordinates, so a comma decimal separator
+  silently doubles the coordinate count. Pinned by a test that runs under a German
+  locale.
 
 ## What is not ported
 
@@ -76,12 +107,16 @@ Everything that touches the engine, which is most of the app:
 - **The whole UI.** Carousel, time scrubber and flood buttons are a world-space Unity
   `Canvas` with a custom ray-hit input path. On Android this should be native UI rather
   than a reimplementation.
-- **`ProceduralTerrain` / `ProceduralSatellite` / `ProceduralWeather` / `Noise`** —
-  portable logic, not yet done. Worth doing: they are what make the app run with no
-  baked data at all.
-- **JSON ingest** (`WeatherDataService`, `OpenMeteoClient`). Deliberately deferred so
-  `core` stays dependency-free for now; `kotlinx.serialization` is the obvious choice
-  and works on both Android and the JVM tests.
+- **HTTP.** `OpenMeteo` builds the URL and parses the reply; something has to fetch the
+  bytes in between. That belongs in `app`, where the platform's HTTP client is known.
+- **Load orchestration.** `WeatherDataService`'s "try live, then baked, then procedural"
+  sequence is Unity coroutines end to end. The *policy* is three lines; it is the
+  async machinery around it that has to be rewritten.
+
+One deliberate content decision left alone: `ProceduralTerrain` still generates a river
+delta shaped like the Yangtze, from when the project targeted Shanghai, even though the
+region is now London. Changing it is a design call, not a port — and making it inside a
+port is how you lose the ability to tell a translation bug from a redesign.
 
 ## The blocker
 

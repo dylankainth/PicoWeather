@@ -1,10 +1,13 @@
 package com.weathervr.core
 
+import kotlinx.serialization.Serializable
+
 /**
  * One grid cell of the weather model. Field names mirror the variable names used by
  * both ERA5 and Open-Meteo, and match the JSON keys the Python baker writes, so the
  * same `weather.json` feeds this build and the Unity one.
  */
+@Serializable
 data class WeatherCell(
     /** Total cloud cover, 0..1. */
     val cloudTotal: Float = 0f,
@@ -38,6 +41,7 @@ data class WeatherCell(
  * Altitude extent of one cloud layer, resolved at bake time so the runtime does not
  * have to redo the barometric conversion.
  */
+@Serializable
 data class WeatherLayerBand(
     val name: String,
     val basePressureHpa: Float,
@@ -68,6 +72,7 @@ data class WeatherLayerBand(
  * stored row-major with `index = y * gridWidth + x`, x running west→east and y
  * south→north.
  */
+@Serializable
 data class WeatherDataset(
     val schemaVersion: Int = CURRENT_SCHEMA_VERSION,
     /** ISO-8601 UTC timestamp of the observation/analysis time. */

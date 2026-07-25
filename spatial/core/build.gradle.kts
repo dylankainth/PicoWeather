@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.9.24"
+    kotlin("plugin.serialization") version "1.9.24"
 }
 
 repositories {
@@ -7,6 +8,10 @@ repositories {
 }
 
 dependencies {
+    // kotlinx.serialization rather than org.json or Moshi: it works identically on the
+    // JVM (so these tests exercise the shipping path) and on Android, and it is the one
+    // dependency this module takes.
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     testImplementation(kotlin("test"))
 }
 
