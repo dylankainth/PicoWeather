@@ -13,6 +13,43 @@ kaleidoscope fold. 60 fps.*
 
 ---
 
+## Adventure X submission
+
+PicoWeather is an **Adventure X submission**. A ready-to-install PICO APK is
+included at `Builds/ImmersiveWeather.apk`.
+
+### Run on the PICO OS 6 emulator
+
+Launch the PICO OS 6 emulator, confirm it appears in `adb devices`, then push
+the APK to the emulator and start it:
+
+```powershell
+adb install -r Builds/ImmersiveWeather.apk
+adb shell monkey -p com.weathervr.immersive `
+    -c android.intent.category.LAUNCHER 1
+```
+
+The APK is ARM64-only and runs through the emulator's ARM64 translation layer.
+Allow roughly 30 seconds for the first immersive frame after launch.
+
+### Run on a physical PICO device
+
+Enable Developer Mode and USB debugging on the headset, connect it by USB,
+accept the debugging prompt inside the headset, and confirm it appears in
+`adb devices`. Install and launch the same APK:
+
+```powershell
+adb install -r Builds/ImmersiveWeather.apk
+adb shell monkey -p com.weathervr.immersive `
+    -c android.intent.category.LAUNCHER 1
+```
+
+Put on the headset after launch. The app declares both controller and hand
+tracking support, so it can enter immersive mode without being blocked while a
+controller is disconnected.
+
+---
+
 ## Status
 
 | Piece | State |
