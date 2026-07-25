@@ -87,6 +87,11 @@ namespace WeatherVR.Weather
             _cloudsRenderer = go.GetComponent<ParticleSystemRenderer>();
             _cloudsRenderer.sharedMaterial = _cloudMaterial;
             _cloudsRenderer.renderMode = ParticleSystemRenderMode.Billboard;
+            _cloudsRenderer.alignment = ParticleSystemRenderSpace.View;
+            _cloudsRenderer.sortMode = ParticleSystemSortMode.Distance;
+            _cloudsRenderer.normalDirection = 0.65f;
+            _cloudsRenderer.minParticleSize = 0.015f;
+            _cloudsRenderer.maxParticleSize = 0.22f;
             _cloudsRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _cloudsRenderer.receiveShadows = false;
             _cloudsRenderer.sortingOrder = 0;
@@ -98,6 +103,7 @@ namespace WeatherVR.Weather
             main.startLifetime = 14f;
             main.startSpeed = 0f;
             main.startSize = 0.32f;
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
             main.maxParticles = 700;
             main.gravityModifier = 0f;
 
@@ -112,6 +118,16 @@ namespace WeatherVR.Weather
             var vel = _clouds.velocityOverLifetime;
             vel.enabled = true;
             vel.space = ParticleSystemSimulationSpace.Local;
+
+            // Slow coherent turbulence keeps the deck from reading as a flat sheet
+            // of identical sprites. The values are intentionally gentle for VR.
+            var noise = _clouds.noise;
+            noise.enabled = true;
+            noise.strength = 0.035f;
+            noise.frequency = 0.32f;
+            noise.scrollSpeed = 0.08f;
+            noise.damping = true;
+            noise.quality = ParticleSystemNoiseQuality.Medium;
         }
 
         void BuildPrecip()
@@ -210,16 +226,20 @@ namespace WeatherVR.Weather
             }
 
             var emission = _clouds.emission;
-            emission.rateOverTime = Mathf.Lerp(0f, 34f, amount);
+            emission.rateOverTime = Mathf.Lerp(0f, 46f, amount);
 
             var main = _clouds.main;
             // Bright cumulus white grading to storm grey.
             Color bright = new Color(0.98f, 0.98f, 1f);
             Color dark = new Color(0.38f, 0.41f, 0.45f);
             Color c = Color.Lerp(bright, dark, Mathf.Clamp01(p.CloudDarkness));
-            c.a = Mathf.Lerp(0.14f, 0.40f, amount);
+            c.a = Mathf.Lerp(0.16f, 0.48f, amount);
             main.startColor = c;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.22f, 0.46f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.16f, 0.38f);
+
+            var noise = _clouds.noise;
+            noise.strength = Mathf.Lerp(0.018f, 0.052f, amount);
+            noise.scrollSpeed = Mathf.Lerp(0.05f, 0.12f, p.WindMs / 15f);
 
             // Drift with the wind, exaggerated so it is perceptible at 1:2500.
             var vel = _clouds.velocityOverLifetime;
@@ -258,7 +278,7 @@ namespace WeatherVR.Weather
             main.startLifetime = fallSeconds;
             main.startColor = snow
                 ? new Color(1f, 1f, 1f, 0.9f)
-                : new Color(0.70f, 0.82f, 0.91f, 0.32f);
+                : new Color(0.78f, 0.84f, 0.91f, 0.46f);
             main.startSize = snow
                 ? new ParticleSystem.MinMaxCurve(0.006f, 0.012f)
                 : new ParticleSystem.MinMaxCurve(0.002f, 0.0045f);
@@ -269,7 +289,7 @@ namespace WeatherVR.Weather
             vel.x = new ParticleSystem.MinMaxCurve(sideDrift);
 
             var emission = _precip.emission;
-            float maxRate = snow ? 560f : 950f;
+            float maxRate = snow ? 620f : 1120f;
             emission.rateOverTime = Mathf.Lerp(0f, maxRate, Mathf.Clamp01(p.PrecipIntensity));
 
             main.maxParticles = Mathf.CeilToInt(maxRate * fallSeconds) + 128;
@@ -389,7 +409,19 @@ namespace WeatherVR.Weather
                 float envelope = Mathf.Clamp01(1f - Mathf.Sqrt(u * u * 0.70f + v * v));
                 float alpha = density * envelope;
                 alpha = alpha * alpha * (3f - 2f * alpha);
-                tex.SetPixel(x, y, new Color(1f, 1f, 1f, alpha));
+
+                // Baked soft lighting: brighter crown, darker underside and subtle
+                // deterministic micro-variation. Sprites remain mobile-cheap while
+                // overlapping particles gain a much more volumetric read.
+                float vertical = Mathf.InverseLerp(-1f, 1f, v);
+                float detail = 0.94f +
+                    0.06f * Mathf.Sin((u * 7.3f + v * 5.1f + seed * 0.001f) * 3.7f);
+                float shade = Mathf.Lerp(0.64f, 1.0f, vertical) * detail;
+                tex.SetPixel(x, y, new Color(
+                    shade,
+                    Mathf.Lerp(shade * 0.96f, shade, vertical),
+                    Mathf.Lerp(shade * 0.91f, shade, vertical),
+                    alpha));
             }
 
             tex.Apply();

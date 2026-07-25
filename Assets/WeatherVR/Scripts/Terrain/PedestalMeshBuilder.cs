@@ -4,8 +4,8 @@ using UnityEngine;
 namespace WeatherVR.Terrain
 {
     /// <summary>
-    /// Builds the holographic plinth the map stands on: a flared lip just under the
-    /// terrain's edge, tapering down to a narrower base. Pure geometry, no weather
+    /// Builds the compact museum table the map stands on: a thin square graphite
+    /// tabletop with a narrow central support. Pure geometry, no weather
     /// dependency, so it is built once in <see cref="PedestalRenderer"/>'s Awake.
     ///
     /// Everything is in normalised map units: X/Z centred on [-0.5, 0.5] (the same
@@ -17,25 +17,17 @@ namespace WeatherVR.Terrain
     public static class PedestalMeshBuilder
     {
         /// <summary>
-        /// Three stacked rectangular rings, widest at the flared lip:
-        ///   Ring A (top)    -- half-extent <paramref name="topHalf"/>, at y = -topInset.
-        ///   Ring B (lip)    -- half-extent <paramref name="rimHalf"/>, at y = -topInset - lipDepth.
-        ///                      Wider than Ring A: the flare reads as an overhanging
-        ///                      lip just below the map's edge.
-        ///   Ring C (base)   -- half-extent <paramref name="baseHalf"/>, at y = -totalDepth.
-        ///                      Narrower again: the body tapers toward the floor like
-        ///                      a museum plinth.
-        /// Vertex colour (r channel) is 1 across the lip band (Ring A/B) and fades to
-        /// 0 down the tapered body to Ring C -- the pedestal shader reads this as an
-        /// emissive glow band.
+        /// The old full-width, blue-lit tapered block made the map look as though it
+        /// sat on a floor. This silhouette is deliberately table-like: a 3 cm slab,
+        /// a short inset beneath it, then a narrow support with no coloured flare.
         /// </summary>
         public static Mesh Build(
-            float topHalf = 0.52f,
-            float rimHalf = 0.57f,
-            float baseHalf = 0.44f,
+            float topHalf = 0.505f,
+            float supportHalf = 0.15f,
             float topInset = 0.004f,
-            float lipDepth = 0.045f,
-            float totalDepth = 0.34f)
+            float slabDepth = 0.030f,
+            float supportInsetDepth = 0.048f,
+            float totalDepth = 0.38f)
         {
             var vertices = new List<Vector3>(32);
             var normals = new List<Vector3>(32);
@@ -43,27 +35,29 @@ namespace WeatherVR.Terrain
             var triangles = new List<int>(96);
 
             float yTop = -topInset;
-            float yLip = -topInset - lipDepth;
+            float ySlab = -topInset - slabDepth;
+            float ySupport = -topInset - supportInsetDepth;
             float yBase = -totalDepth;
 
             var ringA = Ring(topHalf, yTop);
-            var ringB = Ring(rimHalf, yLip);
-            var ringC = Ring(baseHalf, yBase);
+            var ringB = Ring(topHalf, ySlab);
+            var ringC = Ring(supportHalf, ySupport);
+            var ringD = Ring(supportHalf, yBase);
 
-            var glowFull = new Color32(255, 255, 255, 255);
             var glowNone = new Color32(0, 0, 0, 255);
+            var edgeHint = new Color32(64, 64, 64, 255);
 
-            // Lip band: flares out from Ring A (top) down to Ring B, full glow both ends.
-            AddBand(ringA, ringB, glowFull, glowFull, vertices, normals, colors, triangles);
-            // Body: tapers from Ring B down to Ring C, glow fades to zero at the base.
-            AddBand(ringB, ringC, glowFull, glowNone, vertices, normals, colors, triangles);
+            // Thin tabletop edge, inset underside, then the straight narrow support.
+            AddBand(ringA, ringB, edgeHint, edgeHint, vertices, normals, colors, triangles);
+            AddBand(ringB, ringC, edgeHint, glowNone, vertices, normals, colors, triangles);
+            AddBand(ringC, ringD, glowNone, glowNone, vertices, normals, colors, triangles);
 
             // Top cap faces +Y, visible in the thin margin where the pedestal's lip
             // (topHalf) is wider than the terrain mesh's own edge (0.5).
-            AddCap(ringA, glowFull, facingUp: true, vertices, normals, colors, triangles);
+            AddCap(ringA, edgeHint, facingUp: true, vertices, normals, colors, triangles);
             // Base cap faces -Y; cheap to include and avoids an open bottom if anyone
             // ever looks up at the underside.
-            AddCap(ringC, glowNone, facingUp: false, vertices, normals, colors, triangles);
+            AddCap(ringD, glowNone, facingUp: false, vertices, normals, colors, triangles);
 
             var mesh = new Mesh { name = "PedestalMesh" };
             mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt16;

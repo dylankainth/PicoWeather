@@ -153,14 +153,14 @@ namespace WeatherVR.UI.Carousel
             Image edge = CreateImage(
                 "Glass Edge",
                 parent,
-                new Color(0.48f, 0.76f, 0.74f, 0.34f),
+                new Color(0.58f, 0.42f, 0.66f, 0.34f),
                 WeatherCarouselSprites.Rounded);
             SetRect(edge.rectTransform, new Vector2(1164f, 396f), Vector2.zero);
 
             Image surface = CreateImage(
                 "Glass Surface",
                 parent,
-                new Color(0.07f, 0.12f, 0.16f, 0.72f),
+                new Color(0.075f, 0.052f, 0.105f, 0.78f),
                 WeatherCarouselSprites.Rounded);
             SetRect(surface.rectTransform, new Vector2(1158f, 390f), Vector2.zero);
             surface.gameObject.AddComponent<Mask>().showMaskGraphic = true;
@@ -170,8 +170,8 @@ namespace WeatherVR.UI.Carousel
             Stretch(gradient.rectTransform);
             gradient.raycastTarget = false;
             gradient.SetColors(
-                new Color(0.24f, 0.43f, 0.48f, 0.26f),
-                new Color(0.05f, 0.09f, 0.13f, 0.66f));
+                new Color(0.34f, 0.22f, 0.42f, 0.27f),
+                new Color(0.045f, 0.030f, 0.070f, 0.70f));
 
             Image topReflection = CreateImage(
                 "Top Reflection",
@@ -213,14 +213,14 @@ namespace WeatherVR.UI.Carousel
             Image pillEdge = CreateImage(
                 "Source Pill Edge",
                 parent,
-                new Color(0.46f, 0.78f, 0.72f, 0.30f),
+                new Color(0.62f, 0.43f, 0.66f, 0.30f),
                 WeatherCarouselSprites.Rounded);
             SetRect(pillEdge.rectTransform, new Vector2(142f, 50f), new Vector2(470f, 157f));
 
             Image pill = CreateImage(
                 "Source Pill",
                 pillEdge.rectTransform,
-                new Color(0.16f, 0.42f, 0.40f, 0.32f),
+                new Color(0.30f, 0.18f, 0.38f, 0.34f),
                 WeatherCarouselSprites.Rounded);
             Stretch(pill.rectTransform, 2f);
 
@@ -230,7 +230,7 @@ namespace WeatherVR.UI.Carousel
                 dataset.SourceEnglish,
                 10,
                 FontStyle.Bold,
-                new Color(0.82f, 0.96f, 0.91f));
+                new Color(0.94f, 0.88f, 0.97f));
             SetRect(source.rectTransform, new Vector2(130f, 19f), new Vector2(0f, 8f));
             source.alignment = TextAnchor.MiddleCenter;
 
@@ -240,7 +240,7 @@ namespace WeatherVR.UI.Carousel
                 dataset.SourceChinese,
                 8,
                 FontStyle.Normal,
-                new Color(0.76f, 0.90f, 0.86f, 0.82f));
+                new Color(0.88f, 0.82f, 0.92f, 0.84f));
             SetRect(
                 sourceChinese.rectTransform,
                 new Vector2(130f, 17f),
@@ -352,7 +352,7 @@ namespace WeatherVR.UI.Carousel
             Image shell = CreateImage(
                 "Glass Card",
                 cardRoot,
-                new Color(0.08f, 0.13f, 0.17f, 0.78f),
+                new Color(0.075f, 0.052f, 0.105f, 0.80f),
                 WeatherCarouselSprites.Rounded);
             Stretch(shell.rectTransform, 2f);
             shell.gameObject.AddComponent<Mask>().showMaskGraphic = true;
@@ -502,14 +502,14 @@ namespace WeatherVR.UI.Carousel
             Image edge = CreateImage(
                 "Metrics Edge",
                 parent,
-                new Color(0.46f, 0.72f, 0.70f, 0.24f),
+                new Color(0.57f, 0.41f, 0.64f, 0.25f),
                 WeatherCarouselSprites.Rounded);
             SetRect(edge.rectTransform, new Vector2(1020f, 69f), new Vector2(0f, -157f));
 
             Image strip = CreateImage(
                 "Metrics Glass",
                 edge.rectTransform,
-                new Color(0.08f, 0.13f, 0.17f, 0.70f),
+                new Color(0.065f, 0.045f, 0.095f, 0.74f),
                 WeatherCarouselSprites.Rounded);
             Stretch(strip.rectTransform, 2f);
 
@@ -571,13 +571,13 @@ namespace WeatherVR.UI.Carousel
             UnityEngine.Events.UnityAction action,
             string objectName)
         {
-            Color normal = new Color(0.22f, 0.39f, 0.43f, 0.40f);
-            Color hover = new Color(0.38f, 0.64f, 0.62f, 0.58f);
+            Color normal = new Color(0.30f, 0.20f, 0.38f, 0.46f);
+            Color hover = new Color(0.56f, 0.38f, 0.64f, 0.62f);
 
             Image edge = CreateImage(
                 objectName + " Edge",
                 parent,
-                new Color(0.55f, 0.78f, 0.76f, 0.40f),
+                new Color(0.66f, 0.47f, 0.71f, 0.42f),
                 WeatherCarouselSprites.Circle);
             SetRect(edge.rectTransform, new Vector2(52f, 52f), position);
 

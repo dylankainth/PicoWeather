@@ -3,7 +3,7 @@ using UnityEngine;
 namespace WeatherVR.Terrain
 {
     /// <summary>
-    /// Owns the holographic plinth mesh under the map. Needs no weather snapshot --
+    /// Owns the compact graphite table under the map. Needs no weather snapshot --
     /// it is pure geometry -- so it builds itself once in <see cref="Awake"/>.
     /// Sits under the map root alongside <see cref="TerrainRenderer"/>, so it
     /// inherits the map's placement and scale for free.

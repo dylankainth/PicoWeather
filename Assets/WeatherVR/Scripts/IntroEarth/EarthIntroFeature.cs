@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
 using WeatherVR.Core;
 using WeatherVR.Interaction;
 using WeatherVR.UI.Carousel;
@@ -16,6 +17,7 @@ namespace WeatherVR.IntroEarth
     /// removes the feature completely.
     /// </summary>
     [DefaultExecutionOrder(-300)]
+    [Preserve]
     public sealed class EarthIntroFeature : MonoBehaviour
     {
         const float AppearSeconds = 0.55f;
@@ -38,18 +40,44 @@ namespace WeatherVR.IntroEarth
         bool _contentHidden;
         bool _revealed;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void RegisterForSceneLoads()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void AutoCreate()
         {
-            if (SceneManager.GetActiveScene().name != "WeatherVR")
-                return;
+            EnsureInstalled();
+        }
 
-            if (FindObjectOfType<EarthIntroFeature>() == null)
-                new GameObject("Earth to London Intro").AddComponent<EarthIntroFeature>();
+        static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            if (scene.name == "WeatherVR")
+                EnsureInstalled();
+        }
+
+        /// <summary>
+        /// Explicit entry point used by the main weather bootstrap. Keeping this
+        /// direct reference prevents managed stripping from removing the intro on
+        /// Android and makes scene-start ordering deterministic.
+        /// </summary>
+        public static EarthIntroFeature EnsureInstalled()
+        {
+            if (SceneManager.GetActiveScene().name != "WeatherVR")
+                return null;
+
+            var existing = FindObjectOfType<EarthIntroFeature>();
+            return existing != null
+                ? existing
+                : new GameObject("Earth to London Intro").AddComponent<EarthIntroFeature>();
         }
 
         IEnumerator Start()
         {
+            Debug.Log("[WeatherVR] Earth intro starting.");
             _weather = FindObjectOfType<WeatherSceneController>();
             _head = Camera.main != null ? Camera.main.transform : null;
 

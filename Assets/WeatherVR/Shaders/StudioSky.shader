@@ -8,9 +8,9 @@ Shader "WeatherVR/StudioSky"
 {
     Properties
     {
-        _Zenith     ("Zenith",  Color) = (0.12, 0.22, 0.34, 1)
-        _Horizon    ("Horizon", Color) = (0.30, 0.42, 0.52, 1)
-        _Nadir      ("Nadir",   Color) = (0.10, 0.17, 0.24, 1)
+        _Zenith     ("Zenith",  Color) = (0.08, 0.055, 0.125, 1)
+        _Horizon    ("Horizon", Color) = (0.19, 0.125, 0.215, 1)
+        _Nadir      ("Nadir",   Color) = (0.03, 0.024, 0.045, 1)
         _HorizonSharpness ("Vertical Blend", Range(0.5, 6)) = 1.45
 
         _SunColor   ("Sun Glow Color", Color) = (0.72, 0.78, 0.74, 1)
@@ -18,9 +18,9 @@ Shader "WeatherVR/StudioSky"
         _SunSharp   ("Sun Glow Sharpness", Range(1, 200)) = 12
         _SunDir     ("Sun Direction", Vector) = (0.3, 0.15, -0.9, 0)
 
-        _PrismColor    ("Prism Accent", Color) = (0.30, 0.68, 0.66, 1)
-        _PrismStrength ("Prism Strength", Range(0, 1)) = 0.15
-        _LatticeStrength ("Lattice Strength", Range(0, 1)) = 0.045
+        _PrismColor    ("Prism Accent", Color) = (0.52, 0.26, 0.57, 1)
+        _PrismStrength ("Prism Strength", Range(0, 1)) = 0.24
+        _LatticeStrength ("Lattice Strength", Range(0, 1)) = 0.06
     }
 
     SubShader

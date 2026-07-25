@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using WeatherVR.Interaction;
 
@@ -72,18 +73,95 @@ namespace WeatherVR.UI.Carousel
 
         void Update()
         {
-            if (pointer == null || canvasRect == null || !pointer.IsTracked)
+            if (canvasRect == null || controller == null)
+                return;
+
+            if (Keyboard.current != null)
             {
-                SetHoveredButton(null);
-                if (dragging)
-                    FinishDrag();
+                if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+                    controller.Previous();
+                if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
+                    controller.Next();
+            }
+
+            bool hasScreenPointer = TryGetScreenPointer(
+                out Vector2 screenPosition,
+                out bool screenPressed,
+                out bool screenHeld,
+                out bool screenReleased);
+
+            // The PICO emulator advertises a tracked controller even while the user
+            // is clicking its desktop window. A real mouse/touch press must therefore
+            // take priority over the idle XR ray or emulator tile clicks are ignored.
+            if (hasScreenPointer &&
+                (screenPressed || screenHeld || screenReleased) &&
+                Camera.main != null)
+            {
+                ProcessScreenPointer(
+                    screenPosition,
+                    screenPressed,
+                    screenReleased,
+                    Camera.main);
                 return;
             }
 
-            if (!TryGetCanvasHit(out Vector3 worldPoint, out float canvasX))
+            if (pointer != null && pointer.IsTracked)
+            {
+                ProcessRay(
+                    pointer.Ray,
+                    pointer.SelectPressedThisFrame,
+                    pointer.IsSelecting,
+                    pointer.SelectReleasedThisFrame);
+                return;
+            }
+
+            if (hasScreenPointer && Camera.main != null)
+            {
+                SetHoveredButton(
+                    FindScreenTarget(buttons, screenPosition, Camera.main));
+                return;
+            }
+
+            SetHoveredButton(null);
+            if (dragging)
+                FinishDrag();
+        }
+
+        void ProcessScreenPointer(
+            Vector2 screenPosition,
+            bool pressed,
+            bool released,
+            Camera camera)
+        {
+            HitTarget button = FindScreenTarget(buttons, screenPosition, camera);
+            SetHoveredButton(button);
+
+            if (!pressed)
+                return;
+
+            if (button != null)
+            {
+                button.Click?.Invoke();
+                return;
+            }
+
+            HitTarget card = FindScreenTarget(cards, screenPosition, camera);
+            if (card != null)
+            {
+                // Select on press. Emulator touch-up can be consumed by the spatial
+                // window host, so waiting for release made otherwise valid clicks
+                // unreliable.
+                card.Click?.Invoke();
+                Debug.Log("[WeatherVR] Screen pointer selected a weather card.");
+            }
+        }
+
+        void ProcessRay(Ray ray, bool pressed, bool held, bool released)
+        {
+            if (!TryGetCanvasHit(ray, out Vector3 worldPoint, out float canvasX))
             {
                 SetHoveredButton(null);
-                if (dragging && pointer.SelectReleasedThisFrame)
+                if (dragging && released)
                     FinishDrag();
                 return;
             }
@@ -91,7 +169,7 @@ namespace WeatherVR.UI.Carousel
             HitTarget button = FindTarget(buttons, worldPoint);
             SetHoveredButton(button);
 
-            if (pointer.SelectPressedThisFrame)
+            if (pressed)
             {
                 if (button != null)
                 {
@@ -109,7 +187,7 @@ namespace WeatherVR.UI.Carousel
                 }
             }
 
-            if (dragging && pointer.IsSelecting)
+            if (dragging && held)
             {
                 float delta = canvasX - previousCanvasX;
                 previousCanvasX = canvasX;
@@ -117,8 +195,39 @@ namespace WeatherVR.UI.Carousel
                 controller.DragXR(delta);
             }
 
-            if (dragging && pointer.SelectReleasedThisFrame)
+            if (dragging && released)
                 FinishDrag();
+        }
+
+        static bool TryGetScreenPointer(
+            out Vector2 position,
+            out bool pressed,
+            out bool held,
+            out bool released)
+        {
+            if (Touchscreen.current != null)
+            {
+                var touch = Touchscreen.current.primaryTouch;
+                position = touch.position.ReadValue();
+                pressed = touch.press.wasPressedThisFrame;
+                held = touch.press.isPressed;
+                released = touch.press.wasReleasedThisFrame;
+                if (pressed || held || released)
+                    return true;
+            }
+
+            if (Mouse.current != null)
+            {
+                position = Mouse.current.position.ReadValue();
+                pressed = Mouse.current.leftButton.wasPressedThisFrame;
+                held = Mouse.current.leftButton.isPressed;
+                released = Mouse.current.leftButton.wasReleasedThisFrame;
+                return true;
+            }
+
+            position = default;
+            pressed = held = released = false;
+            return false;
         }
 
         void FinishDrag()
@@ -132,17 +241,17 @@ namespace WeatherVR.UI.Carousel
             totalDrag = 0f;
         }
 
-        bool TryGetCanvasHit(out Vector3 worldPoint, out float canvasX)
+        bool TryGetCanvasHit(Ray ray, out Vector3 worldPoint, out float canvasX)
         {
             var plane = new Plane(canvasRect.forward, canvasRect.position);
-            if (!plane.Raycast(pointer.Ray, out float distance) || distance < 0f || distance > 6f)
+            if (!plane.Raycast(ray, out float distance) || distance < 0f || distance > 6f)
             {
                 worldPoint = default;
                 canvasX = 0f;
                 return false;
             }
 
-            worldPoint = pointer.Ray.GetPoint(distance);
+            worldPoint = ray.GetPoint(distance);
             canvasX = canvasRect.InverseTransformPoint(worldPoint).x;
             return true;
         }
@@ -152,6 +261,34 @@ namespace WeatherVR.UI.Carousel
             for (int i = targets.Count - 1; i >= 0; i--)
             {
                 if (Contains(targets[i].Rect, worldPoint))
+                    return targets[i];
+            }
+            return null;
+        }
+
+        static HitTarget FindScreenTarget(
+            List<HitTarget> targets,
+            Vector2 screenPoint,
+            Camera camera)
+        {
+            for (int i = targets.Count - 1; i >= 0; i--)
+            {
+                RectTransform rect = targets[i].Rect;
+                if (rect == null || !rect.gameObject.activeInHierarchy)
+                    continue;
+
+                var corners = new Vector3[4];
+                rect.GetWorldCorners(corners);
+                Vector2 min = camera.WorldToScreenPoint(corners[0]);
+                Vector2 max = min;
+                for (int corner = 1; corner < corners.Length; corner++)
+                {
+                    Vector2 projected = camera.WorldToScreenPoint(corners[corner]);
+                    min = Vector2.Min(min, projected);
+                    max = Vector2.Max(max, projected);
+                }
+
+                if (new Rect(min, max - min).Contains(screenPoint))
                     return targets[i];
             }
             return null;

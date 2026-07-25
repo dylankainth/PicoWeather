@@ -1,7 +1,9 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using WeatherVR.Core;
 using WeatherVR.Interaction;
+using WeatherVR.IntroEarth;
 
 namespace WeatherVR.Weather
 {
@@ -24,18 +26,20 @@ namespace WeatherVR.Weather
             if (SceneManager.GetActiveScene().name != "WeatherVR")
                 return;
 
+            EarthIntroFeature.EnsureInstalled();
+
             if (FindObjectOfType<WeatherSceneBootstrap>() == null)
                 new GameObject("Weather Scene Bootstrap").AddComponent<WeatherSceneBootstrap>();
         }
 
-        void Start()
+        IEnumerator Start()
         {
             var controller = FindObjectOfType<WeatherSceneController>();
             if (controller == null)
             {
                 Debug.LogWarning("[WeatherVR] Scene bootstrap found no WeatherSceneController.");
                 Destroy(gameObject);
-                return;
+                yield break;
             }
 
             WorldLockMap(controller);
@@ -47,6 +51,13 @@ namespace WeatherVR.Weather
                 Begin(director);
             else
                 controller.Ready += _ => Begin(director);
+
+            // XR runtimes report the persisted scene camera pose for the first few
+            // frames. Wait for tracking to settle, then place the world-locked
+            // exhibit in front of the user instead of leaving the user at its centre.
+            for (int frame = 0; frame < 4; frame++)
+                yield return null;
+            PlaceExhibitInFront(controller);
         }
 
         // The map is a world-locked exhibit the user walks around. A scene generated
@@ -60,6 +71,25 @@ namespace WeatherVR.Weather
 
             foreach (var follow in mapRoot.GetComponents<ComfortFollow>())
                 Destroy(follow);
+        }
+
+        static void PlaceExhibitInFront(WeatherSceneController controller)
+        {
+            Transform mapRoot = controller.MapRoot;
+            Transform head = Camera.main != null ? Camera.main.transform : null;
+            if (mapRoot == null || head == null)
+                return;
+
+            Vector3 forward = Vector3.ProjectOnPlane(head.forward, Vector3.up);
+            if (forward.sqrMagnitude < 0.01f)
+                forward = Vector3.forward;
+            forward.Normalize();
+
+            mapRoot.SetPositionAndRotation(
+                head.position + forward * 2.45f + Vector3.down * 0.55f,
+                Quaternion.LookRotation(forward, Vector3.up));
+
+            Debug.Log("[WeatherVR] Table exhibit placed in front of the starting view.");
         }
 
         EnvironmentController InstallEnvironment()

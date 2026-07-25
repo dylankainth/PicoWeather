@@ -93,10 +93,10 @@ namespace WeatherVR.UI.Carousel
 
             Transform head = Camera.main != null ? Camera.main.transform : null;
             XRPointer pointer = FindObjectOfType<XRPointer>();
-            if (head == null || pointer == null)
+            if (head == null)
             {
                 Debug.LogError(
-                    "[WeatherVR] The carousel needs the main camera and the existing XRPointer.");
+                    "[WeatherVR] The carousel needs the main camera.");
                 yield break;
             }
 

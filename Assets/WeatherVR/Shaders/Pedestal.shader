@@ -12,16 +12,16 @@ Shader "WeatherVR/Pedestal"
     Properties
     {
         [Header(Body)]
-        _BaseColor   ("Base Color", Color) = (0.045, 0.065, 0.075, 1)
+        _BaseColor   ("Base Color", Color) = (0.022, 0.020, 0.030, 1)
         _AmbientMix  ("Ambient Contribution", Range(0, 1)) = 0.9
 
         [Header(Rim Glow)]
-        _RimColor    ("Rim Glow Color", Color) = (0.27, 0.55, 0.52, 1)
+        _RimColor    ("Rim Glow Color", Color) = (0.46, 0.38, 0.50, 1)
         _RimPower    ("Fresnel Power", Range(0.5, 8)) = 3.5
-        _RimStrength ("Fresnel Rim Strength", Range(0, 4)) = 0.35
+        _RimStrength ("Fresnel Rim Strength", Range(0, 4)) = 0.10
 
         [Header(Lip Band)]
-        _BandStrength ("Vertex Glow Band Strength", Range(0, 4)) = 0.28
+        _BandStrength ("Vertex Glow Band Strength", Range(0, 4)) = 0.035
     }
 
     SubShader
