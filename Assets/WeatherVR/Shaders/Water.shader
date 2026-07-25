@@ -45,7 +45,7 @@ Shader "WeatherVR/Water"
         _ConnectRange ("Connectivity Range (m)", Float) = 0.0
         _ShallowColor ("Shallow Water Colour", Color) = (0.55, 0.78, 0.80, 0.30)
         _DeepColor ("Deep Water Colour", Color) = (0.05, 0.16, 0.28, 0.80)
-        _DeepDepth ("Depth Considered \"Deep\" (m)", Float) = 10.0
+        _DeepDepth ("Deep Water Depth Threshold (m)", Float) = 10.0
         _FoamDepth ("Foam Band Depth (m)", Float) = 1.0
     }
 
