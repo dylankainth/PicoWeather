@@ -29,7 +29,7 @@ class ProceduralTest {
     }
 
     @Test
-    fun `terrain covers sea, plain and hills`() {
+    fun `terrain has a river crossing a raised floodplain`() {
         val field = ProceduralTerrain.generate(bounds, 128, seed = 3)
         var min = Float.MAX_VALUE
         var max = -Float.MAX_VALUE
@@ -42,10 +42,45 @@ class ProceduralTest {
                 if (e < 0f) below++
             }
         }
-        assertTrue(below > 0, "no water at all — the coastline is missing")
-        assertTrue(below < 128 * 128, "everything is underwater")
-        assertTrue(max > 20f, "no relief above the plain, peak was $max m")
-        assertTrue(min >= ProceduralTerrain.SEA_FLOOR_ELEVATION - 5f, "sea floor undercut: $min m")
+        assertTrue(below > 0, "no water at all — the Thames is missing")
+        assertTrue(below < 128 * 128 / 4, "the river has flooded the whole map: $below cells below datum")
+        assertTrue(max > 20f, "no relief above the floodplain, peak was $max m")
+        assertTrue(min >= ProceduralTerrain.RIVER_BED_ELEVATION - 1f, "channel cut too deep: $min m")
+    }
+
+    @Test
+    fun `terrain matches the elevation range of the real baked London data`() {
+        // The fallback stands in for real data whose range is −5..44 m, and MapScale's
+        // exaggeration constants are tuned against that. A fallback with delta-sized
+        // relief would render at a visibly different vertical scale from the thing it
+        // replaces — which is exactly what the Yangtze-shaped C# original did once the
+        // region moved to London.
+        val field = ProceduralTerrain.generate(bounds, 128, seed = 3)
+        assertTrue(field.minElevation >= -10f, "minimum ${field.minElevation} m is not London")
+        assertTrue(field.maxElevation in 30f..60f, "peak ${field.maxElevation} m is not London")
+    }
+
+    @Test
+    fun `the river runs west to east, not south to north`() {
+        // The Thames crosses London; the Huangpu ran up the Shanghai tile. If this
+        // regresses, the fallback map is the old region again.
+        val field = ProceduralTerrain.generate(bounds, 96, seed = 3)
+
+        fun wettestRowIn(column: Int): Int {
+            var lowest = Float.MAX_VALUE
+            var row = -1
+            for (y in 0 until 96) {
+                val e = field.elevationAt(column, y)
+                if (e < lowest) { lowest = e; row = y }
+            }
+            return row
+        }
+
+        // The channel should be found at a similar northing at both the west and east
+        // edges — i.e. it spans the map horizontally.
+        val west = wettestRowIn(8)
+        val east = wettestRowIn(87)
+        assertTrue(kotlin.math.abs(west - east) < 40, "channel drifts from row $west to $east — not an E-W river")
     }
 
     @Test

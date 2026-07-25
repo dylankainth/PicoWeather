@@ -3,11 +3,12 @@
 A rewrite of the app for PICO's Spatial runtime, in Kotlin, because PICO have said
 the Unity SDK does not support spatial mode.
 
-**Status: the whole engine-independent layer is ported and passing. Nothing renders yet.**
+**Status: data layer, mesh generation and load policy are ported and passing.
+Nothing renders yet — that is the only part that needs the SDK.**
 
 ```
 spatial/
-  core/     pure Kotlin/JVM. No Android, no PICO SDK. 81 tests, all green.
+  core/     pure Kotlin/JVM. No Android, no PICO SDK. 112 tests, all green.
   app/      not written yet — the Android + Spatial SDK surface.
 ```
 
@@ -45,7 +46,10 @@ cd spatial
 | `Data/ProceduralBuildings.cs` | `ProceduralBuildings.kt` | |
 | `Data/ProceduralSatellite.cs` | `ProceduralSatellite.kt` | Returns raw RGB bytes, not a `Texture2D` — that return type was the only thing making it unportable |
 | `Data/OpenMeteoClient.cs` | `OpenMeteo.kt` | **URL building and parsing only.** Networking is the caller's job; it was `UnityWebRequest` coupling that made this untestable before |
-| `Data/WeatherDataService.cs` | `WeatherJson.kt` | Decode/encode; the coroutine orchestration is engine-shaped and belongs in `app` |
+| `Data/WeatherDataService.cs` | `WeatherJson.kt`, `WeatherDataService.kt` | Decode/encode, plus the live→baked→procedural policy behind `AssetSource`/`HttpFetcher` seams |
+| `Terrain/TerrainMeshBuilder.cs` | `TerrainMeshBuilder.kt` | Emits `MeshData` buffers instead of a Unity `Mesh` |
+| `Terrain/BuildingMeshBuilder.cs` | `BuildingMeshBuilder.kt` | Same, plus the winding rules the facades depend on |
+| — | `MeshData.kt` | Engine-neutral vertex/index buffers and `recalculateNormals` |
 | — | `MathUtil.kt` | The `Mathf` helpers the above needed |
 
 The Python pipeline in `tools/` is **unchanged and still authoritative**. Both the Unity

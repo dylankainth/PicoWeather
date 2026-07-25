@@ -7,26 +7,38 @@ import kotlin.math.sqrt
 /**
  * Fallback terrain for when no baked `terrain.bin` is present.
  *
- * A stylised stand-in for a river delta rather than a guess at real elevations: sea to
- * the east, an estuary opening to the north-east, a meandering river, an almost
- * dead-flat alluvial plain a few metres above sea level, and low residual hills to the
- * south-west. It exists so the app is never a black screen, and the app labels the map
- * "procedural" whenever it is used.
+ * A stylised stand-in for the City of London: the Thames meandering roughly west→east
+ * through the middle with its tidal channel cut a few metres below datum, the flat
+ * floodplain terraces either side of it, and the low ground rising gently north and
+ * south away from the river. It exists so the app is never a black screen, and the app
+ * labels the map "procedural" whenever it is used.
  *
- * Note the shape is the Yangtze delta the project originally targeted, not London.
- * That mismatch is inherited from the C# and left as-is deliberately: changing the
- * generator would be a content decision, not a port, and doing it silently inside a
- * port is how you end up unable to tell a translation bug from a redesign.
+ * **The C# original generated the Yangtze delta** — sea to the east, an estuary, an
+ * alluvial plain — from when the project targeted Shanghai. The region moved to London
+ * and the fallback did not follow, so running without baked data put an ocean over the
+ * City. Rewritten here rather than transliterated; this is the one place in the port
+ * that is deliberately not a faithful copy, and the reason is that faithfulness would
+ * have preserved a bug.
+ *
+ * The elevation range is matched to the real baked London `terrain.bin` (−5 m to
+ * +44 m). That matters beyond looks: `MapScale`'s exaggeration constants are tuned
+ * against that range, so a fallback with delta-sized relief would render at a visibly
+ * different vertical scale from the real data it stands in for.
  */
 object ProceduralTerrain {
 
-    const val SEA_FLOOR_ELEVATION = -18f
-    const val PLAIN_ELEVATION = 4f
-    const val HILL_PEAK_ELEVATION = 96f
+    /** Deepest point of the tidal channel, metres. Matches the baked data's minimum. */
+    const val RIVER_BED_ELEVATION = -5f
+
+    /** The floodplain the City sits on. */
+    const val PLAIN_ELEVATION = 12f
+
+    /** Highest ground in the region. Matches the baked data's 43.7 m peak. */
+    const val HILL_PEAK_ELEVATION = 44f
 
     fun generate(bounds: GeoBounds, resolution: Int, seed: Int): TerrainHeightfield {
         val size = resolution.clampTo(32, 2048)
-        val field = TerrainHeightfield(size, size, bounds, SEA_FLOOR_ELEVATION, HILL_PEAK_ELEVATION)
+        val field = TerrainHeightfield(size, size, bounds, RIVER_BED_ELEVATION, HILL_PEAK_ELEVATION)
 
         for (y in 0 until size) {
             val v = y / (size - 1).toFloat()
@@ -40,55 +52,43 @@ object ProceduralTerrain {
 
     /** Elevation in metres at normalised map coordinates (u east, v north). */
     fun elevationAt(u: Float, v: Float, seed: Int): Float {
-        // --- coastline ----------------------------------------------------------
-        // The coast runs roughly NNW-SSE through the eastern third of the tile,
-        // wandering with low-frequency noise so it never reads as a straight edge.
-        var coastX = 0.72f + 0.05f * (Noise.fbm2(v * 2.4f, 11.7f, 3, 2f, 0.5f, seed) - 0.5f) * 2f
-        // The estuary flares open towards the north.
-        coastX -= smoothStep(0f, 1f, inverseLerp(0.62f, 1f, v)) * 0.28f
+        // --- the ground ----------------------------------------------------------
+        // London's relief over 5 km is a few tens of metres: terraces stepping up away
+        // from the river, not hills. The rise is gentle and north-weighted, since the
+        // ground climbs toward Islington and Hampstead beyond the tile.
+        val northward = smoothStep(0f, 1f, inverseLerp(0.55f, 1.0f, v)) * 22f
+        val southward = smoothStep(0f, 1f, inverseLerp(0.42f, 0.0f, v)) * 14f
+        val terraces = (Noise.fbm2(u * 5f, v * 5f, 4, 2f, 0.5f, seed + 31) - 0.5f) * 9f
 
-        val landMask = smoothStep(0f, 1f, (coastX - u) / 0.045f)
+        var land = PLAIN_ELEVATION + northward + southward + terraces
 
-        // --- alluvial plain ------------------------------------------------------
-        // Delta relief is genuinely tiny: a few metres of levees and fill.
-        val plainRelief = (Noise.fbm2(u * 7f, v * 7f, 4, 2f, 0.5f, seed + 31) - 0.5f) * 6f
-        var land = PLAIN_ELEVATION + plainRelief
+        // A couple of low rises so the surface is not a plane: the ground around
+        // Clerkenwell and the slight dome the old City stands on.
+        land += bump(u, v, 0.34f, 0.78f, 0.20f) * 10f
+        land += bump(u, v, 0.62f, 0.30f, 0.16f) * 6f
 
-        // --- south-western hills --------------------------------------------------
-        // A cluster of isolated low hills, not a range: separate Gaussian bumps
-        // modulated by noise.
-        var hills = 0f
-        hills += bump(u, v, 0.17f, 0.21f, 0.075f) * 96f
-        hills += bump(u, v, 0.28f, 0.13f, 0.055f) * 61f
-        hills += bump(u, v, 0.09f, 0.36f, 0.048f) * 44f
-        hills += bump(u, v, 0.34f, 0.30f, 0.040f) * 33f
-        hills *= 0.65f + 0.35f * Noise.fbm2(u * 18f, v * 18f, 3, 2f, 0.5f, seed + 77)
-        land += hills
-
-        // --- rivers ----------------------------------------------------------------
-        // A meander running SW -> NE across the plain into the estuary.
-        val trunk = riverMask(
+        // --- the Thames -----------------------------------------------------------
+        // A wide meander crossing the tile west to east, swinging south around the Isle
+        // of Dogs at the eastern edge. `slope` is small because the river runs across
+        // the map rather than up it.
+        val river = riverMask(
             u, v, seed + 512,
-            amplitude = 0.10f, frequency = 2.3f, baseline = 0.36f, slope = 0.42f, halfWidth = 0.016f,
+            amplitude = 0.085f, frequency = 1.15f, baseline = 0.47f, slope = -0.06f, halfWidth = 0.030f,
         )
-        // A smaller tributary running roughly west -> east.
-        val creek = riverMask(
-            u, v, seed + 913,
-            amplitude = 0.045f, frequency = 4.1f, baseline = 0.60f, slope = 0.04f, halfWidth = 0.008f,
-        )
-        val river = maxOf(trunk, creek)
-        land = lerp(land, -6f, river)
 
-        // --- sea floor ---------------------------------------------------------------
-        // Shallow shelf deepening gradually offshore.
-        val offshore = ((u - coastX) / 0.30f).clamp01()
-        var sea = lerp(-2f, SEA_FLOOR_ELEVATION, smoothStep(0f, 1f, offshore))
-        sea += (Noise.fbm2(u * 9f, v * 9f, 3, 2f, 0.5f, seed + 404) - 0.5f) * 3f
+        // The banks are built up, so the ground dips sharply into the channel rather
+        // than shelving gently — the same reason the real minimum is a hard −5 m.
+        val channel = smoothStep(0f, 1f, river)
+        land = lerp(land, RIVER_BED_ELEVATION, channel)
 
-        return lerp(sea, land, landMask)
+        // Docks and canal basins: small isolated cuts north of the river.
+        val basin = bump(u, v, 0.78f, 0.58f, 0.045f)
+        if (basin > 0f) land = lerp(land, -2f, smoothStep(0f, 1f, basin))
+
+        return land.coerceIn(RIVER_BED_ELEVATION, HILL_PEAK_ELEVATION)
     }
 
-    /** A hill: smooth radial falloff, squared so the flanks are convex rather than conical. */
+    /** A rise: smooth radial falloff, squared so the flanks are convex rather than conical. */
     private fun bump(u: Float, v: Float, cx: Float, cy: Float, radius: Float): Float {
         val d = sqrt((u - cx) * (u - cx) + (v - cy) * (v - cy)) / radius
         if (d >= 1f) return 0f
@@ -99,6 +99,10 @@ object ProceduralTerrain {
     /**
      * 0..1 mask for a sinuous river channel. The centreline is a sine meander with a
      * linear drift, perturbed by noise so it is not obviously periodic.
+     *
+     * Note this runs *across* the map: `centre` is a v (northing) for a given u
+     * (easting), the transpose of the C# version, because the Thames crosses London
+     * west-to-east where the Huangpu ran south-to-north.
      */
     private fun riverMask(
         u: Float,
@@ -110,13 +114,13 @@ object ProceduralTerrain {
         slope: Float,
         halfWidth: Float,
     ): Float {
-        val centre = baseline + slope * v +
-            amplitude * sin(v * frequency * Math.PI.toFloat() * 2f) +
-            amplitude * 0.6f * (Noise.fbm2(v * 3.5f, seed * 0.013f, 3, 2f, 0.5f, seed) - 0.5f) * 2f
+        val centre = baseline + slope * u +
+            amplitude * sin(u * frequency * Math.PI.toFloat() * 2f) +
+            amplitude * 0.6f * (Noise.fbm2(u * 3.5f, seed * 0.013f, 3, 2f, 0.5f, seed) - 0.5f) * 2f
 
-        val d = abs(u - centre)
-        // Channels widen downstream.
-        val width = halfWidth * (0.6f + 0.8f * v)
-        return 1f - smoothStep(0f, 1f, inverseLerp(width, width * 2.4f, d))
+        val d = abs(v - centre)
+        // The tideway widens downstream, toward the east.
+        val width = halfWidth * (0.75f + 0.6f * u)
+        return 1f - smoothStep(0f, 1f, inverseLerp(width, width * 2.2f, d))
     }
 }
