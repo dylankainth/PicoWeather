@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
+using WeatherVR.Core;
 using WeatherVR.Interaction;
 using WeatherVR.UI.Carousel;
 using WeatherVR.Weather;
@@ -68,6 +69,13 @@ namespace WeatherVR.EditorTools.Tests
         [Test]
         public void PrecipitationStylesAreLargeAndCoverEverySliderWeatherCase()
         {
+            // Derived from the live config and the shipped cloud altitude rather than
+            // hardcoded: this was 0.056, which was only right for a 900 m cloud base on a
+            // 2 m map and silently stopped describing the app when either moved.
+            float cloudBaseMap = AppConfig.Instance.AltitudeToMapUnits(
+                WeatherVisuals.CloudBaseMeters);
+            Assert.That(cloudBaseMap, Is.GreaterThan(0f), "cloud base must sit above the map plane");
+
             foreach (WeatherSceneKind kind in WeatherScene.AllKinds)
             {
                 WeatherSceneProfile profile = WeatherScene.Default(kind);
@@ -75,7 +83,7 @@ namespace WeatherVR.EditorTools.Tests
                     WeatherVisuals.ResolvePrecipitationStyle(
                         profile.Precip,
                         profile.PrecipIntensity,
-                        0.056f,
+                        cloudBaseMap,
                         profile.WindMs);
 
                 if (profile.Precip == PrecipKind.None)

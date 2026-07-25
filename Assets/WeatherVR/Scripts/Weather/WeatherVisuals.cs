@@ -30,8 +30,15 @@ namespace WeatherVR.Weather
         // is pre-existing and roughly proportional -- at the previous 2 m map and true
         // building scale it poked in by ~1 cm -- but it is the number to watch if either
         // knob moves again.
-        const float CloudBaseMeters = 1250f;
-        const float CloudThicknessMeters = 700f;
+        //
+        // Public so VisualComfortTests can feed the *real* cloud base into
+        // ResolvePrecipitationStyle instead of a copy of the number, which had already
+        // gone stale once: the test hardcoded 0.056 map units, correct only for a 900 m
+        // base on a 2 m map. That copy could not fail loudly -- cloudBaseMap only feeds
+        // fall speed, which the test does not assert -- so it would have quietly stopped
+        // testing the shipped configuration.
+        public const float CloudBaseMeters = 1250f;
+        public const float CloudThicknessMeters = 700f;
 
         AppConfig _config;
         bool _built;
