@@ -7,7 +7,7 @@ a 24-hour clock — only the rig and the controls differ.
 
 | File | Size | Target | Controls |
 | --- | --- | --- | --- |
-| `ImmersiveWeather-Phone.apk` | 61 MB | any Android phone | touch |
+| `ImmersiveWeather-Phone.apk` | 44 MB | any ARM64 Android phone | touch |
 | `ImmersiveWeather-PICO.apk` | 45 MB | PICO headset / PICO Emulator | controller or hand |
 
 ## Phone build — start here

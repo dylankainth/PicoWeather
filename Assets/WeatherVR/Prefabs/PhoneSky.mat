@@ -25,13 +25,16 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
-    - _HorizonSharpness: 2.2
-    - _SunGlow: 1.4
-    - _SunSharp: 18
+    - _HorizonSharpness: 1.45
+    - _LatticeStrength: 0.06
+    - _PrismStrength: 0.24
+    - _SunGlow: 0.75
+    - _SunSharp: 12
     m_Colors:
-    - _Horizon: {r: 0.049999982, g: 0.064999975, b: 0.09499996, a: 1}
-    - _Nadir: {r: 0.008, g: 0.009, b: 0.013, a: 1}
-    - _SunColor: {r: 0.54999995, g: 0.41999996, b: 0.29999998, a: 1}
+    - _Horizon: {r: 0.18999997, g: 0.12499998, b: 0.21499997, a: 1}
+    - _Nadir: {r: 0.03, g: 0.024, b: 0.044999972, a: 1}
+    - _PrismColor: {r: 0.52, g: 0.25999996, b: 0.56999993, a: 1}
+    - _SunColor: {r: 0.72, g: 0.78, b: 0.74, a: 1}
     - _SunDir: {r: 0.3, g: 0.15, b: -0.9, a: 0}
-    - _Zenith: {r: 0.015, g: 0.018, b: 0.03, a: 1}
+    - _Zenith: {r: 0.079999976, g: 0.054999977, b: 0.12499998, a: 1}
   m_BuildTextureStacks: []
