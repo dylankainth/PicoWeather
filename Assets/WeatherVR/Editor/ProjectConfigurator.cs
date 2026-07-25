@@ -42,6 +42,7 @@ namespace WeatherVR.EditorTools
         const string DefaultBundleId = "com.weathervr.immersive";
         const string DefaultProductName = "Immersive Weather";
         const string DefaultCompanyName = "WeatherVR";
+        const string AppIconPath = "Assets/WeatherVR/Art/PicoWeatherIcon.png";
 
         [MenuItem("Tools/WeatherVR/Configure Player Settings", priority = 20)]
         public static void ConfigureInteractive()
@@ -66,6 +67,7 @@ namespace WeatherVR.EditorTools
             EnsureAndroidDefines(changes, out bool removedForbiddenDefine);
             EnsureAndroidXrLoader(changes);
             EnsureIdentity(changes);
+            EnsureAndroidIcons(changes);
             EnsureAndroidPlayerSettings(changes);
             EnsureGraphics(changes);
 
@@ -234,6 +236,65 @@ namespace WeatherVR.EditorTools
                 PlayerSettings.companyName = DefaultCompanyName;
                 changes.Add($"Set the company name to \"{DefaultCompanyName}\".");
             }
+        }
+
+        // --------------------------------------------------------------- app icon
+
+        /// <summary>
+        /// Assigns the PicoWeather artwork to every Android launcher-icon slot,
+        /// including legacy, round and adaptive variants. Keeping this in the
+        /// configurator makes command-line builds deterministic and prevents a
+        /// clean checkout from silently falling back to Unity's default icon.
+        /// </summary>
+        static void EnsureAndroidIcons(List<string> changes)
+        {
+            var icon = AssetDatabase.LoadAssetAtPath<Texture2D>(AppIconPath);
+            if (icon == null)
+            {
+                throw new UnityEditor.Build.BuildFailedException(
+                    $"[WeatherVR] Android app icon is missing at {AppIconPath}.");
+            }
+
+            var target = NamedBuildTarget.Android;
+            bool changed = false;
+            var supportedKinds = PlayerSettings.GetSupportedIconKinds(target);
+
+            foreach (var kind in supportedKinds)
+            {
+                var slots = PlayerSettings.GetPlatformIcons(target, kind);
+                bool kindChanged = false;
+
+                foreach (var slot in slots)
+                {
+                    var desired = Enumerable.Repeat(icon, slot.maxLayerCount).ToArray();
+                    var current = slot.GetTextures();
+                    if (current != null && current.SequenceEqual(desired)) continue;
+
+                    slot.SetTextures(desired);
+                    kindChanged = true;
+                }
+
+                if (!kindChanged) continue;
+                PlayerSettings.SetPlatformIcons(target, kind, slots);
+                changed = true;
+            }
+
+            // Older Android modules can expose no PlatformIconKind entries. Preserve
+            // a legacy fallback so the launcher still receives the artwork.
+            if (supportedKinds.Length == 0)
+            {
+                int iconCount = PlayerSettings.GetIconSizes(target, IconKind.Any).Length;
+                var desired = Enumerable.Repeat(icon, iconCount).ToArray();
+                var current = PlayerSettings.GetIcons(target, IconKind.Any);
+                if (current == null || !current.SequenceEqual(desired))
+                {
+                    PlayerSettings.SetIcons(target, desired, IconKind.Any);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+                changes.Add("Assigned the PicoWeather artwork to every Android app icon slot.");
         }
 
         // ------------------------------------------------------- android player
