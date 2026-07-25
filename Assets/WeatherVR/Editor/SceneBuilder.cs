@@ -96,6 +96,30 @@ namespace WeatherVR.EditorTools
             var rayVisual = rightAnchor.AddComponent<LineRenderer>();
             ConfigureRayVisual(rayVisual);
 
+            var content = BuildWeatherContent(config);
+
+            // The headset exhibit is world-locked and ready immediately. Phone AR
+            // supplies its own tap-to-place controller in ArSceneBuilder.
+            content.MapRoot.position = new Vector3(0f, 0.85f, 1.1f);
+        }
+
+        /// <summary>
+        /// Everything that is the same on every platform: lighting, the map root and
+        /// its renderers, audio, lightning, the provenance HUD, and the app
+        /// controller. The rig and the placement mechanism differ per platform and are
+        /// wired by the caller, which is what lets the phone-AR scene reuse all of
+        /// this instead of duplicating it.
+        /// </summary>
+        public struct WeatherContent
+        {
+            public Transform MapRoot;
+            public GameObject App;
+            public WeatherSceneController Controller;
+            public Light Sun;
+        }
+
+        public static WeatherContent BuildWeatherContent(AppConfig config)
+        {
             // ------------------------------------------------------- lighting
             var sunObject = new GameObject("SunLight");
             var sun = sunObject.AddComponent<Light>();
@@ -198,9 +222,13 @@ namespace WeatherVR.EditorTools
             controller.SunLight = sun;
             controller.SceneDirector = sceneDirector;
 
-            // A sensible starting pose; ComfortFollow snaps it in front of the head on
-            // the first frame anyway.
-            mapRoot.transform.position = new Vector3(0f, 0.85f, 1.1f);
+            return new WeatherContent
+            {
+                MapRoot = mapRoot.transform,
+                App = appObject,
+                Controller = controller,
+                Sun = sun
+            };
         }
 
         static void ConfigureRayVisual(LineRenderer line)
