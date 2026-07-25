@@ -28,8 +28,9 @@ namespace WeatherVR.Weather
         ParticleSystem _precip;
         ParticleSystemRenderer _precipRenderer;
 
-        Material _cloudMaterial, _rainMaterial, _snowMaterial, _boltMaterial;
-        Texture2D _softCircle, _cloudTexture, _streak;
+        Material _cloudMaterial, _rainMaterial, _snowMaterial;
+        Material _boltMaterial;
+        Texture2D _softCircle, _cloudTexture, _rainStreak, _snowflake;
 
         Light _flashLight;
         LineRenderer _bolt;
@@ -40,6 +41,50 @@ namespace WeatherVR.Weather
         System.Random _rng;
 
         float _cloudBaseMap, _cloudTopMap;
+
+        /// <summary>
+        /// Fully resolved, scale-independent precipitation settings. Keeping this
+        /// calculation separate from the particle-system mutation makes the visual
+        /// scale testable without entering Play mode and prevents slider changes from
+        /// accumulating stale module state.
+        /// </summary>
+        public readonly struct PrecipitationStyle
+        {
+            public readonly bool Enabled;
+            public readonly bool Snow;
+            public readonly float MinSize;
+            public readonly float MaxSize;
+            public readonly float MinLifetime;
+            public readonly float MaxLifetime;
+            public readonly float MinFallSpeed;
+            public readonly float MaxFallSpeed;
+            public readonly float EmissionRate;
+            public readonly float WindDrift;
+
+            public PrecipitationStyle(
+                bool enabled,
+                bool snow,
+                float minSize,
+                float maxSize,
+                float minLifetime,
+                float maxLifetime,
+                float minFallSpeed,
+                float maxFallSpeed,
+                float emissionRate,
+                float windDrift)
+            {
+                Enabled = enabled;
+                Snow = snow;
+                MinSize = minSize;
+                MaxSize = maxSize;
+                MinLifetime = minLifetime;
+                MaxLifetime = maxLifetime;
+                MinFallSpeed = minFallSpeed;
+                MaxFallSpeed = maxFallSpeed;
+                EmissionRate = emissionRate;
+                WindDrift = windDrift;
+            }
+        }
 
         public void Build(AppConfig config)
         {
@@ -63,7 +108,8 @@ namespace WeatherVR.Weather
         {
             _softCircle = SoftCircle(64);
             _cloudTexture = SoftCloud(96, _config.ProceduralSeed ^ 0xC10D);
-            _streak = Streak(16, 64);
+            _rainStreak = RainStreak(32, 128);
+            _snowflake = Snowflake(64);
 
             var sprite = Shader.Find("Sprites/Default");
             _cloudMaterial = new Material(sprite)
@@ -71,8 +117,10 @@ namespace WeatherVR.Weather
                 name = "Cloud (runtime)",
                 mainTexture = _cloudTexture
             };
-            _rainMaterial = new Material(sprite) { name = "Rain (runtime)", mainTexture = _streak };
-            _snowMaterial = new Material(sprite) { name = "Snow (runtime)", mainTexture = _softCircle };
+            _rainMaterial = new Material(sprite)
+                { name = "Rain (runtime)", mainTexture = _rainStreak };
+            _snowMaterial = new Material(sprite)
+                { name = "Snow (runtime)", mainTexture = _snowflake };
             _boltMaterial = new Material(sprite) { name = "Bolt (runtime)" };
         }
 
@@ -132,36 +180,42 @@ namespace WeatherVR.Weather
 
         void BuildPrecip()
         {
-            var go = new GameObject("Precipitation");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = new Vector3(0f, _cloudBaseMap, 0f);
+            var fallingObject = new GameObject("Precipitation");
+            fallingObject.transform.SetParent(transform, false);
+            fallingObject.transform.localPosition = new Vector3(0f, _cloudBaseMap, 0f);
 
-            _precip = go.AddComponent<ParticleSystem>();
+            _precip = fallingObject.AddComponent<ParticleSystem>();
             _precip.Stop();
-            _precipRenderer = go.GetComponent<ParticleSystemRenderer>();
+            _precipRenderer = fallingObject.GetComponent<ParticleSystemRenderer>();
             _precipRenderer.sharedMaterial = _rainMaterial;
             _precipRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             _precipRenderer.receiveShadows = false;
 
-            var main = _precip.main;
+            ConfigureBasePrecipitationSystem(_precip, new Vector3(1.05f, 0.02f, 1.05f), 6000);
+        }
+
+        static void ConfigureBasePrecipitationSystem(
+            ParticleSystem system, Vector3 emitterScale, int maxParticles)
+        {
+            var main = system.main;
             main.simulationSpace = ParticleSystemSimulationSpace.Local;
             main.loop = true;
             main.playOnAwake = false;
             main.gravityModifier = 0f;
             main.startSpeed = 0f;
-            main.maxParticles = 4000;
+            main.maxParticles = maxParticles;
 
-            var shape = _precip.shape;
+            var shape = system.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Box;
-            shape.scale = new Vector3(1.05f, 0.02f, 1.05f);
+            shape.scale = emitterScale;
 
-            var emission = _precip.emission;
+            var emission = system.emission;
             emission.enabled = true;
 
-            var vel = _precip.velocityOverLifetime;
-            vel.enabled = true;
-            vel.space = ParticleSystemSimulationSpace.Local;
+            var velocity = system.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.Local;
         }
 
         void BuildLightning()
@@ -253,49 +307,100 @@ namespace WeatherVR.Weather
 
         void ShowPrecip(WeatherSceneProfile p)
         {
-            if (p.Precip == PrecipKind.None || p.PrecipIntensity <= 0.001f)
+            PrecipitationStyle style = ResolvePrecipitationStyle(
+                p.Precip, p.PrecipIntensity, _cloudBaseMap, p.WindMs);
+            if (!style.Enabled)
             {
                 _precip.Stop();
                 _precip.Clear();
                 return;
             }
 
-            bool snow = p.Precip == PrecipKind.Snow;
-            _precipRenderer.sharedMaterial = snow ? _snowMaterial : _rainMaterial;
-            _precipRenderer.renderMode = snow
+            _precipRenderer.sharedMaterial = style.Snow ? _snowMaterial : _rainMaterial;
+            _precipRenderer.renderMode = style.Snow
                 ? ParticleSystemRenderMode.Billboard
                 : ParticleSystemRenderMode.Stretch;
-            if (!snow)
+            if (!style.Snow)
             {
-                _precipRenderer.lengthScale = 2.5f;
-                _precipRenderer.velocityScale = 0.12f;
+                _precipRenderer.lengthScale =
+                    Mathf.Lerp(3.0f, 4.0f, Mathf.Clamp01(p.PrecipIntensity));
+                _precipRenderer.velocityScale =
+                    Mathf.Lerp(0.15f, 0.22f, Mathf.Clamp01(p.PrecipIntensity));
             }
 
-            float fallSeconds = snow ? 3.5f : 1.0f;
-            float fall = _cloudBaseMap / Mathf.Max(fallSeconds, 0.05f);
-
             var main = _precip.main;
-            main.startLifetime = fallSeconds;
-            main.startColor = snow
-                ? new Color(1f, 1f, 1f, 0.9f)
-                : new Color(0.78f, 0.84f, 0.91f, 0.46f);
-            main.startSize = snow
-                ? new ParticleSystem.MinMaxCurve(0.006f, 0.012f)
-                : new ParticleSystem.MinMaxCurve(0.002f, 0.0045f);
+            float lifetime = (style.MinLifetime + style.MaxLifetime) * 0.5f;
+            float fallSpeed = (style.MinFallSpeed + style.MaxFallSpeed) * 0.5f;
+            main.startLifetime = lifetime;
+            main.startSize =
+                new ParticleSystem.MinMaxCurve(style.MinSize, style.MaxSize);
+            main.startColor = style.Snow
+                ? new Color(0.94f, 0.97f, 1f, 0.90f)
+                : new Color(0.76f, 0.86f, 0.96f, 0.58f);
+            main.maxParticles = Mathf.Clamp(
+                Mathf.CeilToInt(style.EmissionRate * lifetime) + 256,
+                512,
+                6000);
 
-            var vel = _precip.velocityOverLifetime;
-            vel.y = new ParticleSystem.MinMaxCurve(-fall);
-            float sideDrift = p.WindMs * (snow ? 0.01f : 0.02f);
-            vel.x = new ParticleSystem.MinMaxCurve(sideDrift);
+            var velocity = _precip.velocityOverLifetime;
+            velocity.y = new ParticleSystem.MinMaxCurve(-fallSpeed);
+            velocity.x = new ParticleSystem.MinMaxCurve(style.WindDrift);
+            velocity.z = new ParticleSystem.MinMaxCurve(style.WindDrift * 0.35f);
 
             var emission = _precip.emission;
-            float maxRate = snow ? 620f : 1120f;
-            emission.rateOverTime = Mathf.Lerp(0f, maxRate, Mathf.Clamp01(p.PrecipIntensity));
-
-            main.maxParticles = Mathf.CeilToInt(maxRate * fallSeconds) + 128;
+            emission.rateOverTime = style.EmissionRate;
 
             if (!_precip.isPlaying) _precip.Play();
             _precip.Clear();
+        }
+
+        /// <summary>
+        /// Resolves particle scale/density from the selected weather profile. The
+        /// returned sizes are deliberately several times the previous 0.002-0.012
+        /// range: this is a tabletop representation, so physically tiny drops vanish
+        /// at headset resolution and must be perceptually scaled.
+        /// </summary>
+        public static PrecipitationStyle ResolvePrecipitationStyle(
+            PrecipKind kind, float intensity, float cloudBaseMap, float windMs)
+        {
+            float amount = Mathf.Clamp01(intensity);
+            if (kind == PrecipKind.None || amount <= 0.001f)
+                return default;
+
+            bool snow = kind == PrecipKind.Snow;
+            float density = Mathf.Pow(amount, 0.72f);
+            float fallSeconds = snow
+                ? Mathf.Lerp(4.8f, 3.2f, density)
+                : Mathf.Lerp(1.25f, 0.72f, density);
+            float averageFallSpeed =
+                Mathf.Max(0.01f, cloudBaseMap) / Mathf.Max(0.1f, fallSeconds);
+
+            if (snow)
+            {
+                return new PrecipitationStyle(
+                    true,
+                    true,
+                    Mathf.Lerp(0.020f, 0.030f, density),
+                    Mathf.Lerp(0.044f, 0.065f, density),
+                    fallSeconds * 0.84f,
+                    fallSeconds * 1.16f,
+                    averageFallSpeed * 0.78f,
+                    averageFallSpeed * 1.22f,
+                    Mathf.Lerp(150f, 520f, density),
+                    Mathf.Max(0f, windMs) * 0.006f);
+            }
+
+            return new PrecipitationStyle(
+                true,
+                false,
+                Mathf.Lerp(0.0065f, 0.0105f, density),
+                Mathf.Lerp(0.013f, 0.021f, density),
+                fallSeconds * 0.84f,
+                fallSeconds * 1.16f,
+                averageFallSpeed * 0.84f,
+                averageFallSpeed * 1.18f,
+                Mathf.Lerp(240f, 1050f, density),
+                Mathf.Max(0f, windMs) * 0.011f);
         }
 
         void Update()
@@ -428,18 +533,80 @@ namespace WeatherVR.Weather
             return tex;
         }
 
-        static Texture2D Streak(int w, int h)
+        static Texture2D RainStreak(int width, int height)
         {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false) { name = "Streak" };
-            tex.wrapMode = TextureWrapMode.Clamp;
-            for (int y = 0; y < h; y++)
-            for (int x = 0; x < w; x++)
+            var tex = new Texture2D(width, height, TextureFormat.RGBA32, false)
             {
-                float dx = Mathf.Abs((x + 0.5f) / w - 0.5f) * 2f;
-                float a = Mathf.Clamp01(1f - dx);
-                a *= a;
-                tex.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                name = "Tapered Rain Streak",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            for (int y = 0; y < height; y++)
+            for (int x = 0; x < width; x++)
+            {
+                float u = Mathf.Abs((x + 0.5f) / width - 0.5f) * 2f;
+                float v = (y + 0.5f) / height;
+
+                // Fine bright core, softer outer water column, and tapered ends.
+                // The previous texture had the same opacity from top to bottom, which
+                // made stretched drops look like blunt plastic rods.
+                float core = Mathf.Pow(Mathf.Clamp01(1f - u), 3.6f);
+                float outer = Mathf.Pow(Mathf.Clamp01(1f - u), 1.4f) * 0.34f;
+                float headFade = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(v / 0.12f));
+                float tailFade = Mathf.SmoothStep(
+                    0f, 1f, Mathf.Clamp01((1f - v) / 0.22f));
+                float longitudinal = headFade * tailFade;
+                float alpha = Mathf.Clamp01((core + outer) * longitudinal);
+                float glint = Mathf.Lerp(0.78f, 1f, core);
+
+                tex.SetPixel(
+                    x,
+                    y,
+                    new Color(glint * 0.88f, glint * 0.95f, glint, alpha));
             }
+            tex.Apply();
+            return tex;
+        }
+
+        static Texture2D Snowflake(int size)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "Procedural Snowflake",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear
+            };
+
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float u = ((x + 0.5f) / size - 0.5f) * 2f;
+                float v = ((y + 0.5f) / size - 0.5f) * 2f;
+                float radius = Mathf.Sqrt(u * u + v * v);
+                float angle = Mathf.Atan2(v, u);
+
+                // Six crystalline arms, a small centre and two branch rings. The soft
+                // halo keeps the shape legible after bilinear filtering in the headset.
+                float alignment = Mathf.Abs(Mathf.Cos(angle * 3f));
+                float arm = Mathf.Pow(
+                    Mathf.Clamp01((alignment - 0.86f) / 0.14f), 1.7f);
+                float envelope = Mathf.SmoothStep(
+                    1f, 0f, Mathf.InverseLerp(0.12f, 0.94f, radius));
+                float centre = Mathf.SmoothStep(
+                    1f, 0f, Mathf.InverseLerp(0.04f, 0.20f, radius));
+                float branchA = Mathf.Clamp01(
+                    1f - Mathf.Abs(radius - 0.43f) / 0.055f) * arm;
+                float branchB = Mathf.Clamp01(
+                    1f - Mathf.Abs(radius - 0.67f) / 0.050f) * arm;
+                float halo = Mathf.Pow(Mathf.Clamp01(1f - radius), 3f) * 0.20f;
+                float alpha = Mathf.Clamp01(
+                    centre + arm * envelope * 0.94f +
+                    branchA * 0.42f + branchB * 0.34f + halo);
+
+                tex.SetPixel(x, y, new Color(0.91f, 0.96f, 1f, alpha));
+            }
+
             tex.Apply();
             return tex;
         }
@@ -452,7 +619,8 @@ namespace WeatherVR.Weather
             if (_boltMaterial != null) Destroy(_boltMaterial);
             if (_softCircle != null) Destroy(_softCircle);
             if (_cloudTexture != null) Destroy(_cloudTexture);
-            if (_streak != null) Destroy(_streak);
+            if (_rainStreak != null) Destroy(_rainStreak);
+            if (_snowflake != null) Destroy(_snowflake);
         }
     }
 }

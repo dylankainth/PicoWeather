@@ -66,6 +66,35 @@ namespace WeatherVR.EditorTools.Tests
         }
 
         [Test]
+        public void PrecipitationStylesAreLargeAndCoverEverySliderWeatherCase()
+        {
+            foreach (WeatherSceneKind kind in WeatherScene.AllKinds)
+            {
+                WeatherSceneProfile profile = WeatherScene.Default(kind);
+                WeatherVisuals.PrecipitationStyle style =
+                    WeatherVisuals.ResolvePrecipitationStyle(
+                        profile.Precip,
+                        profile.PrecipIntensity,
+                        0.056f,
+                        profile.WindMs);
+
+                if (profile.Precip == PrecipKind.None)
+                {
+                    Assert.That(style.Enabled, Is.False, kind.ToString());
+                    continue;
+                }
+
+                Assert.That(style.Enabled, Is.True, kind.ToString());
+                Assert.That(style.MaxSize, Is.GreaterThan(style.MinSize), kind.ToString());
+                Assert.That(style.EmissionRate, Is.GreaterThan(0f), kind.ToString());
+                Assert.That(
+                    style.MinSize,
+                    Is.GreaterThanOrEqualTo(style.Snow ? 0.020f : 0.0065f),
+                    kind.ToString());
+            }
+        }
+
+        [Test]
         public void ControllerLocomotionUsesRadialDeadzoneAndHeadRelativeAxes()
         {
             Assert.That(
