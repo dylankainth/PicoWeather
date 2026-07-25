@@ -7,7 +7,7 @@ lightning and thunder — only the rig and the controls differ.
 | File | Size | Target | Controls |
 | --- | --- | --- | --- |
 | `ImmersiveWeather-Phone.apk` | 61 MB | any Android phone | touch |
-| `ImmersiveWeather-PICO.apk` | 59 MB | PICO headset / PICO Emulator | controller or hand |
+| `ImmersiveWeather-PICO.apk` | 45 MB | PICO headset / PICO Emulator | controller or hand |
 
 ## Phone build — start here
 
@@ -29,14 +29,16 @@ adb install -r ImmersiveWeather-Phone.apk
 ## PICO build
 
 ```
-adb install -r -t --abi arm64-v8a ImmersiveWeather-PICO.apk
+adb install -r ImmersiveWeather-PICO.apk
 ```
 
-**The `--abi arm64-v8a` flag matters on the emulator.** The emulator is an x86_64
-image, but PICO's native libraries — including `libopenxr_loader.so` — ship for
-ARM64 only. Install the x86_64 slice and you get a running app with a black
-screen, because there is no XR runtime to composite through. On real hardware the
-plain `adb install -r` is fine.
+Earlier builds shipped both ARM64 and x86_64 and needed `--abi arm64-v8a` on the
+emulator, because PICO's native libraries — including `libopenxr_loader.so` —
+ship for ARM64 only, so the x86_64 slice has no XR runtime to composite through
+and the app falls back to rendering as a flat 2D panel in the PICO shell. This
+build is ARM64-only, so there is no wrong slice left to install and the plain
+command is correct everywhere. On the emulator it runs under translation at a
+steady 60 FPS; only startup is slow (~30 s to the first frame).
 
 ## What you are looking at
 

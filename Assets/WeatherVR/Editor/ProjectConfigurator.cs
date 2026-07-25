@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.XR.Management;
+using UnityEditor.XR.Management.Metadata;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -47,6 +49,7 @@ namespace WeatherVR.EditorTools
             var changes = new List<string>();
 
             EnsureAndroidDefines(changes);
+            EnsureAndroidXrLoader(changes);
             EnsureIdentity(changes);
             EnsureAndroidPlayerSettings(changes);
             EnsureGraphics(changes);
@@ -54,6 +57,62 @@ namespace WeatherVR.EditorTools
             AssetDatabase.SaveAssets();
             foreach (string change in changes) Debug.Log($"[WeatherVR] {change}");
             return changes;
+        }
+
+        // ------------------------------------------------------------ xr loader
+
+        /// <summary>
+        /// Asserts that PICO is the active Android XR loader and that the XR manager
+        /// initialises on start.
+        ///
+        /// Unity keeps exactly one loader list per build target, and Android is the
+        /// build target for the headset, the phone-AR variant *and* the flat touch
+        /// variant — so <see cref="BuildPhoneAR"/> and <see cref="BuildPhoneTouch"/>
+        /// both rewrite this list, and <c>BuildPhoneTouch</c> clears it outright
+        /// (no loader, <c>InitManagerOnStart = false</c>). That cleared state is what
+        /// is committed in <c>Assets/XR/XRGeneralSettingsPerBuildTarget.asset</c>,
+        /// and nothing on the headset build path put it back.
+        ///
+        /// The consequence is the exact silent-failure shape this class exists to
+        /// prevent: with no loader the APK builds, installs and *runs* fine, but
+        /// Unity never starts an XR display subsystem, so the PICO shell shows it as
+        /// a flat 2D panel on the wall instead of an immersive scene. No error, on
+        /// device or off. Asserting it here means whichever phone build ran last
+        /// cannot leave the headset build flat.
+        /// </summary>
+        static void EnsureAndroidXrLoader(List<string> changes)
+        {
+            const string PicoLoader = "ByteDance.PICO.XR.PXR_Loader";
+            const string ArCoreLoader = "UnityEngine.XR.ARCore.ARCoreLoader";
+
+            var settings = XRGeneralSettingsPerBuildTarget.XRGeneralSettingsForBuildTarget(BuildTargetGroup.Android);
+            if (settings == null || settings.Manager == null)
+            {
+                Debug.LogWarning("[WeatherVR] No XR settings for Android — the build will not be immersive. " +
+                                 "Open Project Settings ▸ XR Plug-in Management once to create them.");
+                return;
+            }
+
+            if (XRPackageMetadataStore.IsLoaderAssigned(ArCoreLoader, BuildTargetGroup.Android))
+            {
+                XRPackageMetadataStore.RemoveLoader(settings.Manager, ArCoreLoader, BuildTargetGroup.Android);
+                changes.Add("Removed the ARCore XR loader left over from a phone build.");
+            }
+
+            if (!XRPackageMetadataStore.IsLoaderAssigned(PicoLoader, BuildTargetGroup.Android))
+            {
+                bool assigned = XRPackageMetadataStore.AssignLoader(settings.Manager, PicoLoader, BuildTargetGroup.Android);
+                changes.Add(assigned
+                    ? "Assigned the PICO XR loader for Android (the build was running flat, not immersive)."
+                    : "FAILED to assign the PICO XR loader — the build will run as a flat 2D panel.");
+            }
+
+            if (!settings.InitManagerOnStart)
+            {
+                settings.InitManagerOnStart = true;
+                EditorUtility.SetDirty(settings);
+                changes.Add("Enabled Initialize XR on Startup for Android.");
+            }
         }
 
         // --------------------------------------------------------------- defines
@@ -115,19 +174,33 @@ namespace WeatherVR.EditorTools
                 changes.Add("Raised the minimum Android SDK to 29 (PICO/Quest baseline).");
             }
 
-            // ARM64 is what real PICO/Quest hardware runs. X86_64 exists purely so the
-            // build also runs natively on the PICO Emulator, which is an x86_64 image:
-            // an ARM64-only APK does install there (the image ships libhoudini and
-            // advertises arm64-v8a) but every instruction is binary-translated, which
-            // made the app unusably slow while the host sat at 22% CPU and 6% GPU.
-            // Shipping both costs roughly 30 MB of extra native libraries.
-            const AndroidArchitecture DesiredArchitectures =
-                AndroidArchitecture.ARM64 | AndroidArchitecture.X86_64;
+            // ARM64 only — including X86_64 costs the emulator its immersive mode.
+            //
+            // This used to be ARM64 | X86_64, on the reasoning that x86_64 lets the APK
+            // run natively on the PICO Emulator (an x86_64 image) rather than under
+            // binary translation. The problem is that PICO ships no x86_64 XR runtime:
+            // libopenxr_loader.so, libPxrPlatform.so and the rest exist only under
+            // lib/arm64-v8a. Running the x86_64 slice therefore leaves no XR plugin to
+            // load, the XR display subsystem never starts, and the app renders to an
+            // ordinary Android surface — which the PICO shell frames as a flat 2D panel
+            // on the wall. That is not a degraded VR mode; it is the app not being a VR
+            // app at all, and it is silent (no error, on device or in the emulator).
+            //
+            // Measured on the emulator, 2026-07-25, ARM64-only under translation:
+            // a steady 60/60 FPS (the emulator's cap), FrmCpu ≈ 5 ms, FrmGpu ≈ 2.5 ms,
+            // zero late or skipped frames — so the older "unusably slow" note above it
+            // did not reproduce. The cost that is real is startup: ~33 s from launch to
+            // first frame versus ~10 s for the x86_64 slice, since IL2CPP's ARM code has
+            // to be translated. Steady-state rendering is fine; only loading is slow.
+            //
+            // Real hardware is ARM64 regardless, so this also removes ~20 MB of native
+            // libraries that never ran on a headset.
+            const AndroidArchitecture DesiredArchitectures = AndroidArchitecture.ARM64;
 
             if (PlayerSettings.Android.targetArchitectures != DesiredArchitectures)
             {
                 PlayerSettings.Android.targetArchitectures = DesiredArchitectures;
-                changes.Add("Set Android architectures to ARM64 + X86_64 (device + emulator).");
+                changes.Add("Set the Android architecture to ARM64 only (x86_64 has no PICO XR runtime).");
             }
 
             if (PlayerSettings.GetScriptingBackend(NamedBuildTarget.Android) != ScriptingImplementation.IL2CPP)
